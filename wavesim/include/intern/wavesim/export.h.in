@@ -1,0 +1,53 @@
+/* ----------------------------------------------------------------------------
+ * Export and visibility macros
+ * ----------------------------------------------------------------------------
+ * Substitution variables:
+ *  - PROJECT_NAME              : All-caps variable identifying the name of the
+ *                                project being built.
+ *  - ${PROJECT_NAME}_BUILD_TYPE : Set to either SHARED or STATIC.
+ *
+ * Global definitions (non substitution)
+ *  - ${PROJECT_NAME}_BUILDING : Define this during compilation.
+ * ------------------------------------------------------------------------- */
+
+#ifndef ${PROJECT_NAME}_EXPORT_H
+#define ${PROJECT_NAME}_EXPORT_H
+
+/* set @BUILD_TYPE@ to SHARED or STATIC */
+#define ${PROJECT_NAME}_${${PROJECT_NAME}_BUILD_TYPE}
+
+/* ----------------------------------------------------------------------------
+ * define visibility macros
+ * ------------------------------------------------------------------------- */
+
+/*
+ * define public API macro, depending on whether the library is being
+ * built or being linked.
+ */
+#define ${PROJECT_NAME}_HELPER_API_EXPORT ${${PROJECT_NAME}_HELPER_API_EXPORT}
+#define ${PROJECT_NAME}_HELPER_API_IMPORT ${${PROJECT_NAME}_HELPER_API_IMPORT}
+#define ${PROJECT_NAME}_HELPER_API_LOCAL  ${${PROJECT_NAME}_HELPER_API_LOCAL}
+#if defined(${PROJECT_NAME}_BUILDING) /* defined by CMake when library is being compiled */
+#   define ${PROJECT_NAME}_PUBLIC_API ${PROJECT_NAME}_HELPER_API_EXPORT
+#else
+#   define ${PROJECT_NAME}_PUBLIC_API ${PROJECT_NAME}_HELPER_API_IMPORT
+#endif
+#define ${PROJECT_NAME}_PRIVATE_API ${PROJECT_NAME}_HELPER_API_LOCAL
+
+/* ----------------------------------------------------------------------------
+ * C linkage
+ * ------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+#   define C_BEGIN extern "C" {
+#else
+#   define C_BEGIN
+#endif
+
+#ifdef __cplusplus
+#   define C_END }
+#else
+#   define C_END
+#endif
+
+#endif /* ${PROJECT_NAME}_EXPORT_H */

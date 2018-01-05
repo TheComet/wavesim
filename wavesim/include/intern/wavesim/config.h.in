@@ -1,0 +1,24 @@
+/* --------------------------------------------------------------
+ * Configures prerequisits for this library
+ * --------------------------------------------------------------*/
+
+#ifndef WAVESIM_CONFIG_HPP
+#   define WAVESIM_CONFIG_HPP
+
+    /* Config */
+    #cmakedefine WAVESIM_HAVE_STDINT_H
+    #cmakedefine WAVESIM_MEMORY_DEBUGGING
+    #cmakedefine WAVESIM_MEMORY_BACKTRACE
+#   define real ${WAVESIM_PRECISION}
+#   define RESTRICT ${RESTRICT}
+
+    /* Global includes */
+#   ifdef WAVESIM_HAVE_STDINT_H
+#       include <stdint.h>
+#       include <stddef.h>  /* for NULL */
+#   else
+#       include "wavesim/pstdint.h"
+#   endif
+#   include "wavesim/export.h"
+
+#endif /* WAVESIM_CONFIG_HPP */

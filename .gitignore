@@ -1,0 +1,8 @@
+# build folders
+build*/
+
+# IDE files
+*.kdev4
+
+# valgrind results
+*.grind
