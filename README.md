@@ -1,5 +1,5 @@
-Acoustice Wave Simulator
-========================
+Acoustic Wave Simulator
+=======================
 
 This library can be used to automatically  generate a lattice of audio filters
 from  a  3D scene. The filters can then be used in a real-time application  to
