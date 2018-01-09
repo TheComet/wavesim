@@ -11,7 +11,7 @@ C_BEGIN
  * this more than once consecutively is a bad idea.
  */
 WAVESIM_PUBLIC_API void
-wavesim_init();
+wavesim_init(void);
 
 /*!
  * @brief Cleans up any global state in the wavesim library. Must be called
@@ -19,7 +19,7 @@ wavesim_init();
  * consecutively is a bad idea.
  */
 WAVESIM_PUBLIC_API void
-wavesim_deinit();
+wavesim_deinit(void);
 
 /*!
  * @brief Runs all unit tests in the library.

@@ -99,7 +99,7 @@ vector_resize(vector_t* vector, uint32_t size)
 
 /* ------------------------------------------------------------------------- */
 void*
-vector_push_emplace(vector_t* vector)
+vector_emplace(vector_t* vector)
 {
     void* data;
 
@@ -122,7 +122,7 @@ vector_push(vector_t* vector, void* data)
     assert(vector);
     assert(data);
 
-    emplaced = vector_push_emplace(vector);
+    emplaced = vector_emplace(vector);
     if (!emplaced)
         return -1;
     memcpy(emplaced, data, vector->element_size);
@@ -131,7 +131,7 @@ vector_push(vector_t* vector, void* data)
 
 /* ------------------------------------------------------------------------- */
 int
-vector_push_vector(vector_t* vector, vector_t* source_vector)
+vector_push_vector(vector_t* vector, const vector_t* source_vector)
 {
     assert(vector);
     assert(source_vector);

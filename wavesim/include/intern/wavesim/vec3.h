@@ -15,6 +15,9 @@ typedef union vec3_t
     real f[3];
 } vec3_t;
 
+WAVESIM_PRIVATE_API vec3_t
+vec3(real x, real y, real z);
+
 WAVESIM_PRIVATE_API void
 vec3_set_zero(real* v);
 

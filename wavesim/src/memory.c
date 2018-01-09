@@ -1,5 +1,5 @@
 #include "wavesim/memory.h"
-#include "wavesim/bst_vector.h"
+#include "wavesim/btree.h"
 #include "wavesim/backtrace.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,8 +11,8 @@
 #ifdef WAVESIM_MEMORY_DEBUGGING
 static uintptr_t g_allocations = 0;
 static uintptr_t d_deg_allocations = 0;
-static uintptr_t g_ignore_bstv_malloc = 0;
-static bstv_t report;
+static uintptr_t g_ignore_btree_malloc = 0;
+static btree_t report;
 
 typedef struct report_info_t
 {
@@ -36,10 +36,10 @@ memory_init(void)
      * and removing one item. This fixes a bug where the number of memory leaks
      * would be wrong in the case of MALLOC() never being called.
      */
-    g_ignore_bstv_malloc = 1;
-        bstv_construct(&report);
-        bstv_insert(&report, 0, NULL); bstv_erase(&report, 0);
-    g_ignore_bstv_malloc = 0;
+    g_ignore_btree_malloc = 1;
+        btree_construct(&report);
+        btree_insert(&report, 0, NULL); btree_erase(&report, 0);
+    g_ignore_btree_malloc = 0;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -60,18 +60,18 @@ malloc_wrapper(intptr_t size)
             break;
 
         /*
-        * Record allocation info. Call to bstv may allocate memory,
+        * Record allocation info. Call to btree may allocate memory,
         * so set flag to ignore the call to malloc() when inserting.
         */
-        if (!g_ignore_bstv_malloc)
+        if (!g_ignore_btree_malloc)
         {
-            g_ignore_bstv_malloc = 1;
+            g_ignore_btree_malloc = 1;
             info = (report_info_t*)malloc(sizeof(report_info_t));
             if (!info)
             {
                 fprintf(stderr, "[memory] ERROR: malloc() for report_info_t failed"
                     " -- not enough memory.\n");
-                g_ignore_bstv_malloc = 0;
+                g_ignore_btree_malloc = 0;
                 break;
             }
 
@@ -86,12 +86,12 @@ malloc_wrapper(intptr_t size)
                 fprintf(stderr, "[memory] WARNING: Failed to generate backtrace\n");
 #   endif
 
-            /* insert into bstv */
-            if (bstv_insert(&report, (uintptr_t)p, info) == 1)
+            /* insert into btree */
+            if (btree_insert(&report, (uintptr_t)p, info) == 1)
             {
                 fprintf(stderr,
                 "[memory] WARNING: Hash collision occurred when inserting\n"
-                "into memory report bstv. On 64-bit systems the pointers are\n"
+                "into memory report btree. On 64-bit systems the pointers are\n"
                 "rounded down to 32-bit unsigned integers, so even though\n"
                 "it's rare, collisions can happen.\n\n"
                 "The matching call to FREE() will generate a warning saying\n"
@@ -114,7 +114,7 @@ malloc_wrapper(intptr_t size)
                 }
 #   endif
             }
-            g_ignore_bstv_malloc = 0;
+            g_ignore_btree_malloc = 0;
         }
 
         /* success */
@@ -144,10 +144,10 @@ malloc_wrapper(intptr_t size)
 void
 free_wrapper(void* ptr)
 {
-    /* find matching allocation and remove from bstv */
-    if (!g_ignore_bstv_malloc)
+    /* find matching allocation and remove from btree */
+    if (!g_ignore_btree_malloc)
     {
-        report_info_t* info = (report_info_t*)bstv_erase(&report, (uintptr_t)ptr);
+        report_info_t* info = (report_info_t*)btree_erase(&report, (uintptr_t)ptr);
         if (info)
         {
 #   ifdef WAVESIM_MEMORY_BACKTRACE
@@ -206,7 +206,7 @@ memory_deinit(void)
     /* report details on any g_allocations that were not de-allocated */
     if (report.vector.count != 0)
     {
-        BSTV_FOR_EACH(&report, report_info_t, key, info)
+        BTREE_FOR_EACH(&report, report_info_t, key, info)
 
             printf("  un-freed memory at %p, size %p\n", (void*)info->location, (void*)info->size);
             mutated_string_and_hex_dump((void*)info->location, info->size);
@@ -223,7 +223,7 @@ memory_deinit(void)
 #   endif
             free(info);
 
-        BSTV_END_EACH
+        BTREE_END_EACH
 
         printf("=========================================\n");
     }
@@ -236,8 +236,8 @@ memory_deinit(void)
     printf("=========================================\n");
 
     ++g_allocations; /* this is the single allocation still held by the report vector */
-    g_ignore_bstv_malloc = 1;
-    bstv_clear_free(&report);
+    g_ignore_btree_malloc = 1;
+    btree_clear_free(&report);
 
     return leaks;
 }

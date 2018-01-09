@@ -88,6 +88,12 @@ vector_resize(vector_t* vector, uint32_t size);
 #define vector_count(x) ((x)->count)
 
 /*!
+ * @brief Gets the number of bytes this vector is currently consuming
+ * (including reserved space).
+ */
+#define vector_memory_consumption(x) ((x)->capacity * (x)->element_size)
+
+/*!
  * @brief Inserts (copies) a new element at the head of the vector.
  * @note This can cause a re-allocation of the underlying memory. This
  * implementation expands the allocated memory by a factor of 2 every time a
@@ -116,14 +122,14 @@ vector_push(vector_t* vector, void* data);
  * warning and use with caution.
  */
 WAVESIM_PRIVATE_API void*
-vector_push_emplace(vector_t* vector);
+vector_emplace(vector_t* vector);
 
 /*!
  * @brief Copies the contents of another vector and pushes it into the vector.
  * @return Returns 0 if successful, -1 if otherwise.
  */
 WAVESIM_PRIVATE_API int
-vector_push_vector(vector_t* vector, vector_t* source_vector);
+vector_push_vector(vector_t* vector, const vector_t* source_vector);
 
 /*!
  * @brief Removes an element from the back (end) of the vector.

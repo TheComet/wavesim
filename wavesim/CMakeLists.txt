@@ -72,7 +72,7 @@ configure_file ("include/intern/wavesim/config.h.in"
                 "include/wavesim/config.h")
 
 ###############################################################################
-# source files and library definition
+# source files and library definitionvector_count(&octree->faces)
 ###############################################################################
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
@@ -91,7 +91,10 @@ if (${${PROJECT_NAME}_TESTS})
     add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
     set (TEST_SOURCES
         "tests/environment_util_global.cpp"
-        "tests/test_bst_vector.cpp"
+        "tests/utils.cpp"
+        "tests/test_btree.cpp"
+        "tests/test_mesh.cpp"
+        "tests/test_octree.cpp"
         "tests/test_vec3.cpp"
         "tests/test_vector.cpp"
         "tests/test_api.cpp")
@@ -101,12 +104,18 @@ if (${${PROJECT_NAME}_TESTS})
 endif ()
 
 add_library (wavesim ${WAVESIM_BUILD_TYPE}
-    "src/bst_vector.c"
+    "src/aabb.c"
+    "src/btree.c"
     "src/face.c"
+    "src/intersections.c"
     "src/memory.c"
     "src/mesh.c"
+    "src/octree.c"
+    "src/partition.c"
+    "src/simulation.c"
     "src/vec3.c"
     "src/vector.c"
+    "src/vertex.c"
     "src/wavesim.c"
     "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c"
     ${TEST_SOURCES})

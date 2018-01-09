@@ -1,53 +1,53 @@
-#include "wavesim/bst_vector.h"
+#include "wavesim/btree.h"
 #include "wavesim/memory.h"
 #include <assert.h>
 #include <string.h>
 
-const uint32_t BST_VECTOR_INVALID_HASH = (uint32_t)-1;
+const uint32_t BTREE_VECTOR_INVALID_HASH = (uint32_t)-1;
 
 /* ------------------------------------------------------------------------- */
-bstv_t*
-bstv_create(void)
+btree_t*
+btree_create(void)
 {
-    bstv_t* bstv;
-    if (!(bstv = (bstv_t*)MALLOC(sizeof *bstv)))
+    btree_t* btree;
+    if (!(btree = ( btree_t*)MALLOC(sizeof *btree)))
         return NULL;
-    bstv_construct(bstv);
-    return bstv;
+    btree_construct(btree);
+    return btree;
 }
 
 /* ------------------------------------------------------------------------- */
 void
-bstv_construct(bstv_t* bstv)
+btree_construct( btree_t* btree)
 {
-    assert(bstv);
-    vector_construct(&bstv->vector, sizeof(bstv_hash_value_t));
+    assert(btree);
+    vector_construct(&btree->vector, sizeof( btree_hash_value_t ));
 }
 
 /* ------------------------------------------------------------------------- */
 void
-bstv_destroy(bstv_t* bstv)
+btree_destroy( btree_t* btree)
 {
-    assert(bstv);
-    bstv_clear_free(bstv);
-    FREE(bstv);
+    assert(btree);
+    btree_clear_free(btree);
+    FREE(btree);
 }
 
 /* ------------------------------------------------------------------------- */
 /* algorithm taken from GNU GCC stdlibc++'s lower_bound function, line 2121 in stl_algo.h */
 /* https://gcc.gnu.org/onlinedocs/libstdc++/libstdc++-html-USERS-4.3/a02014.html */
-static bstv_hash_value_t*
-bstv_find_lower_bound(const bstv_t* bstv, uint32_t hash)
+static btree_hash_value_t*
+btree_find_lower_bound(const btree_t* btree, uint32_t hash)
 {
     uint32_t half;
-    bstv_hash_value_t* middle;
-    bstv_hash_value_t* data;
+    btree_hash_value_t* middle;
+    btree_hash_value_t* data;
     uint32_t len;
 
-    assert(bstv);
+    assert(btree);
 
-    data = (bstv_hash_value_t*)bstv->vector.data;
-    len = bstv->vector.count;
+    data = ( btree_hash_value_t*)btree->vector.data;
+    len = btree->vector.count;
 
     /* if (the vector has no data, return NULL */
     if (!len)
@@ -68,7 +68,7 @@ bstv_find_lower_bound(const bstv_t* bstv, uint32_t hash)
     }
 
     /* if ("data" is pointing outside of the valid elements in the vector, also return NULL */
-    if ((intptr_t)data >= (intptr_t)bstv->vector.data + (intptr_t)bstv->vector.count * (intptr_t)bstv->vector.element_size)
+    if ((intptr_t)data >= (intptr_t)btree->vector.data + (intptr_t)btree->vector.count * (intptr_t)btree->vector.element_size)
         return NULL;
     else
         return data;
@@ -76,29 +76,29 @@ bstv_find_lower_bound(const bstv_t* bstv, uint32_t hash)
 
 /* ------------------------------------------------------------------------- */
 int
-bstv_insert(bstv_t* bstv, uint32_t hash, void* value)
+btree_insert( btree_t* btree, uint32_t hash, void* value)
 {
-    bstv_hash_value_t* emplaced_data;
-    bstv_hash_value_t* lower_bound;
+    btree_hash_value_t* emplaced_data;
+    btree_hash_value_t* lower_bound;
 
-    assert(bstv);
+    assert(btree);
 
     /* don't insert reserved hashes */
-    if (hash == BST_VECTOR_INVALID_HASH)
+    if (hash == BTREE_VECTOR_INVALID_HASH)
         return -1;
 
-    /* lookup location in bstv to insert */
-    lower_bound = bstv_find_lower_bound(bstv, hash);
+    /* lookup location in btree to insert */
+    lower_bound = btree_find_lower_bound(btree, hash);
     if (lower_bound && lower_bound->hash == hash)
         return 1;
 
     /* either push back or insert, depending on whether there is already data
-     * in the bstv */
+     * in the btree */
     if (!lower_bound)
-        emplaced_data = (bstv_hash_value_t*)vector_push_emplace(&bstv->vector);
+        emplaced_data = ( btree_hash_value_t*)vector_emplace(&btree->vector);
     else
-        emplaced_data = vector_insert_emplace(&bstv->vector,
-                          lower_bound - (bstv_hash_value_t*)bstv->vector.data);
+        emplaced_data = vector_insert_emplace(&btree->vector,
+                          lower_bound - ( btree_hash_value_t*)btree->vector.data);
 
     if (!emplaced_data)
         return -1;
@@ -112,34 +112,34 @@ bstv_insert(bstv_t* bstv, uint32_t hash, void* value)
 
 /* ------------------------------------------------------------------------- */
 void
-bstv_set(bstv_t* bstv, uint32_t hash, void* value)
+btree_set( btree_t* btree, uint32_t hash, void* value)
 {
-    bstv_hash_value_t* data;
+    btree_hash_value_t* data;
 
-    assert(bstv);
+    assert(btree);
 
-    data = bstv_find_lower_bound(bstv, hash);
+    data = btree_find_lower_bound(btree, hash);
     if (data && data->hash == hash)
         data->value = value;
 }
 
 /* ------------------------------------------------------------------------- */
 void*
-bstv_find(const bstv_t* bstv, uint32_t hash)
+btree_find(const btree_t* btree, uint32_t hash)
 {
-    void** result = bstv_find_ptr(bstv, hash);
+    void** result = btree_find_ptr(btree, hash);
     return result == NULL ? NULL : *result;
 }
 
 /* ------------------------------------------------------------------------- */
 void**
-bstv_find_ptr(const bstv_t* bstv, uint32_t hash)
+btree_find_ptr(const btree_t* btree, uint32_t hash)
 {
-    bstv_hash_value_t* data;
+    btree_hash_value_t* data;
 
-    assert(bstv);
+    assert(btree);
 
-    data = bstv_find_lower_bound(bstv, hash);
+    data = btree_find_lower_bound(btree, hash);
     if (!data || data->hash != hash)
         return NULL;
     return &data->value;
@@ -147,24 +147,24 @@ bstv_find_ptr(const bstv_t* bstv, uint32_t hash)
 
 /* ------------------------------------------------------------------------- */
 uint32_t
-bstv_find_element(const bstv_t* bstv, const void* value)
+btree_find_element(const btree_t* btree, const void* value)
 {
-    assert(bstv);
+    assert(btree);
 
-    VECTOR_FOR_EACH(&bstv->vector, bstv_hash_value_t, kv)
+    VECTOR_FOR_EACH(&btree->vector, btree_hash_value_t, kv)
         if (kv->value == value)
             return kv->hash;
     VECTOR_END_EACH
-    return BST_VECTOR_INVALID_HASH;
+    return BTREE_VECTOR_INVALID_HASH;
 }
 
 /* ------------------------------------------------------------------------- */
 void*
-bstv_get_any_element(const bstv_t* bstv)
+btree_get_any_element(const btree_t* btree)
 {
-    bstv_hash_value_t* kv;
-    assert(bstv);
-    kv = (bstv_hash_value_t*)vector_back(&bstv->vector);
+    btree_hash_value_t* kv;
+    assert(btree);
+    kv = ( btree_hash_value_t*)vector_back(&btree->vector);
     if (kv)
         return kv->value;
     return NULL;
@@ -172,13 +172,13 @@ bstv_get_any_element(const bstv_t* bstv)
 
 /* ------------------------------------------------------------------------- */
 int
-bstv_hash_exists(bstv_t* bstv, uint32_t hash)
+btree_hash_exists( btree_t* btree, uint32_t hash)
 {
-    bstv_hash_value_t* data;
+    btree_hash_value_t* data;
 
-    assert(bstv);
+    assert(btree);
 
-    data = bstv_find_lower_bound(bstv, hash);
+    data = btree_find_lower_bound(btree, hash);
     if (data && data->hash == hash)
         return 0;
     return -1;
@@ -186,68 +186,68 @@ bstv_hash_exists(bstv_t* bstv, uint32_t hash)
 
 /* ------------------------------------------------------------------------- */
 uint32_t
-bstv_find_unused_hash(bstv_t* bstv)
+btree_find_unused_hash( btree_t* btree)
 {
     uint32_t i = 0;
 
-    assert(bstv);
+    assert(btree);
 
-    BSTV_FOR_EACH(bstv, void, key, value)
+    BTREE_FOR_EACH(btree, void, key, value)
         if (i != key)
             break;
         ++i;
-    BSTV_END_EACH
+    BTREE_END_EACH
     return i;
 }
 
 /* ------------------------------------------------------------------------- */
 void*
-bstv_erase(bstv_t* bstv, uint32_t hash)
+btree_erase( btree_t* btree, uint32_t hash)
 {
     void* value;
-    bstv_hash_value_t* data;
+    btree_hash_value_t* data;
 
-    assert(bstv);
+    assert(btree);
 
-    data = bstv_find_lower_bound(bstv, hash);
+    data = btree_find_lower_bound(btree, hash);
     if (!data || data->hash != hash)
         return NULL;
 
     value = data->value;
-    vector_erase_element(&bstv->vector, (DATA_POINTER_TYPE*)data);
+    vector_erase_element(&btree->vector, (DATA_POINTER_TYPE*)data);
     return value;
 }
 
 /* ------------------------------------------------------------------------- */
 void*
-bstv_erase_element(bstv_t* bstv, void* value)
+btree_erase_element( btree_t* btree, void* value)
 {
     void* data;
     uint32_t hash;
 
-    assert(bstv);
+    assert(btree);
 
-    hash = bstv_find_element(bstv, value);
-    if (hash == BST_VECTOR_INVALID_HASH)
+    hash = btree_find_element(btree, value);
+    if (hash == BTREE_VECTOR_INVALID_HASH)
         return NULL;
 
-    data = bstv_find_lower_bound(bstv, hash);
-    vector_erase_element(&bstv->vector, (DATA_POINTER_TYPE*)data);
+    data = btree_find_lower_bound(btree, hash);
+    vector_erase_element(&btree->vector, (DATA_POINTER_TYPE*)data);
 
     return value;
 }
 
 /* ------------------------------------------------------------------------- */
 void
-bstv_clear(bstv_t* bstv)
+btree_clear( btree_t* btree)
 {
-    assert(bstv);
-    vector_clear(&bstv->vector);
+    assert(btree);
+    vector_clear(&btree->vector);
 }
 
 /* ------------------------------------------------------------------------- */
-void bstv_clear_free(bstv_t* bstv)
+void btree_clear_free( btree_t* btree)
 {
-    assert(bstv);
-    vector_clear_free(&bstv->vector);
+    assert(btree);
+    vector_clear_free(&btree->vector);
 }

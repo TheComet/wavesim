@@ -2,19 +2,18 @@
 #define FACE_H
 
 #include "wavesim/config.h"
-#include "wavesim/vec3.h"
+#include "wavesim/vertex.h"
 
-typedef struct surface_properties_t
-{
-    real reflection;
-    real absorbtion;
-    real transmission;
-} surface_properties_t;
+C_BEGIN
 
 typedef struct face_t
 {
-    surface_properties_t surface_properties;
-    vec3_t vertices[3];
+    vertex_t vertices[3];
 } face_t;
+
+WAVESIM_PRIVATE_API face_t
+face(vertex_t v1, vertex_t v2, vertex_t v3);
+
+C_END
 
 #endif /* FACE_H */
