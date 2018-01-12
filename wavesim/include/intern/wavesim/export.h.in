@@ -34,6 +34,18 @@
 #endif
 #define ${PROJECT_NAME}_PRIVATE_API ${PROJECT_NAME}_HELPER_API_LOCAL
 
+/* --------------------------------------------------------------
+ * C++11 stuff
+ * --------------------------------------------------------------*/
+
+#   if defined(__cplusplus) && __cplusplus >= 201103L
+#       define OVERRIDE override
+#       define FINAL final
+#   else
+#       define OVERRIDE
+#       define FINAL
+#   endif
+
 /* ----------------------------------------------------------------------------
  * C linkage
  * ------------------------------------------------------------------------- */

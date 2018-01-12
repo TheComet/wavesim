@@ -15,10 +15,10 @@ typedef enum mesh_ib_type_e
     MESH_IB_INT16,
     MESH_IB_UINT16,
     MESH_IB_INT32,
-    MESH_IB_UINT32,
+    MESH_IB_UINT32
 #ifdef WAVESIM_64BIT_INDEX_BUFFERS
-    MESH_IB_INT64,
-    MESH_IB_UINT64,
+    ,MESH_IB_INT64,
+    MESH_IB_UINT64
 #endif
 } mesh_ib_type_e;
 

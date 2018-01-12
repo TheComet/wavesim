@@ -10,13 +10,13 @@ using namespace testing;
 class NAME : public Test
 {
 public:
-    virtual void SetUp() override
+    virtual void SetUp() OVERRIDE
     {
         m = mesh_create();
         o = octree_create();
     }
 
-    virtual void TearDown() override
+    virtual void TearDown() OVERRIDE
     {
         octree_destroy(o);
         mesh_destroy(m);
