@@ -4,38 +4,44 @@
 
 /* ------------------------------------------------------------------------- */
 aabb_t
-aabb(real ax, real ay, real az, real bx, real by, real bz)
+aabb(WS_REAL ax, WS_REAL ay, WS_REAL az, WS_REAL bx, WS_REAL by, WS_REAL bz)
 {
-    return (aabb_t){
+    return (aabb_t){{
         {{ax, ay, az}},
         {{bx, by, bz}},
-    };
+    }};
 }
 
+/* ------------------------------------------------------------------------- */
 aabb_t
 aabb_reset(void)
 {
-    return aabb(-INFINITY, -INFINITY, -INFINITY, INFINITY, INFINITY, INFINITY);
+    return aabb(INFINITY, INFINITY, INFINITY, -INFINITY, -INFINITY, -INFINITY);
 }
 
 /* ------------------------------------------------------------------------- */
-int
-aabb_point_is_inside(const aabb_t* aabb, vec3_t point)
+aabb_t
+aabb_from_3_points(const WS_REAL p1[3], const WS_REAL p2[3], const WS_REAL p3[3])
 {
-    return (
-        point.v.x >= aabb->a.v.x && point.v.x <= aabb->b.v.x &&
-        point.v.y >= aabb->a.v.y && point.v.y <= aabb->b.v.y &&
-        point.v.z >= aabb->a.v.z && point.v.z <= aabb->b.v.z
-    );
-}
+    int i;
+    aabb_t ret = aabb_reset();
+    for (i = 0; i != 3; ++i)
+    {
+        if (p1[i] < ret.data.a.xyz[i])
+            ret.data.a.xyz[i] = p1[i];
+        if (p1[i] > ret.data.b.xyz[i])
+            ret.data.b.xyz[i] = p1[i];
 
-/* ------------------------------------------------------------------------- */
-int
-aabb_face_is_inside(const aabb_t* aabb, const face_t* face)
-{
-    return (
-        aabb_point_is_inside(aabb, face->vertices[0].position) &&
-        aabb_point_is_inside(aabb, face->vertices[1].position) &&
-        aabb_point_is_inside(aabb, face->vertices[2].position)
-    );
+        if (p2[i] < ret.data.a.xyz[i])
+            ret.data.a.xyz[i] = p1[i];
+        if (p2[i] > ret.data.b.xyz[i])
+            ret.data.b.xyz[i] = p2[i];
+
+        if (p3[i] < ret.data.a.xyz[i])
+            ret.data.a.xyz[i] = p3[i];
+        if (p3[i] > ret.data.b.xyz[i])
+            ret.data.b.xyz[i] = p3[i];
+    }
+
+    return ret;
 }

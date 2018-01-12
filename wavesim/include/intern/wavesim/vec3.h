@@ -8,45 +8,45 @@ C_BEGIN
 typedef union vec3_t
 {
     struct {
-        real x;
-        real y;
-        real z;
-    } v;
-    real f[3];
+        WS_REAL x;
+        WS_REAL y;
+        WS_REAL z;
+    } data;
+    WS_REAL xyz[3];
 } vec3_t;
 
 WAVESIM_PRIVATE_API vec3_t
-vec3(real x, real y, real z);
+vec3(WS_REAL x, WS_REAL y, WS_REAL z);
 
 WAVESIM_PRIVATE_API void
-vec3_set_zero(real* v);
+vec3_set_zero(WS_REAL v[3]);
 
 WAVESIM_PRIVATE_API void
-vec3_add_vec3(real* v1, const real* v2);
+vec3_add_vec3(WS_REAL v1[3], const WS_REAL v2[3]);
 
 WAVESIM_PRIVATE_API void
-vec3_sub_vec3(real* v1, const real* v2);
+vec3_sub_vec3(WS_REAL v1[3], const WS_REAL v2[3]);
 
 WAVESIM_PRIVATE_API void
-vec3_mul_scalar(real* v1, real scalar);
+vec3_mul_scalar(WS_REAL v1[3], WS_REAL scalar);
 
 WAVESIM_PRIVATE_API void
-vec3_div_scalar(real* v, real scalar);
+vec3_div_scalar(WS_REAL v[3], WS_REAL scalar);
 
-WAVESIM_PRIVATE_API real
-vec3_length_squared(const real* v);
+WAVESIM_PRIVATE_API WS_REAL
+vec3_length_squared(const WS_REAL v[3]);
 
-WAVESIM_PRIVATE_API real
-vec3_length(const real* v);
-
-WAVESIM_PRIVATE_API void
-vec3_normalise(real* v);
-
-WAVESIM_PRIVATE_API real
-vec3_dot(const real* v1, const real* v2);
+WAVESIM_PRIVATE_API WS_REAL
+vec3_length(const WS_REAL v[3]);
 
 WAVESIM_PRIVATE_API void
-vec3_cross(real* v1, const real* v2);
+vec3_normalise(WS_REAL v[3]);
+
+WAVESIM_PRIVATE_API WS_REAL
+vec3_dot(const WS_REAL v1[3], const WS_REAL v2[3]);
+
+WAVESIM_PRIVATE_API void
+vec3_cross(WS_REAL v1[3], const WS_REAL v2[3]);
 
 C_END
 

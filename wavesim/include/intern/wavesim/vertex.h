@@ -6,22 +6,25 @@
 
 C_BEGIN
 
-typedef struct vertex_attrs_t
+typedef struct vertex_attr_t
 {
-    real reflection;
-    real transmission;
-    real absorbtion;
-} vertex_attrs_t;
+    WS_REAL reflection;
+    WS_REAL transmission;
+    WS_REAL absorbtion;
+} vertex_attr_t;
 
 typedef struct vertex_t
 {
     vec3_t position;
-    vertex_attrs_t attrs;
+    vertex_attr_t attr;
 
 } vertex_t;
 
 WAVESIM_PRIVATE_API vertex_t
-vertex(vec3_t position, real reflection, real transmission, real absorbtion);
+vertex(vec3_t position, WS_REAL reflection, WS_REAL transmission, WS_REAL absorbtion);
+
+WAVESIM_PRIVATE_API int
+vertex_is_same(const vertex_t* v1, const vertex_t* v2);
 
 C_END
 

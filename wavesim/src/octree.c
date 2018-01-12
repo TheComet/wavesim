@@ -20,7 +20,7 @@
 octree_t*
 octree_create(void)
 {
-    octree_t* octree = (octree_t*)MALLOC(sizeof *octree);
+    octree_t* octree = MALLOC(sizeof *octree);
     if (octree == NULL)
         OUT_OF_MEMORY(NULL);
     octree_construct(octree);
@@ -31,8 +31,8 @@ octree_create(void)
 void
 octree_construct(octree_t* octree)
 {
-    memset(octree, 0, sizeof *octree);
-    vector_construct(&octree->index_buffer, sizeof(int));
+    octree->mesh = NULL;
+    octree->root = NULL;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -40,7 +40,6 @@ void
 octree_destruct(octree_t* octree)
 {
     octree_clear(octree);
-    vector_clear_free(&octree->index_buffer);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -52,23 +51,79 @@ octree_destroy(octree_t* octree)
 }
 
 /* ------------------------------------------------------------------------- */
+static void
+node_destroy(octree_node_t* node)
+{
+    /* Destroy all children recursively */
+    if (node->children != NULL)
+    {
+        int i;
+        for (i = 0; i != 8; ++i)
+        {
+            node_destroy(&node->children[i]);
+        }
+        FREE(node->children);
+    }
+
+    /* Clear list of faces, UNLESS we're the root node */
+    if (node->parent != NULL)
+        vector_clear_free(&node->index_buffer);
+}
+
+/* ------------------------------------------------------------------------- */
+static octree_node_t*
+node_create_children(octree_node_t* parent, const mesh_t* mesh)
+{
+    int i;
+    aabb_t bb_parent;
+    vec3_t bb_dims;
+
+    octree_node_t* children = MALLOC(sizeof(octree_node_t) * 8);
+    if (children == NULL)
+        OUT_OF_MEMORY(NULL);
+
+    /* Initialize children fields */
+    for (i = 0; i != 8; ++i)
+    {
+        children[i].children = NULL;
+        children[i].parent = parent;
+        vector_construct(&children[i].index_buffer, mesh->ib_size);
+    }
+
+    /* Calculate child bounding boxes */
+    if (parent == NULL)
+    {
+        bb_parent = mesh->aabb;
+        bb_dims = AABB_DIMS(mesh->aabb);
+    }
+    else
+    {
+        bb_parent = parent->aabb;
+        bb_dims = AABB_DIMS(parent->aabb);
+    }
+    for (i = 0; i != 8; ++i)
+    {
+        AABB_AX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 0) * bb_dims.data.x;
+        AABB_BX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 1) * bb_dims.data.x;
+        AABB_AY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 0) * bb_dims.data.y;
+        AABB_BY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 1) * bb_dims.data.y;
+        AABB_AZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 0) * bb_dims.data.z;
+        AABB_BZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 1) * bb_dims.data.z;
+    }
+
+    return children;
+}
+
+/* ------------------------------------------------------------------------- */
 void
 octree_clear(octree_t* octree)
 {
-    int i;
-    if (octree->children == NULL)
+    if (octree->root == NULL)
         return;
 
-    /* Destroy all children recursively */
-    for (i = 0; i != 8; ++i)
-    {
-        octree_destruct(&octree->children[i]);
-    }
-    FREE(octree->children);
-    octree->children = NULL;
-
-    /* Clear list of faces */
-    vector_clear_free(&octree->index_buffer);
+    /* destroy all children */
+    node_destroy(octree->root);
+    octree->root = NULL;
 
     /* release reference to mesh object */
     octree->mesh = NULL;
@@ -76,35 +131,22 @@ octree_clear(octree_t* octree)
 
 /* ------------------------------------------------------------------------- */
 int
-octree_subdivide(octree_t* octree)
+octree_subdivide(octree_t* octree, octree_node_t* node)
 {
-    int i;
-    real width, height, depth;
-
     /* Subdivide is only valid for leaf nodes */
-    if (octree->children != NULL)
+    if (node && node->children != NULL)
         return 1;
 
-    /* Create 8 new children */
-    octree->children = (octree_t*)MALLOC(sizeof(octree_t) * 8);
-    if (octree->children == NULL)
-        OUT_OF_MEMORY(-1);
-
-    /* Calculate child bounding boxes */
-    width  = (octree->aabb.b.v.x - octree->aabb.a.v.x) * 0.5;
-    height = (octree->aabb.b.v.y - octree->aabb.a.v.y) * 0.5;
-    depth  = (octree->aabb.b.v.z - octree->aabb.a.v.z) * 0.5;
-    for (i = 0; i != 8; ++i)
+    /* If node is NULL then we have to create a new root node for the octree */
+    if (node == NULL)
     {
-        octree_construct(&octree->children[i]);
-        octree->children[i].parent = octree;
-
-        octree->children[i].aabb.a.v.x = octree->aabb.a.v.x + (CX(i) + 0) * width;
-        octree->children[i].aabb.b.v.x = octree->aabb.a.v.x + (CX(i) + 1) * width;
-        octree->children[i].aabb.a.v.y = octree->aabb.a.v.y + (CY(i) + 0) * height;
-        octree->children[i].aabb.b.v.y = octree->aabb.a.v.y + (CY(i) + 1) * height;
-        octree->children[i].aabb.a.v.z = octree->aabb.a.v.z + (CZ(i) + 0) * depth;
-        octree->children[i].aabb.b.v.z = octree->aabb.a.v.z + (CZ(i) + 1) * depth;
+        if ((octree->root = node_create_children(NULL, octree->mesh)) == NULL)
+            return -1;
+    }
+    else
+    {
+        if ((node->children = node_create_children(node, octree->mesh)) == NULL)
+            return -1;
     }
 
     return 0;
@@ -112,47 +154,62 @@ octree_subdivide(octree_t* octree)
 
 /* ------------------------------------------------------------------------- */
 static intptr_t
-octree_build_from_mesh_recursive(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision)
+octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, vec3_t smallest_subdivision)
 {
-    int i;
-    int total_faces;
+    unsigned int i;
+    const mesh_t* mesh = octree->mesh;
 
-    (void)octree;
-    (void)mesh;
-    (void)smallest_subdivision;
-    (void)i;
-    (void)total_faces;
+    if (node->parent != NULL)
+    {
+        for (i = 0; i != vector_count(&node->parent->index_buffer); i += 3)
+        {
+            /*
+            * Here we use the index buffer of the *parent octree node* to look up
+            * 3 vertices in the mesh to form a face. This is dangerous and only
+            * works if the octree node's index buffer was initialized with the
+            * same datatype as the mesh's index buffer (which, if nothing broke,
+            * should always be the case).
+            */
+            WS_IB indices[3] = {
+                mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 0, mesh->ib_type),
+                mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 1, mesh->ib_type),
+                mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 2, mesh->ib_type)
+            };
+            vec3_t face[3] = {
+                mesh_get_vertex_position_from_buffer(mesh->vb, indices[0], mesh->vb_type),
+                mesh_get_vertex_position_from_buffer(mesh->vb, indices[1], mesh->vb_type),
+                mesh_get_vertex_position_from_buffer(mesh->vb, indices[2], mesh->vb_type)
+            };
 
-    return 0;
+            /*
+            * Add face to this node's index buffer if its bounding box intersects
+            * with the node's bounding box
+            */
+            aabb_t face_bb = aabb_from_3_points(face[0].xyz, face[1].xyz, face[2].xyz);
+            if (intersect_aabb_aabb_test(node->aabb.xyzxyz, face_bb.xyzxyz) == 1)
+            {
+                if (vector_push(&node->index_buffer, &indices[0]) == VECTOR_ERROR) return -1;
+                if (vector_push(&node->index_buffer, &indices[1]) == VECTOR_ERROR) return -1;
+                if (vector_push(&node->index_buffer, &indices[2]) == VECTOR_ERROR) return -1;
+            }
+        }
+    }
 
-    /*
-     * NOTE: We are copying *pointers* to faces into the octree's vector, not
-     * the face object itself. This is to save memory, since vertex_t has quite
-     * a few fields and the octree is going to hold many lists containing the
-     * same faces multiple times.
-     *
-    VECTOR_FOR_EACH(&octree->parent->faces, face_t*, ppface)
-        if (intersect_aabb_face_test(octree->aabb, *ppface) == 1)
-            if (vector_push(&octree->faces, ppface) < 0)
-                return -1;
-    VECTOR_END_EACH
-    total_faces = octree_face_count(octree);
+    /* Stop subdividing when we reach one face */
+    if (vector_count(&node->index_buffer) <= 3)
+        return 0;
 
-    * Stop subdividing when we reach one face *
-    if (vector_count(&octree->faces) <= 1)
-        return total_faces;
-
-    * Abort if below smallest division *
+    /* Abort if below smallest division */
     for (i = 0; i != 3; ++i)
-        if (octree->aabb.b.f[i] - octree->aabb.a.f[i] < smallest_subdivision.f[i])
-            return total_faces;
+        if (node->aabb.data.b.xyz[i] - node->aabb.data.a.xyz[i] < smallest_subdivision.xyz[i])
+            return 0;
 
-    if (octree_subdivide(octree) < 0)
+    if (octree_subdivide(octree, node) < 0)
         return -1;
 
     for (int i = 0; i != 8; ++i)
-        total_faces += octree_build_from_mesh_recursive(&octree->children[i], mesh, smallest_subdivision);
-    return total_faces;*/
+        octree_build_from_mesh_recursive(octree, &node->children[i], smallest_subdivision);
+    return 0;
 }
 intptr_t
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision)
@@ -161,31 +218,31 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
 
     (void)i;
     (void)total_faces;
-    return octree_build_from_mesh_recursive(octree, mesh, smallest_subdivision);
 
-    /* Clear old octree if it exists *
+    /* Clear old octree if it exists */
     octree_clear(octree);
 
-    * Copy all faces into top-level octree node *
-    octree->aabb = mesh->aabb;
-    VECTOR_FOR_EACH(&mesh->index_buffer, face_t, face)
-        if (vector_push(&octree->index_buffer, &face) < 0)
-            return -1;
-    VECTOR_END_EACH
+    /*
+     * Create root
+     * WARNING: This is a pretty terrible hack; we manually set up the index
+     * buffer vector to point to the mesh's index buffer, instead of allocating
+     * and copying all of the indices. The root node's IB is identical to the
+     * mesh's IB and we save memory by avoiding a copy.
+     */
+    octree->mesh = mesh;
+    octree->root = node_create_children(NULL, octree->mesh);
+    octree->root->index_buffer.capacity = 0;
+    octree->root->index_buffer.count = mesh->ib_count;
+    octree->root->index_buffer.element_size = mesh->ib_size;
+    octree->root->index_buffer.data = mesh->ib;
 
-    * Recursively subdivide *
-    if (octree_subdivide(octree) < 0)
-        return -1;
-    total_faces = 0;
-    for (i = 0; i != 8; ++i)
-    {
-        int face_count;
-        if ((face_count = octree_build_from_mesh_recursive(&octree->children[i], mesh, smallest_subdivision)) < 0)
-            return -1;
-        total_faces += face_count;
-    }
+    /* Handle empty meshes */
+    if (mesh_face_count(octree->mesh) == 0)
+        return 0;
 
-    return total_faces + octree_face_count(octree);*/
+    if (octree_build_from_mesh_recursive(octree, octree->root, smallest_subdivision) < 0)
+            return -1;
+    return 0;
 }
 
 /* ------------------------------------------------------------------------- */

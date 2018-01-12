@@ -8,7 +8,7 @@ C_BEGIN
 
 typedef struct simulation_t
 {
-    real max_frequency;
+    WS_REAL max_frequency;
     int spatial_samples;
     partition_t partition;
 

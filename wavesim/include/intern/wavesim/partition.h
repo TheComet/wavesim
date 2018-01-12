@@ -27,7 +27,7 @@ WAVESIM_PRIVATE_API void
 partition_destruct(partition_t* partition);
 
 WAVESIM_PRIVATE_API int
-partition_add_area(partition_t* partition, aabb_t bounding_box, real sound_speed);
+partition_add_area(partition_t* partition, aabb_t bounding_box, WS_REAL sound_speed);
 
 WAVESIM_PRIVATE_API int
 partition_build_from_mesh(partition_t* partition,

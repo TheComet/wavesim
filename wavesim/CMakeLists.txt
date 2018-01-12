@@ -26,6 +26,7 @@ option (${PROJECT_NAME}_TESTS "Whether or not to build unit tests (note: require
 option (${PROJECT_NAME}_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory reports" ${MEM_DBG_DEFAULT})
 option (${PROJECT_NAME}_MEMORY_BACKTRACE "Enables backtraces for malloc/free mismatches. Impacts performance on malloc, obviously." ${${PROJECT_NAME}_MEMORY_DEBUGGING})
 set (${PROJECT_NAME}_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
+option (${PROJECT_NAME}_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." OFF)
 
 # Determine visibility macros if the library is a shared library.
 if (${PROJECT_NAME}_BUILD_TYPE MATCHES "SHARED")
@@ -93,6 +94,7 @@ if (${${PROJECT_NAME}_TESTS})
         "tests/environment_util_global.cpp"
         "tests/utils.cpp"
         "tests/test_btree.cpp"
+        "tests/test_intersections.cpp"
         "tests/test_mesh.cpp"
         "tests/test_octree.cpp"
         "tests/test_vec3.cpp"

@@ -4,21 +4,23 @@
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-vec3(real x, real y, real z)
+vec3(WS_REAL x, WS_REAL y, WS_REAL z)
 {
     return (vec3_t){{x, y, z}};
 }
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_set_zero(real* RESTRICT v)
+vec3_set_zero(WS_REAL v[3])
 {
-    memset(v, 0, sizeof *v);
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 0.0;
 }
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_add_vec3(real* RESTRICT v1, const real* RESTRICT v2)
+vec3_add_vec3(WS_REAL v1[3], const WS_REAL v2[3])
 {
     v1[0] += v2[0];
     v1[1] += v2[1];
@@ -27,7 +29,7 @@ vec3_add_vec3(real* RESTRICT v1, const real* RESTRICT v2)
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_sub_vec3(real* RESTRICT v1, const real* RESTRICT v2)
+vec3_sub_vec3(WS_REAL v1[3], const WS_REAL v2[3])
 {
     v1[0] -= v2[0];
     v1[1] -= v2[1];
@@ -36,7 +38,7 @@ vec3_sub_vec3(real* RESTRICT v1, const real* RESTRICT v2)
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_mul_scalar(real* RESTRICT v, real scalar)
+vec3_mul_scalar(WS_REAL v[3], WS_REAL scalar)
 {
     v[0] *= scalar;
     v[1] *= scalar;
@@ -45,7 +47,7 @@ vec3_mul_scalar(real* RESTRICT v, real scalar)
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_div_scalar(real* RESTRICT v, real scalar)
+vec3_div_scalar(WS_REAL v[3], WS_REAL scalar)
 {
     v[0] /= scalar;
     v[1] /= scalar;
@@ -53,24 +55,24 @@ vec3_div_scalar(real* RESTRICT v, real scalar)
 }
 
 /* ------------------------------------------------------------------------- */
-real
-vec3_length_squared(const real* RESTRICT v)
+WS_REAL
+vec3_length_squared(const WS_REAL v[3])
 {
     return vec3_dot(v, v);
 }
 
 /* ------------------------------------------------------------------------- */
-real
-vec3_length(const real* RESTRICT v)
+WS_REAL
+vec3_length(const WS_REAL v[3])
 {
     return sqrt(vec3_length_squared(v));
 }
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_normalise(real* RESTRICT v)
+vec3_normalise(WS_REAL v[3])
 {
-    real length = vec3_length(v);
+    WS_REAL length = vec3_length(v);
     if (length != 0.0)
     {
         length = 1.0 / length;
@@ -85,8 +87,8 @@ vec3_normalise(real* RESTRICT v)
 }
 
 /* ------------------------------------------------------------------------- */
-real
-vec3_dot(const real* RESTRICT v1, const real* RESTRICT v2)
+WS_REAL
+vec3_dot(const WS_REAL v1[3], const WS_REAL v2[3])
 {
     return v1[0] * v2[0] +
            v1[1] * v2[1] +
@@ -95,11 +97,11 @@ vec3_dot(const real* RESTRICT v1, const real* RESTRICT v2)
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_cross(real* RESTRICT v1, const real* RESTRICT v2)
+vec3_cross(WS_REAL v1[3], const WS_REAL v2[3])
 {
-    real v1x = v1[1] * v2[2] - v2[1] * v1[2];
-    real v1z = v1[0] * v2[1] - v2[0] * v1[1];
-    v1[1]       = v1[2] * v2[0] - v2[2] * v1[0];
+    WS_REAL v1x = v1[1] * v2[2] - v2[1] * v1[2];
+    WS_REAL v1z = v1[0] * v2[1] - v2[0] * v1[1];
+    v1[1]    = v1[2] * v2[0] - v2[2] * v1[0];
     v1[0] = v1x;
     v1[2] = v1z;
 }

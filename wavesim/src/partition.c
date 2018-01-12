@@ -5,7 +5,7 @@
 typedef struct partition_area_t
 {
     aabb_t aabb;
-    real sound_speed;
+    WS_REAL sound_speed;
 } partition_area_t;
 
 /* ------------------------------------------------------------------------- */
@@ -43,7 +43,7 @@ partition_destruct(partition_t* partition)
 
 /* ------------------------------------------------------------------------- */
 int
-partition_add_area(partition_t* partition, aabb_t bounding_box, real sound_speed)
+partition_add_area(partition_t* partition, aabb_t bounding_box, WS_REAL sound_speed)
 {
     partition_area_t* area = vector_emplace(&partition->areas);
     if (area == NULL)

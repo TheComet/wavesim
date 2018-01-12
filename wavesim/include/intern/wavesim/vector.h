@@ -16,11 +16,13 @@
 C_BEGIN
 
 #define DATA_POINTER_TYPE unsigned char
+#define VECTOR_ERROR (WS_IB)-1
+
 typedef struct vector_t
 {
-    uint32_t element_size;       /* how large one element is in bytes */
-    uint32_t capacity;           /* how many elements actually fit into the allocated space */
-    uint32_t count;              /* number of elements inserted */
+    WS_IB element_size;       /* how large one element is in bytes */
+    WS_IB capacity;           /* how many elements actually fit into the allocated space */
+    WS_IB count;              /* number of elements inserted */
     DATA_POINTER_TYPE* data;     /* pointer to the contiguous section of memory */
 } vector_t;
 
@@ -31,7 +33,7 @@ typedef struct vector_t
  * @return Returns the newly created vector object.
  */
 WAVESIM_PRIVATE_API vector_t*
-vector_create(const uint32_t element_size);
+vector_create(const WS_IB element_size);
 
 /*!
  * @brief Initialises an existing vector object.
@@ -43,7 +45,7 @@ vector_create(const uint32_t element_size);
  */
 WAVESIM_PRIVATE_API void
 vector_construct(vector_t* vector,
-                 const uint32_t element_size);
+                 const WS_IB element_size);
 
 /*!
  * @brief Destroys an existing vector object and frees all memory allocated by
@@ -80,7 +82,7 @@ vector_clear_free(vector_t* vector);
  * @return Returns -1 on failure, 0 on success.
  */
 WAVESIM_PRIVATE_API int
-vector_resize(vector_t* vector, uint32_t size);
+vector_resize(vector_t* vector, WS_IB size);
 
 /*!
  * @brief Gets the number of elements that have been inserted into the vector.
@@ -104,10 +106,10 @@ vector_resize(vector_t* vector, uint32_t size);
  * @param[in] data The data to copy into the vector. It is assumed that
  * sizeof(data) is equal to what was specified when the vector was first
  * created. If this is not the case then it could cause undefined behaviour.
- * @return Returns 0 if the data was successfully pushed, -1 if
- * otherwise.
+ * @return Returns -1 if the push failed. Otherwise, returns the index of the
+ * element that was pushed.
  */
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API WS_IB
 vector_push(vector_t* vector, void* data);
 
 /*!
@@ -128,7 +130,7 @@ vector_emplace(vector_t* vector);
  * @brief Copies the contents of another vector and pushes it into the vector.
  * @return Returns 0 if successful, -1 if otherwise.
  */
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API WS_IB
 vector_push_vector(vector_t* vector, const vector_t* source_vector);
 
 /*!
@@ -172,7 +174,7 @@ vector_back(const vector_t* vector);
  * @return A pointer to the emplaced element. See warning and use with caution.
  */
 WAVESIM_PRIVATE_API void*
-vector_insert_emplace(vector_t* vector, uint32_t index);
+vector_insert_emplace(vector_t* vector, WS_IB index);
 
 /*!
  * @brief Inserts (copies) a new element at the specified index.
@@ -185,9 +187,10 @@ vector_insert_emplace(vector_t* vector, uint32_t index);
  * @param[in] data The data to copy into the vector. It is assumed that
  * sizeof(data) is equal to what was specified when the vector was first
  * created. If this is not the case then it could cause undefined behaviour.
+ * @return Returns -1 on error, 0 on success.
  */
 WAVESIM_PRIVATE_API int
-vector_insert(vector_t* vector, uint32_t index, void* data);
+vector_insert(vector_t* vector, WS_IB index, void* data);
 
 /*!
  * @brief Erases the specified element from the vector.
@@ -197,7 +200,7 @@ vector_insert(vector_t* vector, uint32_t index, void* data);
  * ranges from **0** to **vector_count()-1**.
  */
 WAVESIM_PRIVATE_API void
-vector_erase_index(vector_t* vector, uint32_t index);
+vector_erase_index(vector_t* vector, WS_IB index);
 
 /*!
  * @brief Removes the element in the vector pointed to by **element**.
@@ -221,7 +224,7 @@ vector_erase_element(vector_t* vector, void* element);
  * returned.
  */
 WAVESIM_PRIVATE_API void*
-vector_get_element(const vector_t*, uint32_t index);
+vector_get_element(const vector_t*, WS_IB index);
 
 /*!
  * @brief Convenient macro for iterating a vector's elements.
