@@ -32,7 +32,11 @@ void
 octree_construct(octree_t* octree)
 {
     octree->mesh = NULL;
-    octree->root = NULL;
+    octree->root.parent = NULL;
+    octree->root.children = NULL;
+    octree->root.index_buffer.data = NULL;
+    octree->root.index_buffer.count = 0;
+    octree->root.aabb = aabb_reset();
 }
 
 /* ------------------------------------------------------------------------- */
@@ -51,27 +55,23 @@ octree_destroy(octree_t* octree)
 }
 
 /* ------------------------------------------------------------------------- */
-static void
-node_destroy(octree_node_t* node)
+void
+node_destroy_children(octree_node_t* node)
 {
-    /* Destroy all children recursively */
     if (node->children != NULL)
     {
         int i;
         for (i = 0; i != 8; ++i)
         {
-            node_destroy(&node->children[i]);
+            node_destroy_children(&node->children[i]);
+            vector_clear_free(&node->children[i].index_buffer);
         }
         FREE(node->children);
     }
-
-    /* Clear list of faces, UNLESS we're the root node */
-    if (node->parent != NULL)
-        vector_clear_free(&node->index_buffer);
 }
 
 /* ------------------------------------------------------------------------- */
-static octree_node_t*
+octree_node_t*
 node_create_children(octree_node_t* parent, const mesh_t* mesh)
 {
     int i;
@@ -118,15 +118,20 @@ node_create_children(octree_node_t* parent, const mesh_t* mesh)
 void
 octree_clear(octree_t* octree)
 {
-    if (octree->root == NULL)
-        return;
 
-    /* destroy all children */
-    node_destroy(octree->root);
-    octree->root = NULL;
+    /* destroy all children and reset the root node */
+    if (octree->root.children != NULL)
+    {
+        int i;
+        for (i = 0; i != 8; ++i)
+            node_destroy_children(&octree->root.children[i]);
+        FREE(octree->root.children);
+    }
 
     /* release reference to mesh object */
     octree->mesh = NULL;
+    octree->root.index_buffer.data = NULL;
+    octree->root.index_buffer.count = 0;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -134,20 +139,11 @@ int
 octree_subdivide(octree_t* octree, octree_node_t* node)
 {
     /* Subdivide is only valid for leaf nodes */
-    if (node && node->children != NULL)
+    if (node->children != NULL)
         return 1;
 
-    /* If node is NULL then we have to create a new root node for the octree */
-    if (node == NULL)
-    {
-        if ((octree->root = node_create_children(NULL, octree->mesh)) == NULL)
-            return -1;
-    }
-    else
-    {
-        if ((node->children = node_create_children(node, octree->mesh)) == NULL)
-            return -1;
-    }
+    if ((node->children = node_create_children(node, octree->mesh)) == NULL)
+        return -1;
 
     return 0;
 }
@@ -230,17 +226,17 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
      * mesh's IB and we save memory by avoiding a copy.
      */
     octree->mesh = mesh;
-    octree->root = node_create_children(NULL, octree->mesh);
-    octree->root->index_buffer.capacity = 0;
-    octree->root->index_buffer.count = mesh->ib_count;
-    octree->root->index_buffer.element_size = mesh->ib_size;
-    octree->root->index_buffer.data = mesh->ib;
+    octree->root.aabb = mesh->aabb;
+    octree->root.index_buffer.capacity = 0;
+    octree->root.index_buffer.count = mesh->ib_count;
+    octree->root.index_buffer.element_size = mesh->ib_size;
+    octree->root.index_buffer.data = mesh->ib;
 
     /* Handle empty meshes */
     if (mesh_face_count(octree->mesh) == 0)
         return 0;
 
-    if (octree_build_from_mesh_recursive(octree, octree->root, smallest_subdivision) < 0)
+    if (octree_build_from_mesh_recursive(octree, &octree->root, smallest_subdivision) < 0)
             return -1;
     return 0;
 }

@@ -20,7 +20,7 @@ typedef struct octree_node_t
 typedef struct octree_t
 {
     const mesh_t*    mesh;
-    octree_node_t*   root;
+    octree_node_t    root;
 } octree_t;
 
 WAVESIM_PRIVATE_API octree_t*

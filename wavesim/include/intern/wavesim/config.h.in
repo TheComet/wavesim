@@ -31,7 +31,6 @@
 #   endif
 
     /* Define epsilon depending on type of "real" */
-
 #   include <float.h>
 #   if defined(WAVESIM_PRECISION_double)
 #       define WS_EPSILON DBL_EPSILON

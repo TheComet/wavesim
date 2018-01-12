@@ -99,5 +99,5 @@ void mesh_cube(mesh_t* mesh, aabb_t bb)
         buffer[i+2] = buffer[i+2] * dims.data.z + AABB_AZ(bb);
     }
 
-    mesh_copy_from_buffers(mesh, buffer, cube_ib, 24, 36, MESH_VB_FLOAT, MESH_IB_UINT16);
+    mesh_copy_from_buffers(mesh, buffer, cube_ib, 8, 36, MESH_VB_FLOAT, MESH_IB_UINT16);
 }

@@ -200,7 +200,7 @@ mesh_builder_finalize(mesh_builder_t* mb)
         goto alloc_mesh_failed;
     mesh_copy_from_buffers(mesh,
                            vb.data, ib.data,
-                           vector_count(&vb), vector_count(&ib),
+                           vector_count(&vb) / 3, vector_count(&ib),
                            vb_type, ib_type);
 
     /* Copy attribute buffer into mesh */
@@ -235,6 +235,7 @@ void
 mesh_construct(mesh_t* mesh)
 {
     memset(mesh, 0, sizeof *mesh);
+    mesh->aabb = aabb_reset();
 }
 
 /* ------------------------------------------------------------------------- */
