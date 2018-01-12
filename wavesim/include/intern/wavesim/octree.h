@@ -50,8 +50,25 @@ octree_subdivide(octree_t* octree, octree_node_t* node);
 WAVESIM_PRIVATE_API intptr_t
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision);
 
-WAVESIM_PRIVATE_API const vector_t*
-octree_intersect_aabb(const octree_t* octree, aabb_t aabb);
+/*!
+ * @brief Queries the octree for which faces intersect the specified bounding
+ * box.
+ * @param[in] octree The octree instance.
+ * @param[out] result A list of indices describing the faces that intersect the
+ * specified bounding box is pushed into this vector. The type of data in the
+ * the vector is identical to the mesh's index buffer that was used to build
+ * the octree. In other words, in order to get index data out of this list,
+ * use:
+ *
+ *   mesh_get_index(retval->data, index, mesh->ib_type);
+ *
+ * Note that the returned list can be empty.
+ * @param[in] aabb The area in the octree to query.
+ * @return Returns 0 on success. -1 if an error occurred. 1 if the query was
+ * outside of the octree boundary.
+ */
+WAVESIM_PRIVATE_API int
+octree_query_aabb(const octree_t* octree, vector_t* result, aabb_t aabb);
 
 C_END
 

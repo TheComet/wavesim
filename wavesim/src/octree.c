@@ -242,10 +242,32 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
 }
 
 /* ------------------------------------------------------------------------- */
-const vector_t*
-octree_intersect_aabb(const octree_t* octree, aabb_t aabb)
+static int
+octree_query_aabb_recursive(const octree_node_t* node, vector_t* result, const WS_REAL bb[6])
 {
-    (void)octree;
-    (void)aabb;
-    return NULL;
+    if (intersect_aabb_aabb_test(node->aabb.xyzxyz, bb) == 0)
+        return 1;
+
+    if (node->children != NULL)
+    {
+        int i, child_result;
+        for (i = 0; i != 8; ++i)
+        {
+            child_result = octree_query_aabb_recursive(&node->children[i], result, bb);
+            if (child_result != 0)
+                return child_result;
+        }
+    }
+    else
+    {
+        vector_push_vector(result, &node->index_buffer);
+    }
+
+    return 0;
+}
+
+int
+octree_query_aabb(const octree_t* octree, vector_t* result, aabb_t aabb)
+{
+    return octree_query_aabb_recursive(&octree->root, result, aabb.xyzxyz);
 }

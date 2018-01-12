@@ -94,7 +94,7 @@ intersect_line_face(const WS_REAL p1[3], const WS_REAL p2[3], const face_t* face
     if (s < 0.0 || s > 1.0) /* intersect point is outside of face */
         return result;
     t = (uv*wu - uu*wv) / determinant;
-    if (t < 0.0 || t > 1.0)  /* intersect point is outside of face */
+    if (t < 0.0 || s+t > 1.0)  /* intersect point is outside of face */
         return result;
 
     result.count = 1;

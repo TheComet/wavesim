@@ -11,7 +11,9 @@ typedef struct mesh_t mesh_t;
 
 typedef struct partition_t
 {
-    vector_t areas;
+    aabb_t boundary;
+    vec3_t grid_size;
+    vector_t areas; /* partition_area_t */
 } partition_t;
 
 WAVESIM_PRIVATE_API partition_t*
@@ -26,8 +28,11 @@ partition_construct(partition_t* partition);
 WAVESIM_PRIVATE_API void
 partition_destruct(partition_t* partition);
 
+WAVESIM_PRIVATE_API void
+partition_clear(partition_t* partition);
+
 WAVESIM_PRIVATE_API int
-partition_add_area(partition_t* partition, aabb_t bounding_box, WS_REAL sound_speed);
+partition_add_area(partition_t* partition, const WS_REAL bounding_box[6], WS_REAL sound_speed);
 
 WAVESIM_PRIVATE_API int
 partition_build_from_mesh(partition_t* partition,
