@@ -44,7 +44,8 @@ TEST_F(NAME, build_from_mesh_with_one_face)
     m = mesh_builder_finalize(mb);
     mesh_builder_destroy(mb);
 
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(1));
+    octree_build_from_mesh(o, m, vec3(0, 0, 0));
+
     // Check boundaries
     EXPECT_THAT(AABB_AX(o->root.aabb), DoubleEq(-1));
     EXPECT_THAT(AABB_AY(o->root.aabb), DoubleEq(-1));
@@ -60,7 +61,7 @@ TEST_F(NAME, build_from_cube_mesh)
 {
     m = mesh_create();
     mesh_cube(m, aabb(-1, -1, -1, 1, 1, 1));
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(12)); // Cube has 12 polygons
+    octree_build_from_mesh(o, m, vec3(0, 0, 0));
     // Check boundaries
     EXPECT_THAT(AABB_AX(o->root.aabb), DoubleEq(-1));
     EXPECT_THAT(AABB_AY(o->root.aabb), DoubleEq(-1));
@@ -89,7 +90,7 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
     m = mesh_builder_finalize(mb);
     mesh_builder_destroy(mb);
 
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(25));
+    octree_build_from_mesh(o, m, vec3(0, 0, 0));
     // Check boundaries
     EXPECT_THAT(AABB_AX(o->root.aabb), DoubleEq(-1));
     EXPECT_THAT(AABB_AY(o->root.aabb), DoubleEq(-1));

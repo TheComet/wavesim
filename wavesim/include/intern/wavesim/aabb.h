@@ -26,8 +26,8 @@ typedef union aabb_t
 
 #define AABB_DIMS(X) \
     vec3(AABB_BX(X) - AABB_AX(X), \
-         AABB_BY(X) - AABB_BY(X), \
-         AABB_BZ(X) - AABB_BZ(X))
+         AABB_BY(X) - AABB_AY(X), \
+         AABB_BZ(X) - AABB_AZ(X))
 
 WAVESIM_PRIVATE_API aabb_t
 aabb(WS_REAL ax, WS_REAL ay, WS_REAL az, WS_REAL bx, WS_REAL by, WS_REAL bz);

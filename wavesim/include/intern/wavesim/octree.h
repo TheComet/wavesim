@@ -45,7 +45,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node);
     *(face_t**)vector_get_element(&octree->faces, idx)
 
 #define octree_face_count(octree) \
-    octree->mesh->ib_count
+    octree->mesh->ib_count / 3
 
 WAVESIM_PRIVATE_API intptr_t
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision);
