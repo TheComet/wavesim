@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
-#include "wavesim/mesh.h"
+#include "wavesim/vertex.h"
 
-#define NAME mesh
+#define NAME vertex
 
 using namespace ::testing;
 

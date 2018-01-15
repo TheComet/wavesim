@@ -29,12 +29,6 @@ typedef enum mesh_vb_type_e
     MESH_VB_LONG_DOUBLE
 } mesh_vb_type_e;
 
-typedef struct mesh_builder_t
-{
-    vector_t  faces;  /* holds face_t instances */
-    aabb_t    aabb;
-} mesh_builder_t;
-
 typedef struct mesh_t
 {
     attribute_t*   ab;       /* attribute buffer, will be same size as vb */
@@ -58,22 +52,6 @@ typedef struct mesh_t
 
     char             we_own_the_buffers;
 } mesh_t;
-
-/* ---- Mesh Builder ---- */
-
-WAVESIM_PRIVATE_API mesh_builder_t*
-mesh_builder_create(void);
-
-WAVESIM_PRIVATE_API int
-mesh_builder_add_face(mesh_builder_t* mb, face_t face);
-
-WAVESIM_PRIVATE_API mesh_t*
-mesh_builder_finalize(mesh_builder_t* mb);
-
-WAVESIM_PRIVATE_API void
-mesh_builder_destroy(mesh_builder_t* mb);
-
-/* ---- Mesh ---- */
 
 WAVESIM_PRIVATE_API mesh_t*
 mesh_create(void);

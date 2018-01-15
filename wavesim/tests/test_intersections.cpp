@@ -47,9 +47,9 @@ TEST(NAME, line_face_intersects_1)
     intersect_result_t result;
     intersect_line_face(&result, p1, p2, &f);
     ASSERT_THAT(result.count, Eq(1));
-    EXPECT_THAT(result.shape[0].data.x, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].data.y, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].data.z, DoubleEq(0.0));
+    EXPECT_THAT(result.shape[0].v.x, DoubleEq(0.0));
+    EXPECT_THAT(result.shape[0].v.y, DoubleEq(0.0));
+    EXPECT_THAT(result.shape[0].v.z, DoubleEq(0.0));
 }
 
 TEST(NAME, line_face_intersects_2)
@@ -65,9 +65,9 @@ TEST(NAME, line_face_intersects_2)
     intersect_result_t result;
     intersect_line_face(&result, p1, p2, &f);
     ASSERT_THAT(result.count, Eq(1));
-    EXPECT_THAT(result.shape[0].data.x, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].data.y, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].data.z, DoubleEq(0.0));
+    EXPECT_THAT(result.shape[0].v.x, DoubleEq(0.0));
+    EXPECT_THAT(result.shape[0].v.y, DoubleEq(0.0));
+    EXPECT_THAT(result.shape[0].v.z, DoubleEq(0.0));
 }
 
 TEST(NAME, line_face_intersects_close)

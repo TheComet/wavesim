@@ -29,10 +29,10 @@ face_calculate_aabb(const face_t* face)
     for (v = 0; v != 3; ++v)
         for (a = 0; a != 3; ++a)
         {
-            if (face->vertices[v].position.xyz[a] < ret.data.a.xyz[a])
-                ret.data.a.xyz[a] = face->vertices[v].position.xyz[a];
-            if (face->vertices[v].position.xyz[a] > ret.data.b.xyz[a])
-                ret.data.b.xyz[a] = face->vertices[v].position.xyz[a];
+            if (face->vertices[v].position.xyz[a] < ret.b.min.xyz[a])
+                ret.b.min.xyz[a] = face->vertices[v].position.xyz[a];
+            if (face->vertices[v].position.xyz[a] > ret.b.max.xyz[a])
+                ret.b.max.xyz[a] = face->vertices[v].position.xyz[a];
         }
 
     return ret;

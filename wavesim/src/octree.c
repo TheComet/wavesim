@@ -103,12 +103,12 @@ node_create_children(octree_node_t* parent, const mesh_t* mesh)
     }
     for (i = 0; i != 8; ++i)
     {
-        AABB_AX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 0) * bb_dims.data.x;
-        AABB_BX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 1) * bb_dims.data.x;
-        AABB_AY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 0) * bb_dims.data.y;
-        AABB_BY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 1) * bb_dims.data.y;
-        AABB_AZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 0) * bb_dims.data.z;
-        AABB_BZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 1) * bb_dims.data.z;
+        AABB_AX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 0) * bb_dims.v.x;
+        AABB_BX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 1) * bb_dims.v.x;
+        AABB_AY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 0) * bb_dims.v.y;
+        AABB_BY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 1) * bb_dims.v.y;
+        AABB_AZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 0) * bb_dims.v.z;
+        AABB_BZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 1) * bb_dims.v.z;
     }
 
     return children;
@@ -197,7 +197,7 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS
 
     /* Abort if below smallest division */
     for (i = 0; i != 3; ++i)
-        if (node->aabb.data.b.xyz[i] - node->aabb.data.a.xyz[i] < smallest_subdivision[i])
+        if (node->aabb.b.max.xyz[i] - node->aabb.b.min.xyz[i] < smallest_subdivision[i])
             return 0;
 
     if (octree_subdivide(octree, node) < 0)

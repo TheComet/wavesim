@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
-#include "wavesim/mesh.h"
+#include "wavesim/aabb.h"
 
-#define NAME mesh
+#define NAME aabb
 
 using namespace ::testing;
 

@@ -93,13 +93,19 @@ if (${${PROJECT_NAME}_TESTS})
     set (TEST_SOURCES
         "tests/environment_util_global.cpp"
         "tests/utils.cpp"
+        "tests/test_api.cpp"
+        "tests/test_aabb.cpp"
+        "tests/test_attribute.cpp"
         "tests/test_btree.cpp"
+        "tests/test_face.cpp"
         "tests/test_intersections.cpp"
         "tests/test_mesh.cpp"
+        "tests/test_mesh_builder.cpp"
         "tests/test_octree.cpp"
+        "tests/test_partition.cpp"
         "tests/test_vec3.cpp"
         "tests/test_vector.cpp"
-        "tests/test_api.cpp")
+        "tests/test_vertex.cpp")
     set (TEST_INCLUDE_DIRS
         "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
         "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/")
@@ -113,6 +119,7 @@ add_library (wavesim ${WAVESIM_BUILD_TYPE}
     "src/intersections.c"
     "src/memory.c"
     "src/mesh.c"
+    "src/mesh_builder.c"
     "src/octree.c"
     "src/partition.c"
     "src/simulation.c"

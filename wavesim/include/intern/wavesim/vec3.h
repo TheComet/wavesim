@@ -11,7 +11,7 @@ typedef union vec3_t
         WS_REAL x;
         WS_REAL y;
         WS_REAL z;
-    } data;
+    } v;
     WS_REAL xyz[3];
 } vec3_t;
 

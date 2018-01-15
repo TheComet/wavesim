@@ -60,9 +60,9 @@ determine_cell_attribute(attribute_t* cell_attribute,
                 vec3_div_scalar(avg_pos.xyz, intersect_result.count);
 
                 face_interpolate_attributes_barycentric(&face, &attr, avg_pos.xyz);
-                art_avg.data.x += attr.absorption;
-                art_avg.data.y += attr.reflection;
-                art_avg.data.z += attr.transmission;
+                art_avg.v.x += attr.absorption;
+                art_avg.v.y += attr.reflection;
+                art_avg.v.z += attr.transmission;
             }
         }
 
@@ -79,9 +79,9 @@ determine_cell_attribute(attribute_t* cell_attribute,
              * which will be the case if we normalize the "art" vector.
              */
             vec3_normalise(art_avg.xyz);
-            cell_attribute->absorption = art_avg.data.x;
-            cell_attribute->reflection = art_avg.data.y;
-            cell_attribute->transmission = art_avg.data.z;
+            cell_attribute->absorption = art_avg.v.x;
+            cell_attribute->reflection = art_avg.v.y;
+            cell_attribute->transmission = art_avg.v.z;
         }
     }
 

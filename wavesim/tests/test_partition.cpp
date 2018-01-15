@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
-#include "wavesim/mesh.h"
+#include "wavesim/partition.h"
 
-#define NAME mesh
+#define NAME partition
 
 using namespace ::testing;
 

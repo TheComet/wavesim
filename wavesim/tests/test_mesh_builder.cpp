@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
-#include "wavesim/mesh.h"
+#include "wavesim/mesh_builder.h"
 
-#define NAME mesh
+#define NAME mesh_builder
 
 using namespace ::testing;
 

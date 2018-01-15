@@ -73,15 +73,15 @@ void mesh_builder_cube(mesh_builder_t* mb, aabb_t bb)
     for (int i = 0; i != 12; ++i)
     {
         mesh_builder_add_face(mb, face(
-            vertex(vec3(cube_mb[i*3+0].data.x * dims.data.x + AABB_AX(bb),
-                        cube_mb[i*3+0].data.y * dims.data.y + AABB_AY(bb),
-                        cube_mb[i*3+0].data.z * dims.data.z + AABB_AZ(bb)), attribute_default()),
-            vertex(vec3(cube_mb[i*3+1].data.x * dims.data.x + AABB_AX(bb),
-                        cube_mb[i*3+1].data.y * dims.data.y + AABB_AY(bb),
-                        cube_mb[i*3+1].data.z * dims.data.z + AABB_AZ(bb)), attribute_default()),
-            vertex(vec3(cube_mb[i*3+2].data.x * dims.data.x + AABB_AX(bb),
-                        cube_mb[i*3+2].data.y * dims.data.y + AABB_AY(bb),
-                        cube_mb[i*3+2].data.z * dims.data.z + AABB_AZ(bb)), attribute_default())
+            vertex(vec3(cube_mb[i*3+0].v.x * dims.v.x + AABB_AX(bb),
+                        cube_mb[i*3+0].v.y * dims.v.y + AABB_AY(bb),
+                        cube_mb[i*3+0].v.z * dims.v.z + AABB_AZ(bb)), attribute_default()),
+            vertex(vec3(cube_mb[i*3+1].v.x * dims.v.x + AABB_AX(bb),
+                        cube_mb[i*3+1].v.y * dims.v.y + AABB_AY(bb),
+                        cube_mb[i*3+1].v.z * dims.v.z + AABB_AZ(bb)), attribute_default()),
+            vertex(vec3(cube_mb[i*3+2].v.x * dims.v.x + AABB_AX(bb),
+                        cube_mb[i*3+2].v.y * dims.v.y + AABB_AY(bb),
+                        cube_mb[i*3+2].v.z * dims.v.z + AABB_AZ(bb)), attribute_default())
         ));
     }
 }
@@ -94,9 +94,9 @@ void mesh_cube(mesh_t* mesh, aabb_t bb)
     memcpy(buffer, cube_vb, sizeof(float) * 24);
     for (int i = 0; i != 24; i += 3)
     {
-        buffer[i+0] = buffer[i+0] * dims.data.x + AABB_AX(bb);
-        buffer[i+1] = buffer[i+1] * dims.data.y + AABB_AY(bb);
-        buffer[i+2] = buffer[i+2] * dims.data.z + AABB_AZ(bb);
+        buffer[i+0] = buffer[i+0] * dims.v.x + AABB_AX(bb);
+        buffer[i+1] = buffer[i+1] * dims.v.y + AABB_AY(bb);
+        buffer[i+2] = buffer[i+2] * dims.v.z + AABB_AZ(bb);
     }
 
     mesh_copy_from_buffers(mesh, buffer, cube_ib, 8, 36, MESH_VB_FLOAT, MESH_IB_UINT16);

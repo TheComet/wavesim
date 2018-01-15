@@ -1,5 +1,5 @@
-#ifndef LIGHTSHIP_UTIL_BACKTRACE_H
-#define LIGHTSHIP_UTIL_BACKTRACE_H
+#ifndef BACKTRACE_H
+#define BACKTRACE_H
 
 #define BACKTRACE_SIZE 64
 
@@ -18,4 +18,4 @@ get_backtrace(int* size);
 
 C_END
 
-#endif /* LIGHTSHIP_UTIL_BACKTRACE_H */
+#endif /* BACKTRACE_H */
