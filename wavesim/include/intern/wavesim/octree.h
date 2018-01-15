@@ -54,11 +54,13 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
  * @brief Queries the octree for which faces intersect the specified bounding
  * box.
  * @param[in] octree The octree instance.
- * @param[out] result A list of indices describing the faces that intersect the
- * specified bounding box is pushed into this vector. The type of data in the
- * the vector is identical to the mesh's index buffer that was used to build
- * the octree. In other words, in order to get index data out of this list,
- * use:
+ * @param[out] result A list of indices describing the faces that *may*
+ * intersect the specified bounding box are pushed into this vector. "May"
+ * because the test is a simple AABB test, not a proper intersection test. The
+ * faces need to be further evaluated to check whether they actually intersect
+ * or not. The type of data in the the vector is identical to the mesh's index
+ * buffer that was used to build the octree. In other words, in order to get
+ * index data out of this list, use:
  *
  *   mesh_get_index(retval->data, index, mesh->ib_type);
  *
@@ -68,7 +70,7 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
  * outside of the octree boundary.
  */
 WAVESIM_PRIVATE_API int
-octree_query_aabb(const octree_t* octree, vector_t* result, aabb_t aabb);
+octree_query_aabb(const octree_t* octree, vector_t* result, const double aabb[6]);
 
 C_END
 

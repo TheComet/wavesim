@@ -37,9 +37,9 @@ TEST_F(NAME, build_from_mesh_with_one_face)
 {
     mesh_builder_t* mb = mesh_builder_create();
     mesh_builder_add_face(mb, face(
-        vertex(vec3(-1, -1, -1), 0, 0, 0),
-        vertex(vec3(1, 1, 1), 0, 0, 0),
-        vertex(vec3(0.4, -0.2, 0.8), 0, 0, 0)
+        vertex(vec3(-1, -1, -1), attribute_default()),
+        vertex(vec3(1, 1, 1), attribute_default()),
+        vertex(vec3(0.4, -0.2, 0.8), attribute_default())
     ));
     m = mesh_builder_finalize(mb);
     mesh_builder_destroy(mb);
@@ -78,14 +78,14 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
     mesh_builder_t* mb = mesh_builder_create();
     mesh_builder_cube(mb, aabb(-1, -1, -1, 1, 1, 1));
     mesh_builder_add_face(mb, face(
-        vertex(vec3(0.01, 0.01, 0.01), 0, 0, 0),
-        vertex(vec3(0.01, 0.01, 0.02), 0, 0, 0),
-        vertex(vec3(0.01, 0.02, 0.02), 0, 0, 0)
+        vertex(vec3(0.01, 0.01, 0.01), attribute_default()),
+        vertex(vec3(0.01, 0.01, 0.02), attribute_default()),
+        vertex(vec3(0.01, 0.02, 0.02), attribute_default())
     ));
     mesh_builder_add_face(mb, face(
-        vertex(vec3(0.03, 0.03, 0.03), 0, 0, 0),
-        vertex(vec3(0.03, 0.04, 0.04), 0, 0, 0),
-        vertex(vec3(0.03, 0.04, 0.04), 0, 0, 0)
+        vertex(vec3(0.03, 0.03, 0.03), attribute_default()),
+        vertex(vec3(0.03, 0.04, 0.04), attribute_default()),
+        vertex(vec3(0.03, 0.04, 0.04), attribute_default())
     ));
     m = mesh_builder_finalize(mb);
     mesh_builder_destroy(mb);

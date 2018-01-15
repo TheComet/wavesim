@@ -37,7 +37,7 @@ typedef struct mesh_builder_t
 
 typedef struct mesh_t
 {
-    vertex_attr_t*   ab;       /* attribute buffer, will be same size as vb */
+    attribute_t*   ab;       /* attribute buffer, will be same size as vb */
     void*            vb;       /* vertex buffer */
     void*            ib;       /* index buffer */
 
@@ -112,7 +112,7 @@ WAVESIM_PRIVATE_API WS_IB
 mesh_get_index_from_buffer(void* ib, int index, mesh_ib_type_e ib_type);
 
 WAVESIM_PRIVATE_API face_t
-mesh_get_face_from_buffers(void* vb, void* ib, vertex_attr_t* attrs,
+mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
                            int face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 

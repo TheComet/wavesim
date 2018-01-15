@@ -40,11 +40,12 @@ TEST(NAME, line_face_intersects_1)
     WS_REAL p1[3] = {1, 1, 1};
     WS_REAL p2[3] = {-1, -1, -1};
     face_t f = face(
-        vertex(vec3(-1, 0, 1), 0, 0, 0),
-        vertex(vec3(1, 0, 1), 0, 0, 0),
-        vertex(vec3(0, 0, -1), 0, 0, 0)
+        vertex(vec3(-1, 0, 1), attribute_default()),
+        vertex(vec3(1, 0, 1), attribute_default()),
+        vertex(vec3(0, 0, -1), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     ASSERT_THAT(result.count, Eq(1));
     EXPECT_THAT(result.shape[0].data.x, DoubleEq(0.0));
     EXPECT_THAT(result.shape[0].data.y, DoubleEq(0.0));
@@ -57,11 +58,12 @@ TEST(NAME, line_face_intersects_2)
     WS_REAL p1[3] = {1, 1, 1};
     WS_REAL p2[3] = {-1, -1, -1};
     face_t f = face(
-        vertex(vec3(-1, 1, 0), 0, 0, 0),
-        vertex(vec3(1, 1, 0), 0, 0, 0),
-        vertex(vec3(0, -1, 0), 0, 0, 0)
+        vertex(vec3(-1, 1, 0), attribute_default()),
+        vertex(vec3(1, 1, 0), attribute_default()),
+        vertex(vec3(0, -1, 0), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     ASSERT_THAT(result.count, Eq(1));
     EXPECT_THAT(result.shape[0].data.x, DoubleEq(0.0));
     EXPECT_THAT(result.shape[0].data.y, DoubleEq(0.0));
@@ -74,11 +76,12 @@ TEST(NAME, line_face_intersects_close)
     WS_REAL p1[3] = {1, 1, 1};
     WS_REAL p2[3] = {-0.01, -1, -1};
     face_t f = face(
-        vertex(vec3(-1, 1, 0), 0, 0, 0),
-        vertex(vec3(1, 1, 0), 0, 0, 0),
-        vertex(vec3(0, -1, 0), 0, 0, 0)
+        vertex(vec3(-1, 1, 0), attribute_default()),
+        vertex(vec3(1, 1, 0), attribute_default()),
+        vertex(vec3(0, -1, 0), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     ASSERT_THAT(result.count, Eq(1));
 }
 
@@ -88,11 +91,12 @@ TEST(NAME, line_face_misses_1)
     WS_REAL p1[3] = {1, 1, 1};
     WS_REAL p2[3] = {1, -1, -1};
     face_t f = face(
-        vertex(vec3(-1, 0, 1), 0, 0, 0),
-        vertex(vec3(1, 0, 1), 0, 0, 0),
-        vertex(vec3(0, 0, -1), 0, 0, 0)
+        vertex(vec3(-1, 0, 1), attribute_default()),
+        vertex(vec3(1, 0, 1), attribute_default()),
+        vertex(vec3(0, 0, -1), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     EXPECT_THAT(result.count, Eq(0));
 }
 
@@ -102,11 +106,12 @@ TEST(NAME, line_face_misses_2)
     WS_REAL p1[3] = {1, 1, 1};
     WS_REAL p2[3] = {1, -1, -1};
     face_t f = face(
-        vertex(vec3(-1, 1, 0), 0, 0, 0),
-        vertex(vec3(1, 1, 0), 0, 0, 0),
-        vertex(vec3(0, -1, 0), 0, 0, 0)
+        vertex(vec3(-1, 1, 0), attribute_default()),
+        vertex(vec3(1, 1, 0), attribute_default()),
+        vertex(vec3(0, -1, 0), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     EXPECT_THAT(result.count, Eq(0));
 }
 
@@ -116,11 +121,12 @@ TEST(NAME, line_face_misses_close)
     WS_REAL p1[3] = {1, 1, 1};
     WS_REAL p2[3] = {0.01, -1, -1};
     face_t f = face(
-        vertex(vec3(-1, 1, 0), 0, 0, 0),
-        vertex(vec3(1, 1, 0), 0, 0, 0),
-        vertex(vec3(0, -1, 0), 0, 0, 0)
+        vertex(vec3(-1, 1, 0), attribute_default()),
+        vertex(vec3(1, 1, 0), attribute_default()),
+        vertex(vec3(0, -1, 0), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     EXPECT_THAT(result.count, Eq(0));
 }
 
@@ -130,11 +136,12 @@ TEST(NAME, line_face_segment_too_short)
     WS_REAL p1[3] = {3, 3, 3};
     WS_REAL p2[3] = {0.01, 0.01, 0.01};
     face_t f = face(
-        vertex(vec3(-1, 0, 1), 0, 0, 0),
-        vertex(vec3(1, 0, 1), 0, 0, 0),
-        vertex(vec3(0, 0, -1), 0, 0, 0)
+        vertex(vec3(-1, 0, 1), attribute_default()),
+        vertex(vec3(1, 0, 1), attribute_default()),
+        vertex(vec3(0, 0, -1), attribute_default())
     );
-    intersect_result_t result = intersect_line_face(p1, p2, &f);
+    intersect_result_t result;
+    intersect_line_face(&result, p1, p2, &f);
     EXPECT_THAT(result.count, Eq(0));
 }
 

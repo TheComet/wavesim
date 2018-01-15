@@ -107,6 +107,7 @@ endif ()
 
 add_library (wavesim ${WAVESIM_BUILD_TYPE}
     "src/aabb.c"
+    "src/attribute.c"
     "src/btree.c"
     "src/face.c"
     "src/intersections.c"

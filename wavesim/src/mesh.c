@@ -101,7 +101,7 @@ mesh_builder_finalize(mesh_builder_t* mb)
 
     vector_construct(&vb, vb_size);
     vector_construct(&ib, ib_size);
-    vector_construct(&ab, sizeof(vertex_attr_t));
+    vector_construct(&ab, sizeof(attribute_t));
 
     /* Copy face vertices into buffers, avoiding duplicates */
     VECTOR_FOR_EACH(&mb->faces, face_t, face)
@@ -116,15 +116,13 @@ mesh_builder_finalize(mesh_builder_t* mb)
             int f;
 
             /* points to the attribute of this vertex triplet */
-            vertex_attr_t* attr = vector_get_element(&ab, v/3);
+            attribute_t* attr = vector_get_element(&ab, v/3);
             /* Construct a vertex object to make comparison easier */
             vertex_t vb_vertex = vertex(vec3(
                 *(WS_REAL*)vector_get_element(&vb, v+0),
                 *(WS_REAL*)vector_get_element(&vb, v+1),
                 *(WS_REAL*)vector_get_element(&vb, v+2)),
-                attr->reflection,
-                attr->transmission,
-                attr->absorbtion
+                *attr
             );
 
             /*
@@ -204,7 +202,7 @@ mesh_builder_finalize(mesh_builder_t* mb)
                            vb_type, ib_type);
 
     /* Copy attribute buffer into mesh */
-    memcpy(mesh->ab, ab.data, sizeof(vertex_attr_t) * vector_count(&ab));
+    memcpy(mesh->ab, ab.data, sizeof(attribute_t) * vector_count(&ab));
 
     vector_clear_free(&ab);
     vector_clear_free(&ib);
@@ -283,7 +281,7 @@ mesh_assign_buffers(mesh_t* mesh,
     mesh_clear_buffers(mesh);
     set_vb_ib_types_and_sizes(mesh, vb_type, ib_type);
 
-    if ((mesh->ab = MALLOC(sizeof(vertex_attr_t) * vertex_count)) == NULL)
+    if ((mesh->ab = MALLOC(sizeof(attribute_t) * vertex_count)) == NULL)
         OUT_OF_MEMORY(-1);
     mesh->vb = vertex_buffer;
     mesh->ib = index_buffer;
@@ -307,7 +305,7 @@ mesh_copy_from_buffers(mesh_t* mesh,
     mesh_clear_buffers(mesh);
     set_vb_ib_types_and_sizes(mesh, vb_type, ib_type);
 
-    if ((mesh->ab = MALLOC(sizeof(vertex_attr_t) * vertex_count)) == NULL)
+    if ((mesh->ab = MALLOC(sizeof(attribute_t) * vertex_count)) == NULL)
         goto ab_alloc_failed;
     if ((mesh->vb = MALLOC(mesh->vb_size * vertex_count * 3)) == NULL)
         goto vb_alloc_failed;
@@ -383,7 +381,7 @@ mesh_get_index_from_buffer(void* ib, int index, mesh_ib_type_e ib_type)
 
 /* ------------------------------------------------------------------------- */
 face_t
-mesh_get_face_from_buffers(void* vb, void* ib, vertex_attr_t* attrs,
+mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
                            int face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
@@ -397,15 +395,15 @@ mesh_get_face_from_buffers(void* vb, void* ib, vertex_attr_t* attrs,
         mesh_get_vertex_position_from_buffer(vb, indices[1], vb_type),
         mesh_get_vertex_position_from_buffer(vb, indices[2], vb_type)
     };
-    vertex_attr_t attributes[3] = {
+    attribute_t attributes[3] = {
         attrs[indices[0]],
         attrs[indices[1]],
         attrs[indices[2]]
     };
     return face(
-        vertex(vertices[0], attributes[0].reflection, attributes[0].absorbtion, attributes[0].transmission),
-        vertex(vertices[1], attributes[1].reflection, attributes[1].absorbtion, attributes[1].transmission),
-        vertex(vertices[2], attributes[2].reflection, attributes[2].absorbtion, attributes[2].transmission)
+        vertex(vertices[0], attributes[0]),
+        vertex(vertices[1], attributes[1]),
+        vertex(vertices[2], attributes[2])
     );
 }
 
@@ -436,7 +434,7 @@ static void init_attribute_buffer(mesh_t* mesh, int vertex_count)
 {
     int i;
     for (i = 0; i != vertex_count; ++i)
-        mesh->ab[i] = (vertex_attr_t){0, 0, 1}; /* full absorption by default */
+        mesh->ab[i] = (attribute_t){0, 0, 1}; /* full absorption by default */
 }
 
 /* ------------------------------------------------------------------------- */

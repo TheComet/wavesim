@@ -150,7 +150,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node)
 
 /* ------------------------------------------------------------------------- */
 static intptr_t
-octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, vec3_t smallest_subdivision)
+octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS_REAL smallest_subdivision[3])
 {
     unsigned int i;
     const mesh_t* mesh = octree->mesh;
@@ -197,7 +197,7 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, vec3_t s
 
     /* Abort if below smallest division */
     for (i = 0; i != 3; ++i)
-        if (node->aabb.data.b.xyz[i] - node->aabb.data.a.xyz[i] < smallest_subdivision.xyz[i])
+        if (node->aabb.data.b.xyz[i] - node->aabb.data.a.xyz[i] < smallest_subdivision[i])
             return 0;
 
     if (octree_subdivide(octree, node) < 0)
@@ -236,7 +236,7 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
     if (mesh_face_count(octree->mesh) == 0)
         return 0;
 
-    if (octree_build_from_mesh_recursive(octree, &octree->root, smallest_subdivision) < 0)
+    if (octree_build_from_mesh_recursive(octree, &octree->root, smallest_subdivision.xyz) < 0)
             return -1;
     return 0;
 }
@@ -267,7 +267,7 @@ octree_query_aabb_recursive(const octree_node_t* node, vector_t* result, const W
 }
 
 int
-octree_query_aabb(const octree_t* octree, vector_t* result, aabb_t aabb)
+octree_query_aabb(const octree_t* octree, vector_t* result, const WS_REAL aabb[6])
 {
-    return octree_query_aabb_recursive(&octree->root, result, aabb.xyzxyz);
+    return octree_query_aabb_recursive(&octree->root, result, aabb);
 }

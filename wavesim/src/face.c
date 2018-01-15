@@ -37,3 +37,18 @@ face_calculate_aabb(const face_t* face)
 
     return ret;
 }
+
+/* ------------------------------------------------------------------------- */
+void
+face_interpolate_attributes_barycentric(const face_t* face, attribute_t* attr, const WS_REAL bary[3])
+{
+    int i;
+
+    attribute_set_zero(attr);
+    for (i = 0; i != 3; ++i)
+    {
+        attr->absorption   += face->vertices[i].attr.absorption   * bary[i];
+        attr->reflection   += face->vertices[i].attr.reflection   * bary[i];
+        attr->transmission += face->vertices[i].attr.transmission * bary[i];
+    }
+}

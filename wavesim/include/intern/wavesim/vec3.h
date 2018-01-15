@@ -21,6 +21,12 @@ vec3(WS_REAL x, WS_REAL y, WS_REAL z);
 WAVESIM_PRIVATE_API void
 vec3_set_zero(WS_REAL v[3]);
 
+WAVESIM_PRIVATE_API int
+vec3_is_zero(const WS_REAL v[3]);
+
+WAVESIM_PRIVATE_API void
+vec3_copy(vec3_t* dst, const WS_REAL src[3]);
+
 WAVESIM_PRIVATE_API void
 vec3_add_vec3(WS_REAL v1[3], const WS_REAL v2[3]);
 

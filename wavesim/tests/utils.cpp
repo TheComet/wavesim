@@ -75,13 +75,13 @@ void mesh_builder_cube(mesh_builder_t* mb, aabb_t bb)
         mesh_builder_add_face(mb, face(
             vertex(vec3(cube_mb[i*3+0].data.x * dims.data.x + AABB_AX(bb),
                         cube_mb[i*3+0].data.y * dims.data.y + AABB_AY(bb),
-                        cube_mb[i*3+0].data.z * dims.data.z + AABB_AZ(bb)), 0, 0, 0),
+                        cube_mb[i*3+0].data.z * dims.data.z + AABB_AZ(bb)), attribute_default()),
             vertex(vec3(cube_mb[i*3+1].data.x * dims.data.x + AABB_AX(bb),
                         cube_mb[i*3+1].data.y * dims.data.y + AABB_AY(bb),
-                        cube_mb[i*3+1].data.z * dims.data.z + AABB_AZ(bb)), 0, 0, 0),
+                        cube_mb[i*3+1].data.z * dims.data.z + AABB_AZ(bb)), attribute_default()),
             vertex(vec3(cube_mb[i*3+2].data.x * dims.data.x + AABB_AX(bb),
                         cube_mb[i*3+2].data.y * dims.data.y + AABB_AY(bb),
-                        cube_mb[i*3+2].data.z * dims.data.z + AABB_AZ(bb)), 0, 0, 0)
+                        cube_mb[i*3+2].data.z * dims.data.z + AABB_AZ(bb)), attribute_default())
         ));
     }
 }
