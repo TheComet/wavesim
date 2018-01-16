@@ -248,7 +248,7 @@ memory_deinit(void)
 
 #else /* WAVESIM_MEMORY_DEBUGGING */
 
-void memory_init(void) {}
+int memory_init(void) { return 0; }
 uintptr_t memory_deinit(void) { return 0; }
 
 #endif /* WAVESIM_MEMORY_DEBUGGING */
