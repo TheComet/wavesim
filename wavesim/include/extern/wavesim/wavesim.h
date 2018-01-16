@@ -9,8 +9,9 @@ C_BEGIN
  * @brief Initializes global state in the wavesim library. Must be called once
  * before using the library or after having called wavesim_deinit(). Calling
  * this more than once consecutively is a bad idea.
+ * @return Returns 0 on success, non-zero if otherwise.
  */
-WAVESIM_PUBLIC_API void
+WAVESIM_PUBLIC_API int
 wavesim_init(void);
 
 /*!

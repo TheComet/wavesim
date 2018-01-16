@@ -23,7 +23,7 @@ WAVESIM_PRIVATE_API int
 mesh_builder_add_face(mesh_builder_t* mb, face_t face);
 
 WAVESIM_PRIVATE_API mesh_t*
-mesh_builder_finalize(mesh_builder_t* mb);
+mesh_builder_build(mesh_builder_t* mb);
 
 WAVESIM_PRIVATE_API void
 mesh_builder_destroy(mesh_builder_t* mb);

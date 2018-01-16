@@ -25,7 +25,7 @@ typedef struct report_info_t
 } report_info_t;
 
 /* ------------------------------------------------------------------------- */
-void
+int
 memory_init(void)
 {
     g_allocations = 0;
@@ -38,8 +38,12 @@ memory_init(void)
      */
     g_ignore_btree_malloc = 1;
         btree_construct(&report);
-        btree_insert(&report, 0, NULL); btree_erase(&report, 0);
+        if (btree_insert(&report, 0, NULL) != 0)
+            return -1;
+        btree_erase(&report, 0);
     g_ignore_btree_malloc = 0;
+
+    return 0;
 }
 
 /* ------------------------------------------------------------------------- */

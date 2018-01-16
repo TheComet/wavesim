@@ -31,7 +31,7 @@ typedef enum mesh_vb_type_e
 
 typedef struct mesh_t
 {
-    attribute_t*   ab;       /* attribute buffer, will be same size as vb */
+    attribute_t*     ab;       /* attribute buffer, will be same size as vb */
     void*            vb;       /* vertex buffer */
     void*            ib;       /* index buffer */
 
@@ -94,6 +94,8 @@ mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
                            int face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
+#define mesh_index_count(mesh) (mesh->ib_count)
+#define mesh_vertex_count(mesh) (mesh->vb_count)
 #define mesh_face_count(mesh) (mesh->ib_count/3)
 
 C_END

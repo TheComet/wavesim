@@ -23,7 +23,7 @@ C_BEGIN
  * In release mode this does nothing. In debug mode it will initialise
  * memory reports and backtraces, if enabled.
  */
-WAVESIM_PRIVATE_API void
+WAVESIM_PRIVATE_API int
 memory_init(void);
 
 /*!

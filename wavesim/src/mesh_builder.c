@@ -50,7 +50,7 @@ mesh_builder_add_face(mesh_builder_t* mb, face_t face)
 
 /* ------------------------------------------------------------------------- */
 mesh_t*
-mesh_builder_finalize(mesh_builder_t* mb)
+mesh_builder_build(mesh_builder_t* mb)
 {
     mesh_vb_type_e vb_type;
     mesh_ib_type_e ib_type;

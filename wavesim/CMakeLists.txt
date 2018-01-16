@@ -24,6 +24,8 @@ set (${PROJECT_NAME}_BUILD_TYPE "SHARED" CACHE STRING "Whether to build as share
 option (${PROJECT_NAME}_PROFILING "Compiles with -pg on linux" OFF)
 option (${PROJECT_NAME}_TESTS "Whether or not to build unit tests (note: requires C++)" OFF)
 option (${PROJECT_NAME}_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory reports" ${MEM_DBG_DEFAULT})
+option (${PROJECT_NAME}_PYTHON "Build python bindings. The library must be shared." ON)
+option (${PROJECT_NAME}_PIC "Position independent code when building as a static library" OFF)
 option (${PROJECT_NAME}_MEMORY_BACKTRACE "Enables backtraces for malloc/free mismatches. Impacts performance on malloc, obviously." ${${PROJECT_NAME}_MEMORY_DEBUGGING})
 set (${PROJECT_NAME}_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
 option (${PROJECT_NAME}_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." OFF)
@@ -56,7 +58,7 @@ else ()
 endif ()
 
 # Need the restrict keyword for some of the math stuff
-foreach (RESTRICT_KEYWORD restrict __restrict __restrict__)
+foreach (RESTRICT_KEYWORD __restrict__ __restrict restrict)
     check_c_source_compiles ("int test (void *${RESTRICT_KEYWORD} x); int main (void) {return 0;}" WAVESIM_RESTRICT_${RESTRICT_KEYWORD})
     if (WAVESIM_RESTRICT_${RESTRICT_KEYWORD})
         set (RESTRICT ${RESTRICT_KEYWORD})  # This replaces ${RESTRICT} in config.h.in
@@ -87,7 +89,6 @@ else ()
 endif ()
 
 set (TEST_SOURCES "src/test_api_stub.c")
-set (TEST_INCLUDE_DIRS "")
 if (${${PROJECT_NAME}_TESTS})
     add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
     set (TEST_SOURCES
@@ -111,6 +112,38 @@ if (${${PROJECT_NAME}_TESTS})
         "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/")
 endif ()
 
+if (${${PROJECT_NAME}_PYTHON})
+    find_package (PythonLibs 3 REQUIRED)
+    add_library (wavesim_python OBJECT
+        "python/src/wavesim_module.c"
+        "python/src/wavesim_module_Attribute.c"
+        "python/src/wavesim_module_Face.c"
+        "python/src/wavesim_module_Mesh.c"
+        "python/src/wavesim_module_MeshIterator.c"
+        "python/src/wavesim_module_Vertex.c")
+    set_property(TARGET wavesim_python PROPERTY POSITION_INDEPENDENT_CODE 1)
+    target_include_directories (wavesim_python
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
+        "${CMAKE_CURRENT_SOURCE_DIR}/python/include"
+        "${PYTHON_INCLUDE_DIRS}")
+    target_compile_options (wavesim_python
+        PUBLIC $<$<C_COMPILER_ID:MSVC>:
+            /EHa /MTd /W4 /WX /D_CRT_SECURE_NO_DEPRECATE
+        >
+        PUBLIC $<$<C_COMPILER_ID:GNU>:
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+        >
+        PUBLIC $<$<C_COMPILER_ID:Clang>:
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+        >
+    )
+endif ()
+
 add_library (wavesim ${WAVESIM_BUILD_TYPE}
     "src/aabb.c"
     "src/attribute.c"
@@ -128,7 +161,11 @@ add_library (wavesim ${WAVESIM_BUILD_TYPE}
     "src/vertex.c"
     "src/wavesim.c"
     "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c"
-    ${TEST_SOURCES})
+    "${TEST_SOURCES}"
+    $<TARGET_OBJECTS:wavesim_python>)
+
+set_target_properties (wavesim PROPERTIES PREFIX "")
+set_target_properties (wavesim PROPERTIES DEBUG_POSTFIX "")
 
 target_include_directories (wavesim
     PUBLIC
@@ -144,6 +181,10 @@ if (${${PROJECT_NAME}_TESTS})
     add_executable (test_wavesim "tests/app.c")
     target_link_libraries (test_wavesim wavesim)
 endif ()
+
+if (${${PROJECT_NAME}_PYTHON})
+    target_link_libraries (wavesim PRIVATE ${PYTHON_LIBRARIES})
+endif()
 
 install (TARGETS wavesim EXPORT WaveSimConfig
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -179,9 +220,11 @@ target_compile_options (wavesim
 message (STATUS "------------------------------------------------------------")
 message (STATUS "Wavesim settings")
 message (STATUS " + Build type: ${${PROJECT_NAME}_BUILD_TYPE}")
-message (STATUS " + Profiling: ${${PROJECT_NAME}_PROFILING}")
-message (STATUS " + Unit Tests: ${${PROJECT_NAME}_TESTS}")
+message (STATUS " + PIC (Position independent code): ${${PROJECT_NAME}_PIC}")
 message (STATUS " + Precision: ${${PROJECT_NAME}_PRECISION}")
 message (STATUS " + Memory debugging: ${${PROJECT_NAME}_MEMORY_DEBUGGING}")
 message (STATUS " + Memory backtraces: ${${PROJECT_NAME}_MEMORY_BACKTRACE}")
+message (STATUS " + Profiling: ${${PROJECT_NAME}_PROFILING}")
+message (STATUS " + Unit Tests: ${${PROJECT_NAME}_TESTS}")
+message (STATUS " + Python bindings: ${${PROJECT_NAME}_PYTHON}")
 message (STATUS "------------------------------------------------------------")

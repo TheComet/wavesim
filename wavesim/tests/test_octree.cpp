@@ -41,7 +41,7 @@ TEST_F(NAME, build_from_mesh_with_one_face)
         vertex(vec3(1, 1, 1), attribute_default()),
         vertex(vec3(0.4, -0.2, 0.8), attribute_default())
     ));
-    m = mesh_builder_finalize(mb);
+    m = mesh_builder_build(mb);
     mesh_builder_destroy(mb);
 
     octree_build_from_mesh(o, m, vec3(0, 0, 0));
@@ -87,7 +87,7 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
         vertex(vec3(0.03, 0.04, 0.04), attribute_default()),
         vertex(vec3(0.03, 0.04, 0.04), attribute_default())
     ));
-    m = mesh_builder_finalize(mb);
+    m = mesh_builder_build(mb);
     mesh_builder_destroy(mb);
 
     octree_build_from_mesh(o, m, vec3(0, 0, 0));

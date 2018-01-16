@@ -11,7 +11,6 @@ typedef struct vertex_t
 {
     vec3_t position;
     attribute_t attr;
-
 } vertex_t;
 
 WAVESIM_PRIVATE_API vertex_t
