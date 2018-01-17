@@ -13,6 +13,11 @@
     #cmakedefine WAVESIM_64BIT_INDEX_BUFFERS
 #   define WS_REAL ${WAVESIM_PRECISION}
 #   define RESTRICT ${RESTRICT}
+#   define WAVESIM_BUILD_TYPE_${WAVESIM_BUILD_TYPE}
+    #cmakedefine WAVESIM_PROFILING
+    #cmakedefine WAVESIM_TESTS
+    #cmakedefine WAVESIM_PYTHON
+    #cmakedefine WAVESIM_PIC
 
     /* Global includes */
 #   ifdef WAVESIM_HAVE_STDINT_H

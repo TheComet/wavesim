@@ -1,5 +1,5 @@
 #include "gmock/gmock.h"
-#include "wavesim/memory.h"
+#include "wavesim/wavesim.h"
 
 using testing::Eq;
 
@@ -11,12 +11,12 @@ public:
     virtual void SetUp()
     {
         testing::FLAGS_gtest_death_test_style = "threadsafe";
-        memory_init();
+        wavesim_init();
     }
 
     virtual void TearDown()
     {
-        EXPECT_THAT(memory_deinit(), Eq(0u)) << "Number of memory leaks";
+        EXPECT_THAT(wavesim_deinit(), Eq(0u)) << "Number of memory leaks";
     }
 };
 

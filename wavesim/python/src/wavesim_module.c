@@ -5,17 +5,15 @@
 #include "wavesim/wavesim_module_Mesh.h"
 #include "wavesim/wavesim_module_MeshIterator.h"
 #include "wavesim/wavesim_module_Vertex.h"
+#include "wavesim/build_info.h"
 
+/* ------------------------------------------------------------------------- */
 static PyObject*
-wavesim_hello(PyObject* self, PyObject* args)
+wavesim_build_info(PyObject* self, PyObject* args)
 {
     (void)self;
     (void)args;
-
-    puts("hello world");
-
-    Py_INCREF(Py_None);
-    return Py_None;
+    return PyUnicode_FromString(wavesim_get_build_info());
 }
 
 /* ------------------------------------------------------------------------- */
@@ -28,7 +26,7 @@ wavesim_module_free(void* x)
 
 /* ------------------------------------------------------------------------- */
 static PyMethodDef wavesim_methods[] = {
-    {"hello", wavesim_hello, METH_VARARGS, "Hello World"},
+    {"build_info", wavesim_build_info, METH_VARARGS, "Gets library build information"},
     {NULL, NULL, 0, NULL}
 };
 
