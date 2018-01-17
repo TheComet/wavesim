@@ -1,25 +1,79 @@
 #include "wavesim/build_info.h"
 #include "wavesim/build_info_dynamic.h"
 
+#define WAVESIM_VERSION "${WAVESIM_VERSION}." "WAVESIM_BUILD_NUMBER"
+#define WAVESIM_CMAKE_CONFIG \
+    "-DWAVESIM_64BIT_INDEX_BUFFERS=${WAVESIM_64BIT_INDEX_BUFFERS} \\\n" \
+    "-DWAVESIM_BUILD_TYPE=${WAVESIM_BUILD_TYPE} \\\n" \
+    "-DWAVESIM_MEMORY_BACKTRACE=${WAVESIM_MEMORY_BACKTRACE} \\\n" \
+    "-DWAVESIM_MEMORY_DEBUGGING=${WAVESIM_MEMORY_DEBUGGING} \\\n" \
+    "-DWAVESIM_PIC=${WAVESIM_PIC} \\\n" \
+    "-DWAVESIM_PRECISION=${WAVESIM_PRECISION} \\\n" \
+    "-DWAVESIM_PROFILING=${WAVESIM_PROFILING} \\\n" \
+    "-DWAVESIM_PYTHON=${WAVESIM_PYTHON} \\\n" \
+    "-DWAVESIM_TESTS=${WAVESIM_TESTS}"
+
+/* ------------------------------------------------------------------------- */
 const char*
-wavesim_get_build_info(void)
+wavesim_version(void)
+{
+    return WAVESIM_VERSION;
+}
+
+/* ------------------------------------------------------------------------- */
+int
+wavesim_build_number(void)
+{
+    return WAVESIM_BUILD_NUMBER;
+}
+
+/* ------------------------------------------------------------------------- */
+const char*
+wavesim_build_host(void)
+{
+    return "${WAVESIM_HOST_COMPUTER}";
+}
+
+/* ------------------------------------------------------------------------- */
+const char*
+wavesim_build_time(void)
+{
+    return WAVESIM_BUILD_TIME;
+}
+
+/* ------------------------------------------------------------------------- */
+const char*
+wavesim_commit_info(void)
+{
+    return "${WAVESIM_COMMIT_INFO}";
+}
+
+/* ------------------------------------------------------------------------- */
+const char*
+wavesim_compiler_info(void)
+{
+    return "${WAVESIM_COMPILER}";
+}
+
+/* ------------------------------------------------------------------------- */
+const char*
+wavesim_cmake_configuration(void)
+{
+    return WAVESIM_CMAKE_CONFIG;
+}
+
+/* ------------------------------------------------------------------------- */
+const char*
+wavesim_build_info(void)
 {
     return
-    "This is wavesim ${WAVESIM_VERSION}." WAVESIM_BUILD_NUMBER " (major,minor,patch,build number)\n"
+    "This is wavesim " WAVESIM_VERSION " (major,minor,patch,build number)\n"
     "Host: ${WAVESIM_HOST_COMPUTER}\n"
     "Time compiled: " WAVESIM_BUILD_TIME "\n"
     "Commit: ${WAVESIM_COMMIT_INFO}\n"
     "Compiler: ${WAVESIM_COMPILER}\n"
     "CMake configuration:\n"
-    "-DWAVESIM_64BIT_INDEX_BUFFERS=${WAVESIM_64BIT_INDEX_BUFFERS} \\\n"
-    "-DWAVESIM_BUILD_TYPE=${WAVESIM_BUILD_TYPE} \\\n"
-    "-DWAVESIM_MEMORY_BACKTRACE=${WAVESIM_MEMORY_BACKTRACE} \\\n"
-    "-DWAVESIM_MEMORY_DEBUGGING=${WAVESIM_MEMORY_DEBUGGING} \\\n"
-    "-DWAVESIM_PIC=${WAVESIM_PIC} \\\n"
-    "-DWAVESIM_PRECISION=${WAVESIM_PRECISION} \\\n"
-    "-DWAVESIM_PROFILING=${WAVESIM_PROFILING} \\\n"
-    "-DWAVESIM_PYTHON=${WAVESIM_PYTHON} \\\n"
-    "-DWAVESIM_TESTS=${WAVESIM_TESTS}\n"
+    WAVESIM_CMAKE_CONFIG "\n"
     "Other interesting variables:\n"
     "RESTRICT=${RESTRICT}\n"
     "WAVESIM_HAVE_STDINT_H=${WAVESIM_HAVE_STDINT_H}"

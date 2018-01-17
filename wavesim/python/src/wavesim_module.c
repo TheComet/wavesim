@@ -8,15 +8,6 @@
 #include "wavesim/build_info.h"
 
 /* ------------------------------------------------------------------------- */
-static PyObject*
-wavesim_build_info(PyObject* self, PyObject* args)
-{
-    (void)self;
-    (void)args;
-    return PyUnicode_FromString(wavesim_get_build_info());
-}
-
-/* ------------------------------------------------------------------------- */
 void
 wavesim_module_free(void* x)
 {
@@ -25,23 +16,32 @@ wavesim_module_free(void* x)
 }
 
 /* ------------------------------------------------------------------------- */
-static PyMethodDef wavesim_methods[] = {
-    {"build_info", wavesim_build_info, METH_VARARGS, "Gets library build information"},
-    {NULL, NULL, 0, NULL}
-};
-
-/* ------------------------------------------------------------------------- */
 static PyModuleDef wavesim_module = {
     PyModuleDef_HEAD_INIT,
     "wavesim",               /* Module name */
     NULL,                    /* docstring, may be NULL */
     -1,                      /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables */
-    wavesim_methods,         /* module methods */
+    NULL,                    /* module methods */
     NULL,                    /* m_reload */
     NULL,                    /* m_traverse */
     NULL,                    /* m_clear */
     wavesim_module_free      /* m_free */
 };
+
+/* ------------------------------------------------------------------------- */
+static int
+add_module_constants(PyObject* m)
+{
+    if (PyModule_AddStringConstant(m, "build_info", wavesim_build_info()) == -1) return -1;
+    if (PyModule_AddIntConstant(m, "build_number", wavesim_build_number()) == -1) return -1;
+    if (PyModule_AddStringConstant(m, "build_host", wavesim_build_host()) == -1) return -1;
+    if (PyModule_AddStringConstant(m, "build_time", wavesim_build_time()) == -1) return -1;
+    if (PyModule_AddStringConstant(m, "commit_info", wavesim_commit_info()) == -1) return -1;
+    if (PyModule_AddStringConstant(m, "compiler_info", wavesim_compiler_info()) == -1) return -1;
+    if (PyModule_AddStringConstant(m, "cmake_configuration", wavesim_cmake_configuration()) == -1) return -1;
+
+    return 0;
+}
 
 /* ------------------------------------------------------------------------- */
 static int
@@ -80,22 +80,20 @@ PyInit_wavesim(void)
 {
     PyObject* m;
 
-    if (wavesim_init() != 0)
-        goto library_init_failed;
-
     m = PyModule_Create(&wavesim_module);
     if (m == NULL)
-        goto create_module_failed;
+        goto module_alloc_failed;
 
-    if (init_builtin_types() != 0)
-        goto init_builtin_types_failed;
-    if (add_builtin_types_to_module(m) != 0)
-        goto add_builtin_types_failed;
+    if (wavesim_init() != 0)
+        goto wavesim_init_failed;
+
+    if (init_builtin_types() != 0)            goto init_module_failed;
+    if (add_builtin_types_to_module(m) != 0)  goto init_module_failed;
+    if (add_module_constants(m) != 0)         goto init_module_failed;
 
     return m;
 
-    add_builtin_types_failed  :
-    init_builtin_types_failed : Py_DECREF(m);
-    create_module_failed      : wavesim_deinit();
-    library_init_failed       : return NULL;
+    init_module_failed        :
+    wavesim_init_failed       : Py_DECREF(m);
+    module_alloc_failed       : return NULL;
 }
