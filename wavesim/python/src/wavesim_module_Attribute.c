@@ -9,13 +9,20 @@ Attribute_init(wavesim_Attribute* self, PyObject* args, PyObject* kwds)
 {
     self->reflection = 0;
     self->transmission = 0;
-    self->absorption = 1;
+    self->absorption = 0;
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ddd", kwlist,
                                      &self->reflection,
                                      &self->transmission,
                                      &self->absorption))
     {
         return -1;
+    }
+
+    if (self->reflection == 0.0 || self->transmission == 0.0 || self->absorption == 0.0)
+    {
+        self->reflection = 0;
+        self->transmission = 0;
+        self->absorption = 1;
     }
 
     return 0;

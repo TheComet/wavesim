@@ -167,40 +167,6 @@ target_compile_options (wavesim_obj
 )
 
 ###############################################################################
-# Unit tests
-###############################################################################
-
-set (TEST_SOURCES "tests/api_stub.c")
-if (${WAVESIM_TESTS})
-    add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
-    add_library (wavesim_tests_obj OBJECT
-        "tests/environment_util_global.cpp"
-        "tests/utils.cpp"
-        "tests/api.cpp"
-        "tests/test_aabb.cpp"
-        "tests/test_attribute.cpp"
-        "tests/test_btree.cpp"
-        "tests/test_face.cpp"
-        "tests/test_intersections.cpp"
-        "tests/test_mesh.cpp"
-        "tests/test_mesh_builder.cpp"
-        "tests/test_octree.cpp"
-        "tests/test_partition.cpp"
-        "tests/test_python_bindings.cpp"
-        "tests/test_vec3.cpp"
-        "tests/test_vector.cpp"
-        "tests/test_vertex.cpp")
-    set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
-    target_include_directories (wavesim_tests_obj
-        PRIVATE
-            "${CMAKE_CURRENT_BINARY_DIR}/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/")
-endif ()
-
-###############################################################################
 # Python bindings
 ###############################################################################
 
@@ -232,6 +198,57 @@ if (${WAVESIM_PYTHON})
             -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
         >
     )
+endif ()
+
+###############################################################################
+# Unit tests
+###############################################################################
+
+set (TEST_SOURCES "tests/api_stub.c")
+if (${WAVESIM_TESTS})
+    add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
+    add_library (wavesim_tests_obj OBJECT
+        "tests/environment_util_global.cpp"
+        "tests/utils.cpp"
+        "tests/api.cpp"
+        "tests/test_aabb.cpp"
+        "tests/test_attribute.cpp"
+        "tests/test_btree.cpp"
+        "tests/test_face.cpp"
+        "tests/test_intersections.cpp"
+        "tests/test_mesh.cpp"
+        "tests/test_mesh_builder.cpp"
+        "tests/test_octree.cpp"
+        "tests/test_partition.cpp"
+        "tests/test_vec3.cpp"
+        "tests/test_vector.cpp"
+        "tests/test_vertex.cpp"
+        $<${WAVESIM_PYTHON}:${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp>)
+    if (${WAVESIM_PYTHON})
+        file (GLOB PYTHON_TEST_SOURCE_FILES "python/tests/*.py")
+        message (STATUS ${PYTHON_TEST_SOURCE_FILES})
+        set (GENERATE_PYTHON_TESTS_CMD ${CMAKE_COMMAND}
+            -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            -DWAVESIM_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_python_unit_tests.cmake")
+        add_custom_command (OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp"
+            COMMAND ${GENERATE_PYTHON_TESTS_CMD}
+            DEPENDS
+                "generate_python_unit_tests.cmake"
+                ${PYTHON_TEST_SOURCE_FILES})
+        add_custom_target (wavesim_generate_unit_tests ALL
+            DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp")
+        add_dependencies (wavesim_tests_obj wavesim_generate_unit_tests)
+    endif ()
+    set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+    target_include_directories (wavesim_tests_obj
+        PRIVATE
+            "${CMAKE_CURRENT_BINARY_DIR}/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/"
+            $<${WAVESIM_PYTHON}:${PYTHON_INCLUDE_DIRS}>)
 endif ()
 
 ###############################################################################
