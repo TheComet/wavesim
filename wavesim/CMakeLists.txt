@@ -14,21 +14,21 @@ include (CheckCSourceCompiles)
 ###############################################################################
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    set (MEM_DBG_DEFAULT ON)
+    set (MEM_DBG_DEFAULT 1)
 else ()
-    set (MEM_DBG_DEFAULT OFF)
+    set (MEM_DBG_DEFAULT 0)
 endif ()
 
 set (PROJECT_NAME "WAVESIM")  # Required for export.h.in
-option (WAVESIM_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." OFF)
+set (WAVESIM_64BIT_INDEX_BUFFERS 0 CACHE STRING "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory.")
 set (WAVESIM_BUILD_TYPE "SHARED" CACHE STRING "Whether to build as shared or static")
-option (WAVESIM_MEMORY_BACKTRACE "Enables backtraces for malloc/free mismatches. Impacts performance on malloc, obviously." ${WAVESIM_MEMORY_DEBUGGING})
-option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory reports" ${MEM_DBG_DEFAULT})
-option (WAVESIM_PYTHON "Build python bindings. The library must be shared." ON)
-option (WAVESIM_PIC "Position independent code when building as a static library" OFF)
+set (WAVESIM_MEMORY_DEBUGGING ${MEM_DBG_DEFAULT} CACHE STRING "Enables malloc/free wrappers and memory reports")
+set (WAVESIM_MEMORY_BACKTRACE ${WAVESIM_MEMORY_DEBUGGING} CACHE STRING "Enables backtraces for malloc/free mismatches. Impacts performance on malloc, obviously.")
+set (WAVESIM_PYTHON 1 CACHE STRING "Build python bindings. The library must be shared.")
+set (WAVESIM_PIC 0 CACHE STRING "Position independent code when building as a static library")
 set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
-option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
-option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" OFF)
+set (WAVESIM_PROFILING 0 CACHE STRING "Compiles with -pg on linux")
+set (WAVESIM_TESTS 0 CACHE STRING "Whether or not to build unit tests (note: requires C++)")
 
 # Determine visibility macros if the library is a shared library.
 if (WAVESIM_BUILD_TYPE MATCHES "SHARED")
@@ -120,64 +120,11 @@ else ()
     message (FATAL_ERROR "Platform is not supported")
 endif ()
 
-set (TEST_SOURCES "src/test_api_stub.c")
-if (${WAVESIM_TESTS})
-    add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
-    set (TEST_SOURCES
-        "tests/environment_util_global.cpp"
-        "tests/utils.cpp"
-        "tests/api.cpp"
-        "tests/test_aabb.cpp"
-        "tests/test_attribute.cpp"
-        "tests/test_btree.cpp"
-        "tests/test_face.cpp"
-        "tests/test_intersections.cpp"
-        "tests/test_mesh.cpp"
-        "tests/test_mesh_builder.cpp"
-        "tests/test_octree.cpp"
-        "tests/test_partition.cpp"
-        "tests/test_python_bindings.cpp"
-        "tests/test_vec3.cpp"
-        "tests/test_vector.cpp"
-        "tests/test_vertex.cpp")
-    set (TEST_INCLUDE_DIRS
-        "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/")
-endif ()
+###############################################################################
+# Unit test library
+###############################################################################
 
-if (${WAVESIM_PYTHON})
-    find_package (PythonLibs 3 REQUIRED)
-    add_library (wavesim_python OBJECT
-        "python/src/wavesim_module.c"
-        "python/src/wavesim_module_Attribute.c"
-        "python/src/wavesim_module_Face.c"
-        "python/src/wavesim_module_Mesh.c"
-        "python/src/wavesim_module_MeshIterator.c"
-        "python/src/wavesim_module_Vertex.c")
-    set_property(TARGET wavesim_python PROPERTY POSITION_INDEPENDENT_CODE 1)
-    target_include_directories (wavesim_python
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
-        "${CMAKE_CURRENT_SOURCE_DIR}/python/include"
-        "${PYTHON_INCLUDE_DIRS}")
-    target_compile_options (wavesim_python
-        PUBLIC $<$<C_COMPILER_ID:MSVC>:
-            /EHa /MTd /W4 /WX /D_CRT_SECURE_NO_DEPRECATE
-        >
-        PUBLIC $<$<C_COMPILER_ID:GNU>:
-            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
-        >
-        PUBLIC $<$<C_COMPILER_ID:Clang>:
-            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
-        >
-    )
-endif ()
-
-add_library (wavesim ${WAVESIM_BUILD_TYPE}
+add_library (wavesim_obj OBJECT
     "src/aabb.c"
     "src/attribute.c"
     "src/btree.c"
@@ -194,53 +141,20 @@ add_library (wavesim ${WAVESIM_BUILD_TYPE}
     "src/vector.c"
     "src/vertex.c"
     "src/wavesim.c"
-    "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c"
-    "${TEST_SOURCES}"
-    $<TARGET_OBJECTS:wavesim_python>)
+    "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c")
 
-set_target_properties (wavesim PROPERTIES PREFIX "")
-set_target_properties (wavesim PROPERTIES DEBUG_POSTFIX "")
+set_property(TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-add_custom_target (wavesim_timestamp
-    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_timestamp.cmake"
-    ADD_DEPENDENCIES "generate_timestamp.cmake")
-add_dependencies (wavesim wavesim_timestamp)
-
-target_include_directories (wavesim
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+target_include_directories (wavesim_obj
     PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
-        "${TEST_INCLUDE_DIRS}")
-
-if (${WAVESIM_TESTS})
-    target_link_libraries (wavesim PRIVATE gmock)
-    add_executable (test_wavesim "tests/app.c")
-    target_link_libraries (test_wavesim wavesim)
-endif ()
-
-if (${WAVESIM_PYTHON})
-    target_link_libraries (wavesim PRIVATE ${PYTHON_LIBRARIES})
-endif()
-
-install (TARGETS wavesim EXPORT WaveSimConfig
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install (DIRECTORY "include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install (EXPORT WaveSimConfig DESTINATION "share/wavesim/cmake")
-export (TARGETS wavesim FILE WaveSimConfig.cmake)
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/extern")
 
 # The library is being built
-add_definitions (-DWAVESIM_BUILDING)
+target_compile_definitions (wavesim_obj PRIVATE WAVESIM_BUILDING)
 
-###############################################################################
-# compiler definitions and flags
-###############################################################################
-
-target_compile_options (wavesim
+target_compile_options (wavesim_obj
     PUBLIC $<$<C_COMPILER_ID:MSVC>:
         /EHa /MTd /W4 /WX /D_CRT_SECURE_NO_DEPRECATE
     >
@@ -251,6 +165,123 @@ target_compile_options (wavesim
         -Wall -Wextra -Werror -pedantic -pedantic-errors
     >
 )
+
+###############################################################################
+# Unit tests
+###############################################################################
+
+set (TEST_SOURCES "tests/api_stub.c")
+if (${WAVESIM_TESTS})
+    add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
+    add_library (wavesim_tests_obj OBJECT
+        "tests/environment_util_global.cpp"
+        "tests/utils.cpp"
+        "tests/api.cpp"
+        "tests/test_aabb.cpp"
+        "tests/test_attribute.cpp"
+        "tests/test_btree.cpp"
+        "tests/test_face.cpp"
+        "tests/test_intersections.cpp"
+        "tests/test_mesh.cpp"
+        "tests/test_mesh_builder.cpp"
+        "tests/test_octree.cpp"
+        "tests/test_partition.cpp"
+        "tests/test_python_bindings.cpp"
+        "tests/test_vec3.cpp"
+        "tests/test_vector.cpp"
+        "tests/test_vertex.cpp")
+    set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+    target_include_directories (wavesim_tests_obj
+        PRIVATE
+            "${CMAKE_CURRENT_BINARY_DIR}/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/")
+endif ()
+
+###############################################################################
+# Python bindings
+###############################################################################
+
+if (${WAVESIM_PYTHON})
+    find_package (PythonLibs 3 REQUIRED)
+    add_library (wavesim_python_obj OBJECT
+        "python/src/wavesim_module.c"
+        "python/src/wavesim_module_Attribute.c"
+        "python/src/wavesim_module_Face.c"
+        "python/src/wavesim_module_Mesh.c"
+        "python/src/wavesim_module_MeshIterator.c"
+        "python/src/wavesim_module_Vertex.c")
+    set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+    target_include_directories (wavesim_python_obj
+        PRIVATE
+            "${CMAKE_CURRENT_BINARY_DIR}/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/include"
+            "${PYTHON_INCLUDE_DIRS}")
+    target_compile_options (wavesim_python_obj
+        PUBLIC $<$<C_COMPILER_ID:MSVC>:
+            /EHa /MTd /W4 /WX /D_CRT_SECURE_NO_DEPRECATE
+        >
+        PUBLIC $<$<C_COMPILER_ID:GNU>:
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+        >
+        PUBLIC $<$<C_COMPILER_ID:Clang>:
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+        >
+    )
+endif ()
+
+###############################################################################
+# The actual wavesim library
+###############################################################################
+
+add_library (wavesim ${WAVESIM_BUILD_TYPE}
+    $<TARGET_OBJECTS:wavesim_obj>
+    $<${WAVESIM_TESTS}:$<TARGET_OBJECTS:wavesim_tests_obj>>
+    $<${WAVESIM_PYTHON}:$<TARGET_OBJECTS:wavesim_python_obj>>)
+
+set_target_properties (wavesim PROPERTIES
+    PREFIX ""
+    DEBUG_POSTFIX ""
+    SOVERSION ${PROJECT_VERSION})
+target_include_directories (wavesim
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+
+add_custom_target (wavesim_timestamp
+    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_timestamp.cmake"
+    ADD_DEPENDENCIES "generate_timestamp.cmake")
+add_dependencies (wavesim wavesim_timestamp)
+
+if (${WAVESIM_TESTS})
+    target_link_libraries (wavesim PRIVATE gmock)
+    add_executable (wavesim_tests "tests/app.c")
+    target_link_libraries (wavesim_tests wavesim)
+    set_target_properties (wavesim_tests PROPERTIES
+        INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+    install (TARGETS wavesim_tests
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif ()
+
+if (${WAVESIM_PYTHON})
+    target_link_libraries (wavesim PRIVATE ${PYTHON_LIBRARIES})
+endif()
+
+install (TARGETS wavesim
+    EXPORT WaveSimConfig
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install (DIRECTORY "include/extern/wavesim" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install (DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/wavesim" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install (EXPORT WaveSimConfig DESTINATION "share/wavesim/cmake")
+export (TARGETS wavesim FILE WaveSimConfig.cmake)
 
 ###############################################################################
 # Dependency settings
