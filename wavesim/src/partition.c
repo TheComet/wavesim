@@ -78,7 +78,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
              * return value. Note that 1 = absorption + reflection + transmission,
              * which will be the case if we normalize the "art" vector.
              */
-            vec3_normalise(art_avg.xyz);
+            vec3_normalize(art_avg.xyz);
             cell_attribute->absorption = art_avg.v.x;
             cell_attribute->reflection = art_avg.v.y;
             cell_attribute->transmission = art_avg.v.z;

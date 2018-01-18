@@ -84,7 +84,7 @@ vec3_length(const WS_REAL v[3])
 
 /* ------------------------------------------------------------------------- */
 void
-vec3_normalise(WS_REAL v[3])
+vec3_normalize(WS_REAL v[3])
 {
     WS_REAL length = vec3_length(v);
     if (length != 0.0)

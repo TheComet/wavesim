@@ -46,7 +46,7 @@ WAVESIM_PRIVATE_API WS_REAL
 vec3_length(const WS_REAL v[3]);
 
 WAVESIM_PRIVATE_API void
-vec3_normalise(WS_REAL v[3]);
+vec3_normalize(WS_REAL v[3]);
 
 WAVESIM_PRIVATE_API WS_REAL
 vec3_dot(const WS_REAL v1[3], const WS_REAL v2[3]);
