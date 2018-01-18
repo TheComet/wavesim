@@ -20,7 +20,10 @@ aabb(WS_REAL ax, WS_REAL ay, WS_REAL az, WS_REAL bx, WS_REAL by, WS_REAL bz)
 aabb_t
 aabb_reset(void)
 {
-    return aabb(INFINITY, INFINITY, INFINITY, -INFINITY, -INFINITY, -INFINITY);
+    return (aabb_t){{
+        {{INFINITY, INFINITY, INFINITY}},
+        {{-INFINITY, -INFINITY, -INFINITY}},
+    }};
 }
 
 /* ------------------------------------------------------------------------- */
