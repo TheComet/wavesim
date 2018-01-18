@@ -183,7 +183,7 @@ vector_back(const vector_t* vector)
 void*
 vector_insert_emplace(vector_t* vector, intptr_t index)
 {
-	intptr_t offset;
+    intptr_t offset;
 
     assert(vector);
 

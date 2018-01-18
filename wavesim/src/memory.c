@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #define BACKTRACE_OMIT_COUNT 2
 
@@ -234,9 +235,9 @@ memory_deinit(void)
 
     /* overall report */
     leaks = (g_allocations > g_deallocations ? g_allocations - g_deallocations : g_deallocations - g_allocations);
-    printf("allocations: %llu\n", (uint64_t)g_allocations);
-    printf("deallocations: %llu\n", (uint64_t)g_deallocations);
-    printf("memory leaks: %llu\n", (uint64_t)leaks);
+    printf("allocations: %" PRIu64 "\n", (uint64_t)g_allocations);
+    printf("deallocations: %" PRIu64 "\n", (uint64_t)g_deallocations);
+    printf("memory leaks: %" PRIu64 "\n", (uint64_t)leaks);
     printf("=========================================\n");
 
     ++g_allocations; /* this is the single allocation still held by the report vector */

@@ -6,6 +6,8 @@ project ("wavesimlib"
     VERSION 0.0.1
     LANGUAGES C CXX)
 
+set (CMAKE_CXX_STANDARD 11)
+
 include (CheckIncludeFiles)
 include (CheckCSourceCompiles)
 include (CMakeDependentOption)
@@ -205,9 +207,9 @@ if (${WAVESIM_PYTHON})
             -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
         >
     )
-	
-	# The library is being built
-	target_compile_definitions (wavesim_python_obj PRIVATE WAVESIM_BUILDING)
+    
+    # The library is being built
+    target_compile_definitions (wavesim_python_obj PRIVATE WAVESIM_BUILDING)
 endif ()
 
 ###############################################################################
@@ -260,20 +262,14 @@ if (${WAVESIM_TESTS})
             "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
             "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/"
             $<$<BOOL:${WAVESIM_PYTHON}>:${PYTHON_INCLUDE_DIRS}>)
-	target_compile_options (wavesim_tests_obj
+    target_compile_options (wavesim_tests_obj
         PUBLIC $<$<C_COMPILER_ID:MSVC>:
             /MTd /D_CRT_SECURE_NO_DEPRECATE
         >
-        PUBLIC $<$<C_COMPILER_ID:GNU>:
-            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
-        >
-        PUBLIC $<$<C_COMPILER_ID:Clang>:
-            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
-        >
     )
-	
-	# The library is being built
-	target_compile_definitions (wavesim_tests_obj PRIVATE WAVESIM_BUILDING)
+    
+    # The library is being built
+    target_compile_definitions (wavesim_tests_obj PRIVATE WAVESIM_BUILDING)
 endif ()
 
 ###############################################################################

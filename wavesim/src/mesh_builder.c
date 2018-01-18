@@ -78,7 +78,7 @@ mesh_builder_build(mesh_builder_t* mb)
         ib_type = MESH_IB_UINT64
         ib_size = 8;
     }
-	else
+    else
 #endif
     if (vector_count(&mb->faces) * 3 >= (1<<16))
     {

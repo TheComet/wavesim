@@ -39,10 +39,10 @@ btree_destroy(btree_t* btree)
 static btree_hash_value_t*
 btree_find_lower_bound(const btree_t* btree, uint32_t hash)
 {
-	intptr_t half;
+    intptr_t half;
     btree_hash_value_t* middle;
     btree_hash_value_t* data;
-	intptr_t len;
+    intptr_t len;
 
     assert(btree);
 

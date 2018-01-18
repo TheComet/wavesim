@@ -20,9 +20,9 @@ C_BEGIN
 
 typedef struct vector_t
 {
-	intptr_t element_size;       /* how large one element is in bytes */
-	intptr_t capacity;           /* how many elements actually fit into the allocated space */
-	intptr_t count;              /* number of elements inserted */
+    intptr_t element_size;       /* how large one element is in bytes */
+    intptr_t capacity;           /* how many elements actually fit into the allocated space */
+    intptr_t count;              /* number of elements inserted */
     DATA_POINTER_TYPE* data;     /* pointer to the contiguous section of memory */
 } vector_t;
 

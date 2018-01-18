@@ -175,16 +175,16 @@ mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
                            WS_IB face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
-	WS_IB indices[3];
-	vec3_t vertices[3];
+    WS_IB indices[3];
+    vec3_t vertices[3];
 
-	indices[0] = mesh_get_index_from_buffer(ib, face_index * 3 + 0, ib_type);
-	indices[1] = mesh_get_index_from_buffer(ib, face_index * 3 + 1, ib_type);
-	indices[2] = mesh_get_index_from_buffer(ib, face_index * 3 + 2, ib_type);
+    indices[0] = mesh_get_index_from_buffer(ib, face_index * 3 + 0, ib_type);
+    indices[1] = mesh_get_index_from_buffer(ib, face_index * 3 + 1, ib_type);
+    indices[2] = mesh_get_index_from_buffer(ib, face_index * 3 + 2, ib_type);
 
-	vertices[0] = mesh_get_vertex_position_from_buffer(vb, indices[0], vb_type);
-	vertices[1] = mesh_get_vertex_position_from_buffer(vb, indices[1], vb_type);
-	vertices[2] = mesh_get_vertex_position_from_buffer(vb, indices[2], vb_type);
+    vertices[0] = mesh_get_vertex_position_from_buffer(vb, indices[0], vb_type);
+    vertices[1] = mesh_get_vertex_position_from_buffer(vb, indices[1], vb_type);
+    vertices[2] = mesh_get_vertex_position_from_buffer(vb, indices[2], vb_type);
 
     return face(
         vertex(vertices[0], attrs[indices[0]]),

@@ -4,11 +4,11 @@
 face_t
 face(vertex_t v1, vertex_t v2, vertex_t v3)
 {
-	face_t f;
-	f.vertices[0] = v1;
-	f.vertices[1] = v2;
-	f.vertices[2] = v3;
-	return f;
+    face_t f;
+    f.vertices[0] = v1;
+    f.vertices[1] = v2;
+    f.vertices[2] = v3;
+    return f;
 }
 
 /* ------------------------------------------------------------------------- */
