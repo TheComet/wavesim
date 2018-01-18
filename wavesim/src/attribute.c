@@ -7,7 +7,11 @@
 attribute_t
 attribute(WS_REAL reflection, WS_REAL transmission, WS_REAL absorption)
 {
-    return (attribute_t){reflection, transmission, absorption};
+	attribute_t a;
+	a.reflection = reflection;
+	a.transmission = transmission;
+	a.absorption = absorption;
+	return a;
 }
 
 /* ------------------------------------------------------------------------- */

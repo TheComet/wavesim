@@ -65,7 +65,7 @@ mesh_clear_buffers(mesh_t* mesh)
 int
 mesh_assign_buffers(mesh_t* mesh,
                     void* vertex_buffer, void* index_buffer,
-                    int vertex_count, int index_count,
+                    WS_IB vertex_count, WS_IB index_count,
                     mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     mesh_clear_buffers(mesh);
@@ -89,7 +89,7 @@ mesh_assign_buffers(mesh_t* mesh,
 WAVESIM_PRIVATE_API int
 mesh_copy_from_buffers(mesh_t* mesh,
                        const void* vertex_buffer, const void* index_buffer,
-                       int vertex_count, int index_count,
+                       WS_IB vertex_count, WS_IB index_count,
                        mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     mesh_clear_buffers(mesh);
@@ -121,14 +121,14 @@ mesh_copy_from_buffers(mesh_t* mesh,
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-mesh_get_vertex_position(mesh_t* mesh, int index)
+mesh_get_vertex_position(mesh_t* mesh, WS_IB index)
 {
     return mesh_get_vertex_position_from_buffer(mesh->vb, index, mesh->vb_type);
 }
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-mesh_get_vertex_position_from_buffer(void* vb, int index, mesh_vb_type_e vb_type)
+mesh_get_vertex_position_from_buffer(void* vb, WS_IB index, mesh_vb_type_e vb_type)
 {
     index *= 3;
 
@@ -151,7 +151,7 @@ mesh_get_vertex_position_from_buffer(void* vb, int index, mesh_vb_type_e vb_type
 
 /* ------------------------------------------------------------------------- */
 WS_IB
-mesh_get_index_from_buffer(void* ib, int index, mesh_ib_type_e ib_type)
+mesh_get_index_from_buffer(void* ib, WS_IB index, mesh_ib_type_e ib_type)
 {
     switch (ib_type)
     {
@@ -172,28 +172,24 @@ mesh_get_index_from_buffer(void* ib, int index, mesh_ib_type_e ib_type)
 /* ------------------------------------------------------------------------- */
 face_t
 mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
-                           int face_index,
+                           WS_IB face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
-    WS_IB indices[3] = {
-        mesh_get_index_from_buffer(ib, face_index * 3 + 0, ib_type),
-        mesh_get_index_from_buffer(ib, face_index * 3 + 1, ib_type),
-        mesh_get_index_from_buffer(ib, face_index * 3 + 2, ib_type)
-    };
-    vec3_t vertices[3] = {
-        mesh_get_vertex_position_from_buffer(vb, indices[0], vb_type),
-        mesh_get_vertex_position_from_buffer(vb, indices[1], vb_type),
-        mesh_get_vertex_position_from_buffer(vb, indices[2], vb_type)
-    };
-    attribute_t attributes[3] = {
-        attrs[indices[0]],
-        attrs[indices[1]],
-        attrs[indices[2]]
-    };
+	WS_IB indices[3];
+	vec3_t vertices[3];
+
+	indices[0] = mesh_get_index_from_buffer(ib, face_index * 3 + 0, ib_type);
+	indices[1] = mesh_get_index_from_buffer(ib, face_index * 3 + 1, ib_type);
+	indices[2] = mesh_get_index_from_buffer(ib, face_index * 3 + 2, ib_type);
+
+	vertices[0] = mesh_get_vertex_position_from_buffer(vb, indices[0], vb_type);
+	vertices[1] = mesh_get_vertex_position_from_buffer(vb, indices[1], vb_type);
+	vertices[2] = mesh_get_vertex_position_from_buffer(vb, indices[2], vb_type);
+
     return face(
-        vertex(vertices[0], attributes[0]),
-        vertex(vertices[1], attributes[1]),
-        vertex(vertices[2], attributes[2])
+        vertex(vertices[0], attrs[indices[0]]),
+        vertex(vertices[1], attrs[indices[1]]),
+        vertex(vertices[2], attrs[indices[2]])
     );
 }
 
@@ -230,7 +226,7 @@ static void init_attribute_buffer(mesh_t* mesh, int vertex_count)
 /* ------------------------------------------------------------------------- */
 static void calculate_aabb(mesh_t* mesh)
 {
-    int v, i;
+    WS_IB v, i;
     mesh->aabb = aabb_reset();
 
     for (v = 0; v != mesh->vb_count; ++v)

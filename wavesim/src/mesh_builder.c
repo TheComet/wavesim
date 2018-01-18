@@ -72,15 +72,15 @@ mesh_builder_build(mesh_builder_t* mb)
 
     /* Determine what datatype to use for the index buffer; there will be
      * 3*faces indices */
-    if (1 == 0) {}
 #ifdef WAVESIM_64BIT_INDEX_BUFFERS
-    else if (vector_count(&mb->faces) * 3 >= (1<<32))
+    if (vector_count(&mb->faces) * 3 >= (1<<32))
     {
         ib_type = MESH_IB_UINT64
         ib_size = 8;
     }
+	else
 #endif
-    else if (vector_count(&mb->faces) * 3 >= (1<<16))
+    if (vector_count(&mb->faces) * 3 >= (1<<16))
     {
         ib_type = MESH_IB_UINT32;
         ib_size = 4;
@@ -148,7 +148,7 @@ mesh_builder_build(mesh_builder_t* mb)
 #endif
                     WS_IB i;
                 } index;
-                if ((index.i = vector_push(&vb, &face->vertices[v].position.v.x)) == VECTOR_ERROR)
+                if ((index.i = (WS_IB)vector_push(&vb, &face->vertices[v].position.v.x)) == VECTOR_ERROR)
                     goto buffer_push_failed;
                 if (         vector_push(&vb, &face->vertices[v].position.v.y) == VECTOR_ERROR)
                     goto buffer_push_failed;
@@ -195,7 +195,7 @@ mesh_builder_build(mesh_builder_t* mb)
         goto alloc_mesh_failed;
     mesh_copy_from_buffers(mesh,
                            vb.data, ib.data,
-                           vector_count(&vb) / 3, vector_count(&ib),
+                           (WS_IB)vector_count(&vb) / 3, (WS_IB)vector_count(&ib),
                            vb_type, ib_type);
 
     /* Copy attribute buffer into mesh */

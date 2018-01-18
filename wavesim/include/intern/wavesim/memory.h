@@ -31,9 +31,9 @@ memory_init(void);
  *
  * In release mode this does nothing. In debug mode this will output the memory
  * report and print backtraces, if enabled.
- * @return Returns the number of memory leaks.
+ * @return Returns the difference in malloc/free calls
  */
-WAVESIM_PRIVATE_API uintptr_t
+WAVESIM_PRIVATE_API int
 memory_deinit(void);
 
 #ifdef WAVESIM_MEMORY_DEBUGGING

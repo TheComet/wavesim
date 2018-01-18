@@ -10,10 +10,15 @@ aabb(WS_REAL ax, WS_REAL ay, WS_REAL az, WS_REAL bx, WS_REAL by, WS_REAL bz)
     assert(ax <= bx);
     assert(ay <= by);
     assert(az <= bz);
-    return (aabb_t){{
-        {{ax, ay, az}},
-        {{bx, by, bz}},
-    }};
+
+	aabb_t bb;
+	AABB_AX(bb) = ax;
+	AABB_AY(bb) = ay;
+	AABB_AZ(bb) = az;
+	AABB_BX(bb) = bx;
+	AABB_BY(bb) = by;
+	AABB_BZ(bb) = bz;
+	return bb;
 }
 
 /* ------------------------------------------------------------------------- */

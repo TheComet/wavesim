@@ -20,19 +20,19 @@
  * Otherwise the vector will expand to the specified target size.
  * @note No checks are performed to make sure the target size is large enough.
  */
-static int
+static intptr_t
 vector_expand(vector_t *vector,
-              uintptr_t insertion_index,
-              WS_IB target_size);
+              intptr_t insertion_index,
+              intptr_t target_size);
 
 /* ----------------------------------------------------------------------------
  * Exported functions
  * ------------------------------------------------------------------------- */
 vector_t*
-vector_create(const WS_IB element_size)
+vector_create(const intptr_t element_size)
 {
-    vector_t* vector;
-    if (!(vector = (vector_t*)MALLOC(sizeof(vector_t))))
+    vector_t* vector = MALLOC(sizeof(vector_t));
+    if (vector == NULL)
         return NULL;
     vector_construct(vector, element_size);
     return vector;
@@ -40,7 +40,7 @@ vector_create(const WS_IB element_size)
 
 /* ------------------------------------------------------------------------- */
 void
-vector_construct(vector_t* vector, const WS_IB element_size)
+vector_construct(vector_t* vector, const intptr_t element_size)
 {
     assert(vector);
     memset(vector, 0, sizeof(vector_t));
@@ -83,10 +83,10 @@ vector_clear_free(vector_t* vector)
 }
 
 /* ------------------------------------------------------------------------- */
-int
-vector_resize(vector_t* vector, WS_IB size)
+intptr_t
+vector_resize(vector_t* vector, intptr_t size)
 {
-    int result = 0;
+    intptr_t result = 0;
 
     assert(vector);
 
@@ -114,7 +114,7 @@ vector_emplace(vector_t* vector)
 }
 
 /* ------------------------------------------------------------------------- */
-WS_IB
+intptr_t
 vector_push(vector_t* vector, void* data)
 {
     void* emplaced;
@@ -130,7 +130,7 @@ vector_push(vector_t* vector, void* data)
 }
 
 /* ------------------------------------------------------------------------- */
-WS_IB
+intptr_t
 vector_push_vector(vector_t* vector, const vector_t* source_vector)
 {
     assert(vector);
@@ -181,9 +181,9 @@ vector_back(const vector_t* vector)
 
 /* ------------------------------------------------------------------------- */
 void*
-vector_insert_emplace(vector_t* vector, WS_IB index)
+vector_insert_emplace(vector_t* vector, intptr_t index)
 {
-    WS_IB offset;
+	intptr_t offset;
 
     assert(vector);
 
@@ -204,7 +204,7 @@ vector_insert_emplace(vector_t* vector, WS_IB index)
     else
     {
         /* shift all elements up by one to make space for insertion */
-        WS_IB total_size = vector->count * vector->element_size;
+        intptr_t total_size = vector->count * vector->element_size;
         offset = vector->element_size * index;
         memmove((void*)((intptr_t)vector->data + offset + vector->element_size),
                 (void*)((intptr_t)vector->data + offset),
@@ -218,7 +218,7 @@ vector_insert_emplace(vector_t* vector, WS_IB index)
 
 /* ------------------------------------------------------------------------- */
 int
-vector_insert(vector_t* vector, WS_IB index, void* data)
+vector_insert(vector_t* vector, intptr_t index, void* data)
 {
     void* emplaced;
 
@@ -234,7 +234,7 @@ vector_insert(vector_t* vector, WS_IB index, void* data)
 
 /* ------------------------------------------------------------------------- */
 void
-vector_erase_index(vector_t* vector, WS_IB index)
+vector_erase_index(vector_t* vector, intptr_t index)
 {
     assert(vector);
 
@@ -247,8 +247,8 @@ vector_erase_index(vector_t* vector, WS_IB index)
     else
     {
         /* shift memory right after the specified element down by one element */
-        WS_IB offset = vector->element_size * index;  /* offset to the element being erased in bytes */
-        WS_IB total_size = vector->element_size * vector->count; /* total current size in bytes */
+        intptr_t offset = vector->element_size * index;  /* offset to the element being erased in bytes */
+        intptr_t total_size = vector->element_size * vector->count; /* total current size in bytes */
         memmove((void*)((intptr_t)vector->data + offset),   /* target is to overwrite the element specified by index */
                 (void*)((intptr_t)vector->data + offset + vector->element_size),    /* copy beginning from one element ahead of element to be erased */
                 total_size - offset - vector->element_size);     /* copying number of elements after element to be erased */
@@ -279,7 +279,7 @@ vector_erase_element(vector_t* vector, void* element)
 
 /* ------------------------------------------------------------------------- */
 void*
-vector_get_element(const vector_t* vector, WS_IB index)
+vector_get_element(const vector_t* vector, intptr_t index)
 {
     assert(vector);
 
@@ -291,12 +291,12 @@ vector_get_element(const vector_t* vector, WS_IB index)
 /* ----------------------------------------------------------------------------
  * Static functions
  * ------------------------------------------------------------------------- */
-static int
+static intptr_t
 vector_expand(vector_t *vector,
-                      uintptr_t insertion_index,
-                      WS_IB target_count)
+                      intptr_t insertion_index,
+                      intptr_t target_count)
 {
-    uintptr_t new_count;
+    intptr_t new_count;
     DATA_POINTER_TYPE* old_data;
     DATA_POINTER_TYPE* new_data;
 
@@ -327,15 +327,15 @@ vector_expand(vector_t *vector,
         return -1;
 
     /* if (no insertion index is required, copy all data to new memory */
-    if (insertion_index == (uintptr_t)-1 || insertion_index >= new_count)
+    if (insertion_index == -1 || insertion_index >= new_count)
         memcpy(new_data, old_data, vector->count * vector->element_size);
 
     /* keep space for one element at the insertion index */
     else
     {
         /* copy old data up until right before insertion offset */
-        WS_IB offset = vector->element_size * insertion_index;
-        WS_IB total_size = vector->element_size * vector->count;
+        intptr_t offset = vector->element_size * insertion_index;
+        intptr_t total_size = vector->element_size * vector->count;
         memcpy(new_data, old_data, offset);
         /* copy the remaining amount of old data shifted one element ahead */
         memcpy((void*)((intptr_t)new_data + offset + vector->element_size),

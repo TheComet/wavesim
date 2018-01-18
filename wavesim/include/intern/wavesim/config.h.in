@@ -30,9 +30,9 @@
 
     /* Index buffer type depends on whether 64-bit IBs are enabled */
 #   ifdef WAVESIM_64BIT_INDEX_BUFFERS
-#       define WS_IB uint64_t
+#       define WS_IB int64_t
 #   else
-#       define WS_IB uint32_t
+#       define WS_IB int32_t
 #   endif
 
     /* Define epsilon depending on type of "real" */

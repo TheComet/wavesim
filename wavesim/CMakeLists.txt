@@ -33,7 +33,7 @@ cmake_dependent_option (WAVESIM_TESTS "Whether or not to build unit tests (note:
 
 # Determine visibility macros if the library is a shared library.
 if (WAVESIM_BUILD_TYPE MATCHES "SHARED")
-    if (${CMAKE_C_COMPILER_ID} MATCHES "Clang" OR ${CMAKE_C_COMPILER_ID} MATCHES "GNU")
+    if (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU")
         if (CYGWIN)
             set (WAVESIM_HELPER_API_EXPORT "__declspec(dllexport)")
             set (WAVESIM_HELPER_API_IMPORT "__declspec(dllimport)")
@@ -43,7 +43,7 @@ if (WAVESIM_BUILD_TYPE MATCHES "SHARED")
             set (WAVESIM_HELPER_API_IMPORT "__attribute__((visibility(\"default\")))")
             set (WAVESIM_HELPER_API_LOCAL  "__attribute__((visibility(\"hidden\")))")
         endif ()
-    elseif (${CMAKE_C_COMPILER_ID} MATCHES "MSVC")
+    elseif (CMAKE_C_COMPILER_ID MATCHES "MSVC")
         set (WAVESIM_HELPER_API_EXPORT "__declspec(dllexport)")
         set (WAVESIM_HELPER_API_IMPORT "__declspec(dllimport)")
         set (WAVESIM_HELPER_API_LOCAL  "")
@@ -157,7 +157,7 @@ target_compile_definitions (wavesim_obj PRIVATE WAVESIM_BUILDING)
 
 target_compile_options (wavesim_obj
     PUBLIC $<$<C_COMPILER_ID:MSVC>:
-        /EHa /MTd /W4 /WX /D_CRT_SECURE_NO_DEPRECATE
+        /EHa /MTd /W4 /WX /wd4706 /D_CRT_SECURE_NO_DEPRECATE
     >
     PUBLIC $<$<C_COMPILER_ID:GNU>:
         -Wall -Wextra -Werror -pedantic -pedantic-errors
@@ -196,7 +196,7 @@ if (${WAVESIM_PYTHON})
             "${PYTHON_INCLUDE_DIRS}")
     target_compile_options (wavesim_python_obj
         PUBLIC $<$<C_COMPILER_ID:MSVC>:
-            /EHa /MTd /W4 /WX /D_CRT_SECURE_NO_DEPRECATE
+            /EHa /MTd /W4 /WX /wd4115 /D_CRT_SECURE_NO_DEPRECATE
         >
         PUBLIC $<$<C_COMPILER_ID:GNU>:
             -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
@@ -205,6 +205,9 @@ if (${WAVESIM_PYTHON})
             -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
         >
     )
+	
+	# The library is being built
+	target_compile_definitions (wavesim_python_obj PRIVATE WAVESIM_BUILDING)
 endif ()
 
 ###############################################################################
@@ -257,6 +260,20 @@ if (${WAVESIM_TESTS})
             "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
             "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/"
             $<$<BOOL:${WAVESIM_PYTHON}>:${PYTHON_INCLUDE_DIRS}>)
+	target_compile_options (wavesim_tests_obj
+        PUBLIC $<$<C_COMPILER_ID:MSVC>:
+            /MTd /D_CRT_SECURE_NO_DEPRECATE
+        >
+        PUBLIC $<$<C_COMPILER_ID:GNU>:
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+        >
+        PUBLIC $<$<C_COMPILER_ID:Clang>:
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+        >
+    )
+	
+	# The library is being built
+	target_compile_definitions (wavesim_tests_obj PRIVATE WAVESIM_BUILDING)
 endif ()
 
 ###############################################################################

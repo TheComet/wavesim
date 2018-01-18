@@ -37,16 +37,16 @@ typedef struct mesh_t
 
     mesh_vb_type_e   vb_type;
     mesh_ib_type_e   ib_type;
-    int              vb_count;  /* Number of vertices in the buffer. This
+    WS_IB            vb_count;  /* Number of vertices in the buffer. This
                                  * number is always divisible by 3, because the
                                  * vertices appear as float triplets in the
                                  * buffer. As such, the actual size of the
                                  * buffer is 3 times larger than this value. */
-    int              ib_count;  /* Number of indices in the buffer */
-    int              vb_size;   /* Size in bytes of one element in the vertex
+    WS_IB            ib_count;  /* Number of indices in the buffer */
+    WS_IB            vb_size;   /* Size in bytes of one element in the vertex
                                  * buffer. vb_size*3 will be the size in bytes
                                  * of one vertex triplet */
-    int              ib_size;   /* Size in bytes of one index buffer element */
+    WS_IB            ib_size;   /* Size in bytes of one index buffer element */
 
     aabb_t           aabb;
 
@@ -71,27 +71,27 @@ mesh_clear_buffers(mesh_t* mesh);
 WAVESIM_PRIVATE_API int
 mesh_assign_buffers(mesh_t* mesh,
                     void* vertex_buffer, void* index_buffer,
-                    int vertex_count, int index_count,
+                    WS_IB vertex_count, WS_IB index_count,
                     mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
 WAVESIM_PRIVATE_API int
 mesh_copy_from_buffers(mesh_t* mesh,
                        const void* vertex_buffer, const void* index_buffer,
-                       int vertex_count, int index_count,
+                       WS_IB vertex_count, WS_IB index_count,
                        mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
 WAVESIM_PRIVATE_API vec3_t
-mesh_get_vertex_position(mesh_t* mesh, int index);
+mesh_get_vertex_position(mesh_t* mesh, WS_IB index);
 
 WAVESIM_PRIVATE_API vec3_t
-mesh_get_vertex_position_from_buffer(void* vb, int index, mesh_vb_type_e vb_type);
+mesh_get_vertex_position_from_buffer(void* vb, WS_IB index, mesh_vb_type_e vb_type);
 
 WAVESIM_PRIVATE_API WS_IB
-mesh_get_index_from_buffer(void* ib, int index, mesh_ib_type_e ib_type);
+mesh_get_index_from_buffer(void* ib, WS_IB index, mesh_ib_type_e ib_type);
 
 WAVESIM_PRIVATE_API face_t
 mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
-                           int face_index,
+                           WS_IB face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
 #define mesh_index_count(mesh) (mesh->ib_count)

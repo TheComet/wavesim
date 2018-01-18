@@ -10,7 +10,7 @@
 
 #ifdef WAVESIM_MEMORY_DEBUGGING
 static uintptr_t g_allocations = 0;
-static uintptr_t d_deg_allocations = 0;
+static uintptr_t g_deallocations = 0;
 static uintptr_t g_ignore_btree_malloc = 0;
 static btree_t report;
 
@@ -29,7 +29,7 @@ int
 memory_init(void)
 {
     g_allocations = 0;
-    d_deg_allocations = 0;
+    g_deallocations = 0;
 
     /*
      * Init bst vector of report objects and force it to allocate by adding
@@ -91,7 +91,7 @@ malloc_wrapper(intptr_t size)
 #   endif
 
             /* insert into btree */
-            if (btree_insert(&report, (uintptr_t)p, info) == 1)
+            if (btree_insert(&report, (uint32_t)(intptr_t)p, info) == 1)
             {
                 fprintf(stderr,
                 "[memory] WARNING: Hash collision occurred when inserting\n"
@@ -151,7 +151,7 @@ free_wrapper(void* ptr)
     /* find matching allocation and remove from btree */
     if (!g_ignore_btree_malloc)
     {
-        report_info_t* info = (report_info_t*)btree_erase(&report, (uintptr_t)ptr);
+        report_info_t* info = (report_info_t*)btree_erase(&report, (uint32_t)(intptr_t)ptr);
         if (info)
         {
 #   ifdef WAVESIM_MEMORY_BACKTRACE
@@ -188,7 +188,7 @@ free_wrapper(void* ptr)
 
     if (ptr)
     {
-        ++d_deg_allocations;
+        ++g_deallocations;
         free(ptr);
     }
     else
@@ -196,7 +196,7 @@ free_wrapper(void* ptr)
 }
 
 /* ------------------------------------------------------------------------- */
-uintptr_t
+int
 memory_deinit(void)
 {
     uintptr_t leaks;
@@ -233,17 +233,17 @@ memory_deinit(void)
     }
 
     /* overall report */
-    leaks = (g_allocations > d_deg_allocations ? g_allocations - d_deg_allocations : d_deg_allocations - g_allocations);
-    printf("allocations: %lu\n", g_allocations);
-    printf("deallocations: %lu\n", d_deg_allocations);
-    printf("memory leaks: %lu\n", leaks);
+    leaks = (g_allocations > g_deallocations ? g_allocations - g_deallocations : g_deallocations - g_allocations);
+    printf("allocations: %llu\n", (uint64_t)g_allocations);
+    printf("deallocations: %llu\n", (uint64_t)g_deallocations);
+    printf("memory leaks: %llu\n", (uint64_t)leaks);
     printf("=========================================\n");
 
     ++g_allocations; /* this is the single allocation still held by the report vector */
     g_ignore_btree_malloc = 1;
     btree_clear_free(&report);
 
-    return leaks;
+    return (int)(g_allocations - g_deallocations);
 }
 
 #else /* WAVESIM_MEMORY_DEBUGGING */

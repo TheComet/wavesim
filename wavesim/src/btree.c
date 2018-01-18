@@ -9,8 +9,8 @@ const uint32_t BTREE_VECTOR_INVALID_HASH = (uint32_t)-1;
 btree_t*
 btree_create(void)
 {
-    btree_t* btree;
-    if (!(btree = ( btree_t*)MALLOC(sizeof *btree)))
+    btree_t* btree = MALLOC(sizeof *btree);
+    if (btree == NULL)
         return NULL;
     btree_construct(btree);
     return btree;
@@ -18,7 +18,7 @@ btree_create(void)
 
 /* ------------------------------------------------------------------------- */
 void
-btree_construct( btree_t* btree)
+btree_construct(btree_t* btree)
 {
     assert(btree);
     vector_construct(&btree->vector, sizeof( btree_hash_value_t ));
@@ -26,7 +26,7 @@ btree_construct( btree_t* btree)
 
 /* ------------------------------------------------------------------------- */
 void
-btree_destroy( btree_t* btree)
+btree_destroy(btree_t* btree)
 {
     assert(btree);
     btree_clear_free(btree);
@@ -39,10 +39,10 @@ btree_destroy( btree_t* btree)
 static btree_hash_value_t*
 btree_find_lower_bound(const btree_t* btree, uint32_t hash)
 {
-    uint32_t half;
+	intptr_t half;
     btree_hash_value_t* middle;
     btree_hash_value_t* data;
-    uint32_t len;
+	intptr_t len;
 
     assert(btree);
 
@@ -68,7 +68,7 @@ btree_find_lower_bound(const btree_t* btree, uint32_t hash)
     }
 
     /* if ("data" is pointing outside of the valid elements in the vector, also return NULL */
-    if ((intptr_t)data >= (intptr_t)btree->vector.data + (intptr_t)btree->vector.count * (intptr_t)btree->vector.element_size)
+    if ((intptr_t)data >= (intptr_t)btree->vector.data + btree->vector.count * btree->vector.element_size)
         return NULL;
     else
         return data;
@@ -76,7 +76,7 @@ btree_find_lower_bound(const btree_t* btree, uint32_t hash)
 
 /* ------------------------------------------------------------------------- */
 int
-btree_insert( btree_t* btree, uint32_t hash, void* value)
+btree_insert(btree_t* btree, uint32_t hash, void* value)
 {
     btree_hash_value_t* emplaced_data;
     btree_hash_value_t* lower_bound;
@@ -95,10 +95,10 @@ btree_insert( btree_t* btree, uint32_t hash, void* value)
     /* either push back or insert, depending on whether there is already data
      * in the btree */
     if (!lower_bound)
-        emplaced_data = ( btree_hash_value_t*)vector_emplace(&btree->vector);
+        emplaced_data = (btree_hash_value_t*)vector_emplace(&btree->vector);
     else
         emplaced_data = vector_insert_emplace(&btree->vector,
-                          lower_bound - ( btree_hash_value_t*)btree->vector.data);
+                          lower_bound - (btree_hash_value_t*)btree->vector.data);
 
     if (!emplaced_data)
         return -1;
@@ -112,7 +112,7 @@ btree_insert( btree_t* btree, uint32_t hash, void* value)
 
 /* ------------------------------------------------------------------------- */
 void
-btree_set( btree_t* btree, uint32_t hash, void* value)
+btree_set(btree_t* btree, uint32_t hash, void* value)
 {
     btree_hash_value_t* data;
 
@@ -172,7 +172,7 @@ btree_get_any_element(const btree_t* btree)
 
 /* ------------------------------------------------------------------------- */
 int
-btree_hash_exists( btree_t* btree, uint32_t hash)
+btree_hash_exists(btree_t* btree, uint32_t hash)
 {
     btree_hash_value_t* data;
 
@@ -186,7 +186,7 @@ btree_hash_exists( btree_t* btree, uint32_t hash)
 
 /* ------------------------------------------------------------------------- */
 uint32_t
-btree_find_unused_hash( btree_t* btree)
+btree_find_unused_hash(btree_t* btree)
 {
     uint32_t i = 0;
 
@@ -202,7 +202,7 @@ btree_find_unused_hash( btree_t* btree)
 
 /* ------------------------------------------------------------------------- */
 void*
-btree_erase( btree_t* btree, uint32_t hash)
+btree_erase(btree_t* btree, uint32_t hash)
 {
     void* value;
     btree_hash_value_t* data;
@@ -220,7 +220,7 @@ btree_erase( btree_t* btree, uint32_t hash)
 
 /* ------------------------------------------------------------------------- */
 void*
-btree_erase_element( btree_t* btree, void* value)
+btree_erase_element(btree_t* btree, void* value)
 {
     void* data;
     uint32_t hash;
@@ -239,14 +239,14 @@ btree_erase_element( btree_t* btree, void* value)
 
 /* ------------------------------------------------------------------------- */
 void
-btree_clear( btree_t* btree)
+btree_clear(btree_t* btree)
 {
     assert(btree);
     vector_clear(&btree->vector);
 }
 
 /* ------------------------------------------------------------------------- */
-void btree_clear_free( btree_t* btree)
+void btree_clear_free(btree_t* btree)
 {
     assert(btree);
     vector_clear_free(&btree->vector);

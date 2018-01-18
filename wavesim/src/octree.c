@@ -166,16 +166,14 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS
             * same datatype as the mesh's index buffer (which, if nothing broke,
             * should always be the case).
             */
-            WS_IB indices[3] = {
-                mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 0, mesh->ib_type),
-                mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 1, mesh->ib_type),
-                mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 2, mesh->ib_type)
-            };
-            vec3_t face[3] = {
-                mesh_get_vertex_position_from_buffer(mesh->vb, indices[0], mesh->vb_type),
-                mesh_get_vertex_position_from_buffer(mesh->vb, indices[1], mesh->vb_type),
-                mesh_get_vertex_position_from_buffer(mesh->vb, indices[2], mesh->vb_type)
-            };
+            WS_IB indices[3];
+            vec3_t face[3];
+            indices[0] = mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 0, mesh->ib_type);
+            indices[1] = mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 1, mesh->ib_type);
+            indices[2] = mesh_get_index_from_buffer(node->parent->index_buffer.data, i + 2, mesh->ib_type);
+            face[0] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[0], mesh->vb_type);
+            face[1] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[1], mesh->vb_type);
+            face[2] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[2], mesh->vb_type);
 
             /*
             * Add face to this node's index buffer if its bounding box intersects
@@ -203,7 +201,7 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS
     if (octree_subdivide(octree, node) < 0)
         return -1;
 
-    for (int i = 0; i != 8; ++i)
+    for (i = 0; i != 8; ++i)
         octree_build_from_mesh_recursive(octree, &node->children[i], smallest_subdivision);
     return 0;
 }

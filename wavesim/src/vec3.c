@@ -6,7 +6,11 @@
 vec3_t
 vec3(WS_REAL x, WS_REAL y, WS_REAL z)
 {
-    return (vec3_t){{x, y, z}};
+    vec3_t v;
+    v.v.x = x;
+    v.v.y = y;
+    v.v.z = z;
+    return v;
 }
 
 /* ------------------------------------------------------------------------- */

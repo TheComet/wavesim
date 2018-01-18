@@ -4,7 +4,10 @@
 vertex_t
 vertex(vec3_t position, attribute_t attribute)
 {
-    return (vertex_t){position, attribute};
+    vertex_t vert;
+    vert.position = position;
+    vert.attr = attribute;
+    return vert;
 }
 
 /* ------------------------------------------------------------------------- */
