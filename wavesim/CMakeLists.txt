@@ -122,7 +122,7 @@ else ()
 endif ()
 
 ###############################################################################
-# Unit test library
+# Wavesim core
 ###############################################################################
 
 add_library (wavesim_obj OBJECT
@@ -166,6 +166,12 @@ target_compile_options (wavesim_obj
         -Wall -Wextra -Werror -pedantic -pedantic-errors
     >
 )
+
+# Update build info every time the project is compiled
+add_custom_target (wavesim_generate_build_info ALL
+    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_timestamp.cmake"
+    DEPENDS "cmake/generate_timestamp.cmake")
+add_dependencies (wavesim_obj wavesim_generate_build_info)
 
 ###############################################################################
 # Python bindings
@@ -271,11 +277,6 @@ target_include_directories (wavesim
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
         $<INSTALL_INTERFACE:include>)
-
-add_custom_target (wavesim_timestamp
-    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_timestamp.cmake"
-    DEPENDS "cmake/generate_timestamp.cmake")
-add_dependencies (wavesim wavesim_timestamp)
 
 if (${WAVESIM_TESTS})
     target_link_libraries (wavesim PRIVATE gmock)
