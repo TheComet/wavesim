@@ -174,19 +174,19 @@ target_compile_options (wavesim_obj
 if (${WAVESIM_PYTHON})
     find_package (PythonLibs 3 REQUIRED)
     add_library (wavesim_python_obj OBJECT
-        "python/src/wavesim_module.c"
-        "python/src/wavesim_module_Attribute.c"
-        "python/src/wavesim_module_Face.c"
-        "python/src/wavesim_module_Mesh.c"
-        "python/src/wavesim_module_MeshIterator.c"
-        "python/src/wavesim_module_Vertex.c")
+        "src/python/wavesim_module.c"
+        "src/python/wavesim_module_Attribute.c"
+        "src/python/wavesim_module_Face.c"
+        "src/python/wavesim_module_Mesh.c"
+        "src/python/wavesim_module_MeshIterator.c"
+        "src/python/wavesim_module_Vertex.c")
     set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_python_obj
         PRIVATE
             "${CMAKE_CURRENT_BINARY_DIR}/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
             "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
-            "${CMAKE_CURRENT_SOURCE_DIR}/python/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/python"
             "${PYTHON_INCLUDE_DIRS}")
     target_compile_options (wavesim_python_obj
         PUBLIC $<$<C_COMPILER_ID:MSVC>:
@@ -224,21 +224,22 @@ if (${WAVESIM_TESTS})
         "tests/test_vec3.cpp"
         "tests/test_vector.cpp"
         "tests/test_vertex.cpp"
-        $<$<BOOL:${WAVESIM_PYTHON}>:${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp>)
+        $<$<BOOL:${WAVESIM_PYTHON}>:
+            ${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp>)
     if (${WAVESIM_PYTHON})
-        file (GLOB PYTHON_TEST_SOURCE_FILES "python/tests/*.py")
+        file (GLOB PYTHON_TEST_SOURCE_FILES "tests/python/*.py")
         set (GENERATE_PYTHON_TESTS_CMD ${CMAKE_COMMAND}
             -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
             -DWAVESIM_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
-            -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_python_unit_tests.cmake")
-        add_custom_command (OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_python_unit_tests.cmake")
+        add_custom_command (OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp"
             COMMAND ${GENERATE_PYTHON_TESTS_CMD}
             DEPENDS
-                "generate_python_unit_tests.cmake"
-                "python/tests/test_python_bindings.cpp.in"
+                "cmake/generate_python_unit_tests.cmake"
+                "tests/python/test_python_bindings.cpp.in"
                 ${PYTHON_TEST_SOURCE_FILES})
         add_custom_target (wavesim_generate_unit_tests ALL
-            DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp")
+            DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp")
         add_dependencies (wavesim_tests_obj wavesim_generate_unit_tests)
     endif ()
     set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
@@ -267,13 +268,13 @@ set_target_properties (wavesim PROPERTIES
     SOVERSION ${PROJECT_VERSION})
 target_include_directories (wavesim
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
         $<INSTALL_INTERFACE:include>)
 
 add_custom_target (wavesim_timestamp
-    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_timestamp.cmake"
-    ADD_DEPENDENCIES "generate_timestamp.cmake")
+    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_timestamp.cmake"
+    DEPENDS "cmake/generate_timestamp.cmake")
 add_dependencies (wavesim wavesim_timestamp)
 
 if (${WAVESIM_TESTS})

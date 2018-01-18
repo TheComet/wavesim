@@ -9,12 +9,12 @@ function (set_python_tests)
             "    EXPECT_THAT(PyRun_SimpleString(\""
             ${TEST_SRC}
             "    \"), Eq(0))\;\n}\n")
-        file (APPEND "${WAVESIM_BINARY_DIR}/python/tests/test_python_bindings.cpp" ${TEST_SRC})
+        file (APPEND "${WAVESIM_BINARY_DIR}/tests/python/test_python_bindings.cpp" ${TEST_SRC})
     endforeach ()
 endfunction ()
 
-execute_process (COMMAND ${CMAKE_COMMAND} -E copy "${WAVESIM_SOURCE_DIR}/python/tests/test_python_bindings.cpp.in" "${WAVESIM_BINARY_DIR}/python/tests/test_python_bindings.cpp")
+execute_process (COMMAND ${CMAKE_COMMAND} -E copy "${WAVESIM_SOURCE_DIR}/tests/python/test_python_bindings.cpp.in" "${WAVESIM_BINARY_DIR}/tests/python/test_python_bindings.cpp")
 
-file (GLOB PYTHON_TEST_SOURCE_FILES "${WAVESIM_SOURCE_DIR}/python/tests/*.py")
+file (GLOB PYTHON_TEST_SOURCE_FILES "${WAVESIM_SOURCE_DIR}/tests/python/*.py")
 
 set_python_tests (${PYTHON_TEST_SOURCE_FILES})
