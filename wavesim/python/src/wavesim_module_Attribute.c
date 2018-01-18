@@ -1,7 +1,7 @@
 #include "wavesim/wavesim_module_Attribute.h"
 #include "structmember.h"
 
-static char* kwlist[] = {"reflection", "transmission", "absorption"};
+static char* kwlist[] = {"reflection", "transmission", "absorption", NULL};
 
 /* ------------------------------------------------------------------------- */
 static int

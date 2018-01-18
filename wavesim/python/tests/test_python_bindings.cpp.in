@@ -13,13 +13,21 @@ class NAME : public Test
 public:
     virtual void SetUp()
     {
+        wchar_t name[] = L"wavesim_tests";
         PyImport_AppendInittab("wavesim", PyInit_wavesim);
+        Py_SetProgramName(name);
+        Py_SetPythonHome(L"/home/thecomet/documents/programming/cpp/wavesim/build/python-local");
         Py_Initialize();
+        PySys_SetPath(
+            L":"
+            L":python-local/lib/python3.6"
+            L":python-local/lib/python3.6/site-packages"
+        );
         // For some reason, sys.argv doesn't exist (probably because
         // Py_SetProgramName() is never called).
-        PyRun_SimpleString("import sys\nsys.argv = ['wavesim_tests']");
+        //PyRun_SimpleString("import sys\nsys.argv = ['wavesim_tests']");
         // Don't allow python to call exit()
-        PyRun_SimpleString("def stub(x):\n    pass\nsys.exit = stub");
+        PyRun_SimpleString("import sys\ndef stub(x):\n    pass\nsys.exit = stub");
     }
 
     virtual void TearDown()

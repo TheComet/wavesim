@@ -226,7 +226,6 @@ if (${WAVESIM_TESTS})
         $<${WAVESIM_PYTHON}:${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp>)
     if (${WAVESIM_PYTHON})
         file (GLOB PYTHON_TEST_SOURCE_FILES "python/tests/*.py")
-        message (STATUS ${PYTHON_TEST_SOURCE_FILES})
         set (GENERATE_PYTHON_TESTS_CMD ${CMAKE_COMMAND}
             -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
             -DWAVESIM_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
@@ -235,6 +234,7 @@ if (${WAVESIM_TESTS})
             COMMAND ${GENERATE_PYTHON_TESTS_CMD}
             DEPENDS
                 "generate_python_unit_tests.cmake"
+                "python/tests/test_python_bindings.cpp.in"
                 ${PYTHON_TEST_SOURCE_FILES})
         add_custom_target (wavesim_generate_unit_tests ALL
             DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp")
