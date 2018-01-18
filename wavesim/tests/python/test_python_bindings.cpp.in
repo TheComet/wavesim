@@ -13,10 +13,10 @@ class NAME : public Test
 public:
     virtual void SetUp()
     {
-        wchar_t name[] = L"wavesim_tests";
         PyImport_AppendInittab("wavesim", PyInit_wavesim);
-        Py_SetProgramName(name);
         Py_Initialize();
+        // "module 'sys' has no attribute 'argv'"
+        PyRun_SimpleString("import sys\nsys.argv = ['./wavesim_tests']");
         // Don't allow python to call exit()
         PyRun_SimpleString("import sys\ndef stub(x):\n    pass\nsys.exit = stub");
     }
