@@ -80,4 +80,21 @@ TEST(NAME, from_3_points_2)
 TEST(NAME, expand_point)
 {
     aabb_t bb = aabb_reset();
+    vec3_t p = vec3(2, 3, 4);
+    aabb_expand_point(bb.xyzxyz, p.xyz);
+    p = vec3(5, 5, 5);
+    aabb_expand_point(bb.xyzxyz, p.xyz);
+    p = vec3(-6, 3, 2);
+    aabb_expand_point(bb.xyzxyz, p.xyz);
+    p = vec3(5, -8, 5);
+    aabb_expand_point(bb.xyzxyz, p.xyz);
+    p = vec3(1, 1, 3);
+    aabb_expand_point(bb.xyzxyz, p.xyz);
+
+    EXPECT_THAT(bb.b.min.v.x, DoubleEq(-6));
+    EXPECT_THAT(bb.b.min.v.y, DoubleEq(-8));
+    EXPECT_THAT(bb.b.min.v.z, DoubleEq(2));
+    EXPECT_THAT(bb.b.max.v.x, DoubleEq(5));
+    EXPECT_THAT(bb.b.max.v.y, DoubleEq(5));
+    EXPECT_THAT(bb.b.max.v.z, DoubleEq(5));
 }
