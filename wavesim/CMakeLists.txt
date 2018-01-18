@@ -8,6 +8,7 @@ project ("wavesimlib"
 
 include (CheckIncludeFiles)
 include (CheckCSourceCompiles)
+include (CMakeDependentOption)
 
 ###############################################################################
 # Library options and config
@@ -20,15 +21,15 @@ else ()
 endif ()
 
 set (PROJECT_NAME "WAVESIM")  # Required for export.h.in
-set (WAVESIM_64BIT_INDEX_BUFFERS 0 CACHE STRING "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory.")
+option (WAVESIM_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." off)
 set (WAVESIM_BUILD_TYPE "SHARED" CACHE STRING "Whether to build as shared or static")
-set (WAVESIM_MEMORY_DEBUGGING ${MEM_DBG_DEFAULT} CACHE STRING "Enables malloc/free wrappers and memory reports")
-set (WAVESIM_MEMORY_BACKTRACE ${WAVESIM_MEMORY_DEBUGGING} CACHE STRING "Enables backtraces for malloc/free mismatches. Impacts performance on malloc, obviously.")
-set (WAVESIM_PYTHON 1 CACHE STRING "Build python bindings. The library must be shared.")
-set (WAVESIM_PIC 0 CACHE STRING "Position independent code when building as a static library")
+cmake_dependent_option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage reports" ON "CMAKE_BUILD_TYPE MATCHES Debug" OFF)
+cmake_dependent_option (WAVESIM_MEMORY_BACKTRACE "Generates backtraces to each malloc call that doesn't get matched to a free. Impacts performance, but can help track down memory leaks easily." ON "CMAKE_BUILD_TYPE MATCHES Debug;WAVESIM_MEMORY_DEBUGGING" OFF)
+option (WAVESIM_PYTHON "Build python bindings. The library must be shared." ON)
+option (WAVESIM_PIC "Position independent code when building as a static library" ON)
 set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
-set (WAVESIM_PROFILING 0 CACHE STRING "Compiles with -pg on linux")
-set (WAVESIM_TESTS 0 CACHE STRING "Whether or not to build unit tests (note: requires C++)")
+option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
+cmake_dependent_option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ON "CMAKE_BUILD_TYPE MATCHES Debug" OFF)
 
 # Determine visibility macros if the library is a shared library.
 if (WAVESIM_BUILD_TYPE MATCHES "SHARED")
@@ -143,7 +144,7 @@ add_library (wavesim_obj OBJECT
     "src/wavesim.c"
     "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c")
 
-set_property(TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
 
 target_include_directories (wavesim_obj
     PRIVATE
@@ -179,7 +180,7 @@ if (${WAVESIM_PYTHON})
         "python/src/wavesim_module_Mesh.c"
         "python/src/wavesim_module_MeshIterator.c"
         "python/src/wavesim_module_Vertex.c")
-    set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+    set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_python_obj
         PRIVATE
             "${CMAKE_CURRENT_BINARY_DIR}/include"
@@ -223,7 +224,7 @@ if (${WAVESIM_TESTS})
         "tests/test_vec3.cpp"
         "tests/test_vector.cpp"
         "tests/test_vertex.cpp"
-        $<${WAVESIM_PYTHON}:${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp>)
+        $<$<BOOL:${WAVESIM_PYTHON}>:${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp>)
     if (${WAVESIM_PYTHON})
         file (GLOB PYTHON_TEST_SOURCE_FILES "python/tests/*.py")
         set (GENERATE_PYTHON_TESTS_CMD ${CMAKE_COMMAND}
@@ -240,7 +241,7 @@ if (${WAVESIM_TESTS})
             DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/python/tests/test_python_bindings.cpp")
         add_dependencies (wavesim_tests_obj wavesim_generate_unit_tests)
     endif ()
-    set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+    set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_tests_obj
         PRIVATE
             "${CMAKE_CURRENT_BINARY_DIR}/include"
@@ -248,7 +249,7 @@ if (${WAVESIM_TESTS})
             "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
             "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
             "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/"
-            $<${WAVESIM_PYTHON}:${PYTHON_INCLUDE_DIRS}>)
+            $<$<BOOL:${WAVESIM_PYTHON}>:${PYTHON_INCLUDE_DIRS}>)
 endif ()
 
 ###############################################################################
@@ -257,8 +258,8 @@ endif ()
 
 add_library (wavesim ${WAVESIM_BUILD_TYPE}
     $<TARGET_OBJECTS:wavesim_obj>
-    $<${WAVESIM_TESTS}:$<TARGET_OBJECTS:wavesim_tests_obj>>
-    $<${WAVESIM_PYTHON}:$<TARGET_OBJECTS:wavesim_python_obj>>)
+    $<$<BOOL:${WAVESIM_TESTS}>:$<TARGET_OBJECTS:wavesim_tests_obj>>
+    $<$<BOOL:${WAVESIM_PYTHON}>:$<TARGET_OBJECTS:wavesim_python_obj>>)
 
 set_target_properties (wavesim PROPERTIES
     PREFIX ""
