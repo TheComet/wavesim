@@ -53,20 +53,28 @@ TEST(NAME, from_3_points_1)
     vec3_t b = vec3(1, 1, 1);
     vec3_t c = vec3(6, 2, 6);
     aabb_t bb = aabb_from_3_points(a.xyz, b.xyz, c.xyz);
-/*
-    EXPECT_THAT(bb.b.min, Eq(a));
-    EXPECT_THAT(bb.b.max, Eq(c));*/
+
+    EXPECT_THAT(bb.b.min.v.x, DoubleEq(a.v.x));
+    EXPECT_THAT(bb.b.min.v.y, DoubleEq(a.v.y));
+    EXPECT_THAT(bb.b.min.v.z, DoubleEq(a.v.z));
+    EXPECT_THAT(bb.b.max.v.x, DoubleEq(c.v.x));
+    EXPECT_THAT(bb.b.max.v.y, DoubleEq(c.v.y));
+    EXPECT_THAT(bb.b.max.v.z, DoubleEq(c.v.z));
 }
 
 TEST(NAME, from_3_points_2)
 {
-    vec3_t a = vec3(-5, 1, 6);
-    vec3_t b = vec3(-2, 1, 2);
-    vec3_t c = vec3(-3, 1, 6);
+    vec3_t a = vec3(-5, 2, 6);
+    vec3_t b = vec3(1, -2, 1);
+    vec3_t c = vec3(6, 1, -3);
     aabb_t bb = aabb_from_3_points(a.xyz, b.xyz, c.xyz);
-/*
-    EXPECT_THAT(bb.b.min, Eq(vec3(-5, -2, -3)));
-    EXPECT_THAT(bb.b.max, Eq(vec3(6, 2, 6)));*/
+
+    EXPECT_THAT(bb.b.min.v.x, DoubleEq(-5));
+    EXPECT_THAT(bb.b.min.v.y, DoubleEq(-2));
+    EXPECT_THAT(bb.b.min.v.z, DoubleEq(-3));
+    EXPECT_THAT(bb.b.max.v.x, DoubleEq(6));
+    EXPECT_THAT(bb.b.max.v.y, DoubleEq(2));
+    EXPECT_THAT(bb.b.max.v.z, DoubleEq(6));
 }
 
 TEST(NAME, expand_point)
