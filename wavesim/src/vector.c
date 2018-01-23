@@ -183,8 +183,6 @@ vector_back(const vector_t* vector)
 void*
 vector_insert_emplace(vector_t* vector, intptr_t index)
 {
-    intptr_t offset;
-
     assert(vector);
 
     /*
@@ -204,11 +202,12 @@ vector_insert_emplace(vector_t* vector, intptr_t index)
     else
     {
         /* shift all elements up by one to make space for insertion */
+        intptr_t offset = vector->element_size * index;
         intptr_t total_size = vector->count * vector->element_size;
-        offset = vector->element_size * index;
-        memmove((void*)((intptr_t)vector->data + offset + vector->element_size),
-                (void*)((intptr_t)vector->data + offset),
-                total_size - offset);
+        void* src = (void*)((intptr_t)vector->data + offset);
+        void* dst = (void*)((intptr_t)vector->data + offset + vector->element_size);
+        intptr_t bytes = total_size - offset;
+        memmove(dst, src, bytes);
     }
 
     /* return pointer to memory of new element */

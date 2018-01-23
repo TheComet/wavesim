@@ -44,6 +44,12 @@ WAVESIM_PRIVATE_API aabb_t
 aabb_reset(void);
 
 /*!
+ * @brief Creates a new axis-aligned bounding-box with all components set to 0.
+ */
+WAVESIM_PRIVATE_API aabb_t
+aabb_zero(void);
+
+/*!
  * @brief Calculates the axis-aligned bounding-box of 3 points.
  */
 WAVESIM_PRIVATE_API aabb_t
@@ -55,6 +61,13 @@ aabb_from_3_points(const WS_REAL p1[3], const WS_REAL p2[3], const WS_REAL p3[3]
  */
 WAVESIM_PRIVATE_API void
 aabb_expand_point(WS_REAL aabb[6], const WS_REAL p[3]);
+
+/*!
+ * @brief Expands an existing axis-aligned bounding-box (if necessary) to
+ * include an additional volume defined by another axis-aligned bounding-box.
+ */
+WAVESIM_PRIVATE_API void
+aabb_expand_aabb(WS_REAL aabb[6], const WS_REAL aabb_other[6]);
 
 C_END
 

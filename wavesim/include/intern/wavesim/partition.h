@@ -14,9 +14,9 @@ typedef int (*partition_decomposition_func)(partition_t*, const octree_t*, const
 
 typedef struct partition_t
 {
-    aabb_t boundary;
-    vec3_t grid_size;
-    vector_t areas; /* partition_area_t */
+    aabb_t                       boundary;
+    vec3_t                       grid_size;
+    vector_t                     areas; /* partition_area_t */
     partition_decomposition_func decompose;
 } partition_t;
 

@@ -33,6 +33,13 @@ aabb_reset(void)
 
 /* ------------------------------------------------------------------------- */
 aabb_t
+aabb_zero(void)
+{
+    return (aabb_t){{{{0, 0, 0}}, {{0, 0, 0}}}};
+}
+
+/* ------------------------------------------------------------------------- */
+aabb_t
 aabb_from_3_points(const WS_REAL p1[3], const WS_REAL p2[3], const WS_REAL p3[3])
 {
     aabb_t ret = aabb(
@@ -61,3 +68,12 @@ aabb_expand_point(WS_REAL aabb[6], const WS_REAL p[3])
             aabb[i+3] = p[i];
     }
 }
+
+/* ------------------------------------------------------------------------- */
+void
+aabb_expand_aabb(WS_REAL aabb[6], const WS_REAL aabb_other[6])
+{
+    aabb_expand_point(aabb, &aabb_other[0]);
+    aabb_expand_point(aabb, &aabb_other[3]);
+}
+
