@@ -349,7 +349,7 @@ partition_decompose_systematic(partition_t* partition,
 }
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 partition_decompose_greedy_random(partition_t* partition,
                                   const octree_t* octree,
                                   const partition_t* medium)
@@ -357,20 +357,21 @@ partition_decompose_greedy_random(partition_t* partition,
     (void)partition;
     (void)octree;
     (void)medium;
-    return 0;
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 partition_build_from_mesh(partition_t* partition,
                           const partition_t* medium,
                           const mesh_t* mesh,
                           const WS_REAL grid_size[3])
 {
     octree_t octree;
+    wsret result;
 
     /* Clear areas from last time */
-    vector_clear_free(&partition->areas);
+    partition_clear(partition);
 
     /* Copy arguments into partition structure, partition building relies on
      * them */
@@ -379,11 +380,12 @@ partition_build_from_mesh(partition_t* partition,
 
     /* Need an octree */
     octree_construct(&octree);
-    if (octree_build_from_mesh(&octree, mesh, partition->grid_size) < 0)
-        return -1;
+    if ((result = octree_build_from_mesh(&octree, mesh, partition->grid_size)) != WS_OK)
+        goto bail;
 
-    partition->decompose(partition, &octree, medium);
+    if ((result = partition->decompose(partition, &octree, medium)) != WS_OK)
+        goto bail;
 
-    octree_destruct(&octree);
-    return 0;
+    bail : octree_destruct(&octree);
+    return result;
 }

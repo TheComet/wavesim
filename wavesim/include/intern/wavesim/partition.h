@@ -10,7 +10,7 @@ C_BEGIN
 typedef struct mesh_t mesh_t;
 typedef struct partition_t partition_t;
 typedef struct octree_t octree_t;
-typedef int (*partition_decomposition_func)(partition_t*, const octree_t*, const partition_t*);
+typedef wsret (*partition_decomposition_func)(partition_t*, const octree_t*, const partition_t*);
 
 typedef struct partition_t
 {
@@ -42,17 +42,17 @@ WAVESIM_PRIVATE_API void
 partition_set_decomposition_method(partition_t* partition,
                                    partition_decomposition_func method);
 
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API wsret
 partition_decompose_systematic(partition_t* partition,
                                const octree_t* octree,
                                const partition_t* medium);
 
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API wsret
 partition_decompose_greedy_random(partition_t* partition,
                                   const octree_t* octree,
                                   const partition_t* medium);
 
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API wsret
 partition_build_from_mesh(partition_t* partition,
                           const partition_t* medium,
                           const mesh_t* mesh,
