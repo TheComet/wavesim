@@ -15,15 +15,14 @@ ws_strtok(char* str, const char* delimiter, char** save_ptr)
     if(str)
         *save_ptr = str;
 
+    /* "Optimized" by Oberon */
     start_ptr = *save_ptr;
-    retry:
-    if (*save_ptr == NULL || (*save_ptr = strstr(*save_ptr, delimiter)) == NULL)
-        return start_ptr && start_ptr[0] != '\0' ? start_ptr : NULL;
-    if (start_ptr == *save_ptr)
+    do
     {
-        start_ptr = ++(*save_ptr);
-        goto retry;
-    }
+        if (*save_ptr == NULL || (*save_ptr = strpbrk(*save_ptr, delimiter)) == NULL)
+            return start_ptr && start_ptr[0] != '\0' ? start_ptr : NULL;
+    } while ((start_ptr == *save_ptr) && (start_ptr = ++(*save_ptr)));
+
     **save_ptr = '\0';
     ++(*save_ptr);
 
