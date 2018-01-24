@@ -2,11 +2,10 @@
 #include "stdio.h"
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 wavesim_run_tests(int* argc, char** argv)
 {
     (void)argc;
     (void)argv;
-    puts("Error: Library was built without unit tests. Try passing -DWAVESIM_TESTS=ON to CMake.");
-    return -1;
+    return WSRET(WS_ERR_BUILT_WITHOUT_TESTS);
 }

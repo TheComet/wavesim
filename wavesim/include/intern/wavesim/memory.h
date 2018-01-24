@@ -12,9 +12,6 @@
 #   define FREE   free
 #endif /* WAVESIM_MEMORY_DEBUGGING */
 
-#define OUT_OF_MEMORY(retval) \
-    return retval;
-
 C_BEGIN
 
 /*!
@@ -23,7 +20,7 @@ C_BEGIN
  * In release mode this does nothing. In debug mode it will initialise
  * memory reports and backtraces, if enabled.
  */
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API wsret
 memory_init(void);
 
 /*!

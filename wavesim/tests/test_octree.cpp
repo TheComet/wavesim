@@ -12,7 +12,7 @@ class NAME : public Test
 public:
     virtual void SetUp() OVERRIDE
     {
-        o = octree_create();
+        octree_create(&o);
         m = NULL;
     }
 
@@ -29,19 +29,19 @@ protected:
 
 TEST_F(NAME, build_from_empty_mesh)
 {
-    m = mesh_create();
+    mesh_create(&m);
     EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(0));
 }
 
 TEST_F(NAME, build_from_mesh_with_one_face)
 {
-    mesh_builder_t* mb = mesh_builder_create();
+    mesh_builder_t* mb; mesh_builder_create(&mb);
     mesh_builder_add_face(mb, face(
         vertex(vec3(-1, -1, -1), attribute_default()),
         vertex(vec3(1, 1, 1), attribute_default()),
         vertex(vec3(0.4, -0.2, 0.8), attribute_default())
     ));
-    m = mesh_builder_build(mb);
+    mesh_builder_build(&m, mb);
     mesh_builder_destroy(mb);
 
     octree_build_from_mesh(o, m, vec3(0, 0, 0));
@@ -59,7 +59,7 @@ TEST_F(NAME, build_from_mesh_with_one_face)
 
 TEST_F(NAME, build_from_cube_mesh)
 {
-    m = mesh_create();
+    mesh_create(&m);
     mesh_cube(m, aabb(-1, -1, -1, 1, 1, 1));
     octree_build_from_mesh(o, m, vec3(0, 0, 0));
     // Check boundaries
@@ -75,7 +75,7 @@ TEST_F(NAME, build_from_cube_mesh)
 
 TEST_F(NAME, cube_mesh_with_small_triangles)
 {
-    mesh_builder_t* mb = mesh_builder_create();
+    mesh_builder_t* mb; mesh_builder_create(&mb);
     mesh_builder_cube(mb, aabb(-1, -1, -1, 1, 1, 1));
     mesh_builder_add_face(mb, face(
         vertex(vec3(0.01, 0.01, 0.01), attribute_default()),
@@ -87,7 +87,7 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
         vertex(vec3(0.03, 0.04, 0.04), attribute_default()),
         vertex(vec3(0.03, 0.04, 0.04), attribute_default())
     ));
-    m = mesh_builder_build(mb);
+    mesh_builder_build(&m, mb);
     mesh_builder_destroy(mb);
 
     octree_build_from_mesh(o, m, vec3(0, 0, 0));

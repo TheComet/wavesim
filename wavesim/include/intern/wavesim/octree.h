@@ -23,8 +23,8 @@ typedef struct octree_t
     octree_node_t    root;
 } octree_t;
 
-WAVESIM_PRIVATE_API octree_t*
-octree_create(void);
+WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+octree_create(octree_t** octree);
 
 WAVESIM_PRIVATE_API void
 octree_destroy(octree_t* octree);
@@ -38,7 +38,7 @@ octree_destruct(octree_t* octree);
 WAVESIM_PRIVATE_API void
 octree_clear(octree_t* octree);
 
-WAVESIM_PRIVATE_API int
+WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
 octree_subdivide(octree_t* octree, octree_node_t* node);
 
 #define octree_face(octree, idx) \
@@ -47,7 +47,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node);
 #define octree_face_count(octree) \
     octree->mesh->ib_count / 3
 
-WAVESIM_PRIVATE_API intptr_t
+WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision);
 
 /*!

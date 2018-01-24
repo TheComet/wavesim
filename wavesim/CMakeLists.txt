@@ -64,13 +64,19 @@ endif ()
 foreach (RESTRICT_KEYWORD __restrict__ __restrict restrict)
     check_c_source_compiles ("int test (void *${RESTRICT_KEYWORD} x); int main (void) {return 0;}" WAVESIM_RESTRICT_${RESTRICT_KEYWORD})
     if (WAVESIM_RESTRICT_${RESTRICT_KEYWORD})
-        set (RESTRICT ${RESTRICT_KEYWORD})  # This replaces ${RESTRICT} in config.h.in
+        set (WS_RESTRICT ${RESTRICT_KEYWORD})  # This replaces ${WS_RESTRICT} in config.h.in
         break ()
     endif ()
 endforeach ()
 
 # Use stdint.h if possible, otherwise use pstdint.h
 check_include_files ("stdint.h" WAVESIM_HAVE_STDINT_H)
+
+# Check if we can warn about unused function results
+check_c_source_compiles ("int __attribute__((warn_unused_result)) f(int z) { return z*z + z*2 + z/3 + 23; } int main(void) { return f(4); }" HAVE_WARN_UNUSED)
+if (HAVE_WARN_UNUSED)
+    set (WS_WARN_UNUSED "__attribute__((warn_unused_result))")
+endif ()
 
 set (WAVESIM_HOST_COMPUTER ${CMAKE_HOST_SYSTEM})
 set (WAVESIM_COMPILER ${CMAKE_C_COMPILER_ID})
@@ -134,11 +140,13 @@ add_library (wavesim_obj OBJECT
     "${CMAKE_CURRENT_BINARY_DIR}/src/build_info.c"
     "src/face.c"
     "src/intersections.c"
+    "src/log.c"
     "src/memory.c"
     "src/mesh.c"
     "src/mesh_builder.c"
     "src/octree.c"
     "src/partition.c"
+    "src/return_codes.c"
     "src/simulation.c"
     "src/vec3.c"
     "src/vector.c"
@@ -265,6 +273,12 @@ if (${WAVESIM_TESTS})
     target_compile_options (wavesim_tests_obj
         PUBLIC $<$<C_COMPILER_ID:MSVC>:
             /MTd /D_CRT_SECURE_NO_DEPRECATE
+        >
+        PUBLIC $<$<C_COMPILER_ID:GNU>:
+            -Wno-unused-result
+        >
+        PUBLIC $<$<C_COMPILER_ID:Clang>:
+            -Wno-unused-result
         >
     )
     

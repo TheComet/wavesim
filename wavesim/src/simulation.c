@@ -2,15 +2,15 @@
 #include "wavesim/memory.h"
 
 /* ------------------------------------------------------------------------- */
-simulation_t*
-simulation_create(void)
+wsret
+simulation_create(simulation_t** simulation)
 {
-    simulation_t* simulation = MALLOC(sizeof *simulation);
-    if (simulation == NULL)
-        OUT_OF_MEMORY(NULL);
+    *simulation = MALLOC(sizeof **simulation);
+    if (*simulation == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
 
-    simulation_construct(simulation);
-    return simulation;
+    simulation_construct(*simulation);
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */

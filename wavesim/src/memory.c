@@ -26,7 +26,7 @@ typedef struct report_info_t
 } report_info_t;
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 memory_init(void)
 {
     g_allocations = 0;
@@ -40,11 +40,11 @@ memory_init(void)
     g_ignore_btree_malloc = 1;
         btree_construct(&report);
         if (btree_insert(&report, 0, NULL) != 0)
-            return -1;
+            WSRET(WS_ERR_OUT_OF_MEMORY);
         btree_erase(&report, 0);
     g_ignore_btree_malloc = 0;
 
-    return 0;
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -249,8 +249,8 @@ memory_deinit(void)
 
 #else /* WAVESIM_MEMORY_DEBUGGING */
 
-int memory_init(void) { return 0; }
-uintptr_t memory_deinit(void) { return 0; }
+wsret memory_init(void) { return WS_OK; }
+int memory_deinit(void) { return 0; }
 
 #endif /* WAVESIM_MEMORY_DEBUGGING */
 

@@ -47,7 +47,7 @@ Mesh_new(PyTypeObject* type, PyObject* args, PyObject* kwds)
     self->faceIterator->pyMesh = self;
 
     /* Always have a mesh instance. Builders are only created when begin() is called */
-    if ((self->mesh = mesh_create()) == NULL)
+    if (mesh_create(&self->mesh) != WS_OK)
         goto mesh_create_failed;
     self->mesh_builder = NULL;
 
@@ -75,7 +75,7 @@ Mesh_begin(wavesim_Mesh* self)
     if (self->mesh_builder != NULL)
         mesh_builder_destroy(self->mesh_builder);
 
-    if ((self->mesh_builder = mesh_builder_create()) == NULL)
+    if (mesh_builder_create(&self->mesh_builder) != WS_OK)
         return NULL;
 
     Py_RETURN_NONE;
@@ -144,7 +144,7 @@ Mesh_build(wavesim_Mesh* self)
     if (self->mesh_builder == NULL)
         return NULL;
 
-    if ((new_mesh = mesh_builder_build(self->mesh_builder)) == NULL)
+    if (mesh_builder_build(&new_mesh, self->mesh_builder) != WS_OK)
         return NULL;
 
     mesh_destroy(self->mesh);

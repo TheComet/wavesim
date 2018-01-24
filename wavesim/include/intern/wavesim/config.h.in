@@ -6,14 +6,15 @@
 #   define WAVESIM_CONFIG_HPP
 
     /* Config */
+#   define WS_PRECISION_${WAVESIM_PRECISION}
+#   define WS_REAL ${WAVESIM_PRECISION}
+#   define WS_RESTRICT ${WS_RESTRICT}
+#   define WS_WARN_UNUSED ${WS_WARN_UNUSED}
+#   define WAVESIM_BUILD_TYPE_${WAVESIM_BUILD_TYPE}
     #cmakedefine WAVESIM_HAVE_STDINT_H
     #cmakedefine WAVESIM_MEMORY_DEBUGGING
     #cmakedefine WAVESIM_MEMORY_BACKTRACE
-#   define WAVESIM_PRECISION_${WAVESIM_PRECISION}
     #cmakedefine WAVESIM_64BIT_INDEX_BUFFERS
-#   define WS_REAL ${WAVESIM_PRECISION}
-#   define RESTRICT ${RESTRICT}
-#   define WAVESIM_BUILD_TYPE_${WAVESIM_BUILD_TYPE}
     #cmakedefine WAVESIM_PROFILING
     #cmakedefine WAVESIM_TESTS
     #cmakedefine WAVESIM_PYTHON
@@ -27,6 +28,7 @@
 #       include "wavesim/pstdint.h"
 #   endif
 #   include "wavesim/export.h"
+#   include "wavesim/return_codes.h"
 
     /* Index buffer type depends on whether 64-bit IBs are enabled */
 #   ifdef WAVESIM_64BIT_INDEX_BUFFERS
@@ -37,9 +39,9 @@
 
     /* Define epsilon depending on type of "real" */
 #   include <float.h>
-#   if defined(WAVESIM_PRECISION_double)
+#   if defined(WS_PRECISION_double)
 #       define WS_EPSILON DBL_EPSILON
-#   elif defined(WAVESIM_PRECISION_float)
+#   elif defined(WS_PRECISION_float)
 #       define WS_EPSILON FLT_EPSILON
 #   else
 #       define WS_EPSILON DBL_EPSILON

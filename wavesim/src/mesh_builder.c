@@ -5,15 +5,15 @@
 #include <string.h>
 
 /* ------------------------------------------------------------------------- */
-mesh_builder_t*
-mesh_builder_create(void)
+wsret
+mesh_builder_create(mesh_builder_t** mb)
 {
-    mesh_builder_t* mb = MALLOC(sizeof(*mb));
+    *mb = MALLOC(sizeof(**mb));
     if (mb == NULL)
-        OUT_OF_MEMORY(NULL);
-    vector_construct(&mb->faces, sizeof(face_t));
-    mb->aabb = aabb_reset();
-    return mb;
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    vector_construct(&(*mb)->faces, sizeof(face_t));
+    (*mb)->aabb = aabb_reset();
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -25,12 +25,12 @@ mesh_builder_destroy(mesh_builder_t* mb)
 }
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 mesh_builder_add_face(mesh_builder_t* mb, face_t face)
 {
     face_t* face_store = vector_emplace(&mb->faces);
     if (face_store == NULL)
-        OUT_OF_MEMORY(-1);
+        WSRET(WS_ERR_OUT_OF_MEMORY);
 
     *face_store = face;
 
@@ -49,20 +49,19 @@ mesh_builder_add_face(mesh_builder_t* mb, face_t face)
 }
 
 /* ------------------------------------------------------------------------- */
-mesh_t*
-mesh_builder_build(mesh_builder_t* mb)
+wsret
+mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
 {
     mesh_vb_type_e vb_type;
     mesh_ib_type_e ib_type;
     int vb_size, ib_size;
     vector_t vb, ib, ab;
-    mesh_t* mesh;
 
     /* Determine what datatype to use for the vertex buffer */
-#if defined(WAVESIM_PRECISION_double)
+#if defined(WS_PRECISION_double)
     vb_type = MESH_VB_DOUBLE;
     vb_size = sizeof(double);
-#elif defined(WAVESIM_PRECISION_float)
+#elif defined(WS_PRECISION_float)
     vb_type = MESH_VB_FLOAT;
     vb_size = sizeof(float);
 #else
@@ -190,26 +189,27 @@ mesh_builder_build(mesh_builder_t* mb)
     VECTOR_END_EACH
 
     /* Finally, create a mesh and pass buffers to it */
-    mesh = mesh_create();
-    if (mesh == NULL)
+    if (mesh_create(mesh) != WS_OK)
         goto alloc_mesh_failed;
-    mesh_copy_from_buffers(mesh,
-                           vb.data, ib.data,
-                           (WS_IB)vector_count(&vb) / 3, (WS_IB)vector_count(&ib),
-                           vb_type, ib_type);
+    if (mesh_copy_from_buffers(*mesh,
+                               vb.data, ib.data,
+                               (WS_IB)vector_count(&vb) / 3, (WS_IB)vector_count(&ib),
+                               vb_type, ib_type) != WS_OK)
+        goto copy_buffers_failed;
 
     /* Copy attribute buffer into mesh */
-    memcpy(mesh->ab, ab.data, sizeof(attribute_t) * vector_count(&ab));
+    memcpy((*mesh)->ab, ab.data, sizeof(attribute_t) * vector_count(&ab));
 
     vector_clear_free(&ab);
     vector_clear_free(&ib);
     vector_clear_free(&vb);
 
-    return mesh;
+    return WS_OK;
 
-    alloc_mesh_failed  :
-    buffer_push_failed : vector_clear_free(&ab);
-                         vector_clear_free(&ib);
-                         vector_clear_free(&vb);
-    OUT_OF_MEMORY(NULL);
+    copy_buffers_failed : mesh_destroy(*mesh);
+    alloc_mesh_failed   : *mesh = NULL;
+    buffer_push_failed  : vector_clear_free(&ab);
+                          vector_clear_free(&ib);
+                          vector_clear_free(&vb);
+    return WS_ERR_OUT_OF_MEMORY;
 }

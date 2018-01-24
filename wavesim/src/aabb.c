@@ -76,4 +76,3 @@ aabb_expand_aabb(WS_REAL aabb[6], const WS_REAL aabb_other[6])
     aabb_expand_point(aabb, &aabb_other[0]);
     aabb_expand_point(aabb, &aabb_other[3]);
 }
-

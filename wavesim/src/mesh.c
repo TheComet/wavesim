@@ -8,14 +8,14 @@ static void init_attribute_buffer(mesh_t* mesh, int vertex_count);
 static void calculate_aabb(mesh_t* mesh);
 
 /* ------------------------------------------------------------------------- */
-mesh_t*
-mesh_create(void)
+wsret
+mesh_create(mesh_t** mesh)
 {
-    mesh_t* mesh = MALLOC(sizeof *mesh);
-    if (mesh == NULL)
-        OUT_OF_MEMORY(NULL);
-    mesh_construct(mesh);
-    return mesh;
+    *mesh = MALLOC(sizeof **mesh);
+    if (*mesh == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    mesh_construct(*mesh);
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -62,7 +62,7 @@ mesh_clear_buffers(mesh_t* mesh)
 }
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 mesh_assign_buffers(mesh_t* mesh,
                     void* vertex_buffer, void* index_buffer,
                     WS_IB vertex_count, WS_IB index_count,
@@ -72,7 +72,7 @@ mesh_assign_buffers(mesh_t* mesh,
     set_vb_ib_types_and_sizes(mesh, vb_type, ib_type);
 
     if ((mesh->ab = MALLOC(sizeof(attribute_t) * vertex_count)) == NULL)
-        OUT_OF_MEMORY(-1);
+        WSRET(WS_ERR_OUT_OF_MEMORY);
     mesh->vb = vertex_buffer;
     mesh->ib = index_buffer;
     mesh->vb_count = vertex_count;
@@ -82,11 +82,11 @@ mesh_assign_buffers(mesh_t* mesh,
     init_attribute_buffer(mesh, vertex_count);
     calculate_aabb(mesh);
 
-    return 0;
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API int
+wsret
 mesh_copy_from_buffers(mesh_t* mesh,
                        const void* vertex_buffer, const void* index_buffer,
                        WS_IB vertex_count, WS_IB index_count,
@@ -112,11 +112,11 @@ mesh_copy_from_buffers(mesh_t* mesh,
     init_attribute_buffer(mesh, vertex_count);
     calculate_aabb(mesh);
 
-    return 0;
+    return WS_OK;
 
     ib_alloc_failed: FREE(mesh->vb);
     vb_alloc_failed: FREE(mesh->ab);
-    ab_alloc_failed: return -1;
+    ab_alloc_failed: return WS_ERR_OUT_OF_MEMORY;
 }
 
 /* ------------------------------------------------------------------------- */

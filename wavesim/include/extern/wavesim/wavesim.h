@@ -9,9 +9,8 @@ C_BEGIN
  * @brief Initializes global state in the wavesim library. Must be called once
  * before using the library or after having called wavesim_deinit(). The call
  * is guarded and can be called multiple times consecutively.
- * @return Returns 0 on success, non-zero if otherwise.
  */
-WAVESIM_PUBLIC_API int
+WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
 wavesim_init(void);
 
 /*!
@@ -28,9 +27,8 @@ wavesim_deinit(void);
 /*!
  * @brief Runs all unit tests in the library.
  * @param[in] argv Command line arguments are passed on to googletest/mock
- * @return If all tests pass, then zero is returned.
  */
-WAVESIM_PUBLIC_API int
+WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
 wavesim_run_tests(int* argc, char** argv);
 
 C_END

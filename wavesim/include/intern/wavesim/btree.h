@@ -40,7 +40,7 @@ btree_create(void);
  * @param[in] btree The btree object to initialise.
  */
 WAVESIM_PRIVATE_API void
-btree_construct( btree_t* btree);
+btree_construct(btree_t* btree);
 
 /*!
  * @brief Destroys an existing btree object and FREEs the underlying memory.
@@ -48,7 +48,7 @@ btree_construct( btree_t* btree);
  * @param[in] btree The btree object to destroy.
  */
 WAVESIM_PRIVATE_API void
-btree_destroy( btree_t* btree);
+btree_destroy(btree_t* btree);
 
 /*!
  * @brief Inserts an element into the btree using a hashed key.
@@ -69,7 +69,7 @@ btree_destroy( btree_t* btree);
  * existed (in which case nothing is inserted). Returns -1 on failure.
  */
 WAVESIM_PRIVATE_API int
-btree_insert( btree_t* btree, uint32_t hash, void* value);
+btree_insert(btree_t* btree, uint32_t hash, void* value);
 
 /*!
  * @brief Sets the value btreeped to the specified hash in the btree.
@@ -79,7 +79,7 @@ btree_insert( btree_t* btree, uint32_t hash, void* value);
  * @param[in] value The new value to set.
  */
 WAVESIM_PRIVATE_API void
-btree_set( btree_t* btree, uint32_t hash, void* value);
+btree_set(btree_t* btree, uint32_t hash, void* value);
 
 /*!
  * @brief Looks for an element in the btree and returns it if found.
@@ -135,7 +135,7 @@ btree_get_any_element(const btree_t* btree);
  * @return 0 if the hash was found, -1 if the hash was not found.
  */
 WAVESIM_PRIVATE_API int
-btree_hash_exists( btree_t* btree, uint32_t hash);
+btree_hash_exists(btree_t* btree, uint32_t hash);
 
 /*!
  * @brief Returns a hash that does not yet exist in the btree.
@@ -144,7 +144,7 @@ btree_hash_exists( btree_t* btree, uint32_t hash);
  * @return Returns a hash that does not yet exist in the btree.
  */
 WAVESIM_PRIVATE_API uint32_t
-btree_find_unused_hash( btree_t* btree);
+btree_find_unused_hash(btree_t* btree);
 
 /*!
  * @brief Erases an element from the btree using a hash.
@@ -162,10 +162,10 @@ btree_find_unused_hash( btree_t* btree);
  * btree.
  */
 WAVESIM_PRIVATE_API void*
-btree_erase( btree_t* btree, uint32_t hash);
+btree_erase(btree_t* btree, uint32_t hash);
 
 WAVESIM_PRIVATE_API void*
-btree_erase_element( btree_t* btree, void* value);
+btree_erase_element(btree_t* btree, void* value);
 
 /*!
  * @brief Erases the entire btree, including the underlying memory.
@@ -175,10 +175,10 @@ btree_erase_element( btree_t* btree, void* value);
  * @param[in] btree The btree to clear.
  */
 WAVESIM_PRIVATE_API void
-btree_clear( btree_t* btree);
+btree_clear(btree_t* btree);
 
 WAVESIM_PRIVATE_API void
-btree_clear_free( btree_t* btree);
+btree_clear_free(btree_t* btree);
 
 /*!
  * @brief Returns the number of elements in the specified btree.

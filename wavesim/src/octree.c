@@ -17,14 +17,14 @@
     (idx % 2 ? 1 : 0)
 
 /* ------------------------------------------------------------------------- */
-octree_t*
-octree_create(void)
+wsret
+octree_create(octree_t** octree)
 {
-    octree_t* octree = MALLOC(sizeof *octree);
-    if (octree == NULL)
-        OUT_OF_MEMORY(NULL);
-    octree_construct(octree);
-    return octree;
+    *octree = MALLOC(sizeof **octree);
+    if (*octree == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    octree_construct(*octree);
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -71,23 +71,23 @@ node_destroy_children(octree_node_t* node)
 }
 
 /* ------------------------------------------------------------------------- */
-octree_node_t*
-node_create_children(octree_node_t* parent, const mesh_t* mesh)
+wsret
+node_create_children(octree_node_t** children, octree_node_t* parent, const mesh_t* mesh)
 {
     int i;
     aabb_t bb_parent;
     vec3_t bb_dims;
 
-    octree_node_t* children = MALLOC(sizeof(octree_node_t) * 8);
+    *children = MALLOC(sizeof(octree_node_t) * 8);
     if (children == NULL)
-        OUT_OF_MEMORY(NULL);
+        WSRET(WS_ERR_OUT_OF_MEMORY);
 
     /* Initialize children fields */
     for (i = 0; i != 8; ++i)
     {
-        children[i].children = NULL;
-        children[i].parent = parent;
-        vector_construct(&children[i].index_buffer, mesh->ib_size);
+        (*children)[i].children = NULL;
+        (*children)[i].parent = parent;
+        vector_construct(&(*children)[i].index_buffer, mesh->ib_size);
     }
 
     /* Calculate child bounding boxes */
@@ -103,15 +103,15 @@ node_create_children(octree_node_t* parent, const mesh_t* mesh)
     }
     for (i = 0; i != 8; ++i)
     {
-        AABB_AX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 0) * bb_dims.v.x;
-        AABB_BX(children[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 1) * bb_dims.v.x;
-        AABB_AY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 0) * bb_dims.v.y;
-        AABB_BY(children[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 1) * bb_dims.v.y;
-        AABB_AZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 0) * bb_dims.v.z;
-        AABB_BZ(children[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 1) * bb_dims.v.z;
+        AABB_AX((*children)[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 0) * bb_dims.v.x;
+        AABB_BX((*children)[i].aabb) = AABB_AX(bb_parent) + (CX(i) + 1) * bb_dims.v.x;
+        AABB_AY((*children)[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 0) * bb_dims.v.y;
+        AABB_BY((*children)[i].aabb) = AABB_AY(bb_parent) + (CY(i) + 1) * bb_dims.v.y;
+        AABB_AZ((*children)[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 0) * bb_dims.v.z;
+        AABB_BZ((*children)[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 1) * bb_dims.v.z;
     }
 
-    return children;
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -135,23 +135,21 @@ octree_clear(octree_t* octree)
 }
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 octree_subdivide(octree_t* octree, octree_node_t* node)
 {
     /* Subdivide is only valid for leaf nodes */
     if (node->children != NULL)
-        return 1;
+        return WS_ERR_SUBDIVIDED_NON_LEAF_NODE;
 
-    if ((node->children = node_create_children(node, octree->mesh)) == NULL)
-        return -1;
-
-    return 0;
+    return node_create_children(&node->children, node, octree->mesh);
 }
 
 /* ------------------------------------------------------------------------- */
-static intptr_t
+static wsret WS_WARN_UNUSED
 octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS_REAL smallest_subdivision[3])
 {
+    wsret result;
     unsigned int i;
     const mesh_t* mesh = octree->mesh;
 
@@ -182,30 +180,31 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS
             aabb_t face_bb = aabb_from_3_points(face[0].xyz, face[1].xyz, face[2].xyz);
             if (intersect_aabb_aabb_test(node->aabb.xyzxyz, face_bb.xyzxyz) == 1)
             {
-                if (vector_push(&node->index_buffer, &indices[0]) == VECTOR_ERROR) return -1;
-                if (vector_push(&node->index_buffer, &indices[1]) == VECTOR_ERROR) return -1;
-                if (vector_push(&node->index_buffer, &indices[2]) == VECTOR_ERROR) return -1;
+                if (vector_push(&node->index_buffer, &indices[0]) == VECTOR_ERROR) WSRET(WS_ERR_OUT_OF_MEMORY);
+                if (vector_push(&node->index_buffer, &indices[1]) == VECTOR_ERROR) WSRET(WS_ERR_OUT_OF_MEMORY);
+                if (vector_push(&node->index_buffer, &indices[2]) == VECTOR_ERROR) WSRET(WS_ERR_OUT_OF_MEMORY);
             }
         }
     }
 
     /* Stop subdividing when we reach one face */
     if (vector_count(&node->index_buffer) <= 3)
-        return 0;
+        return WS_OK;
 
     /* Abort if below smallest division */
     for (i = 0; i != 3; ++i)
         if (node->aabb.b.max.xyz[i] - node->aabb.b.min.xyz[i] < smallest_subdivision[i])
-            return 0;
+            return WS_OK;
 
-    if (octree_subdivide(octree, node) < 0)
-        return -1;
+    if ((result = octree_subdivide(octree, node)) != WS_OK)
+        return result;
 
     for (i = 0; i != 8; ++i)
-        octree_build_from_mesh_recursive(octree, &node->children[i], smallest_subdivision);
-    return 0;
+        if ((result = octree_build_from_mesh_recursive(octree, &node->children[i], smallest_subdivision)) != WS_OK)
+            return result;
+    return WS_OK;
 }
-intptr_t
+wsret
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision)
 {
     int i, total_faces;

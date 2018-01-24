@@ -56,8 +56,7 @@ attribute_is_same(const attribute_t* a1, const attribute_t* a2)
 void
 attribute_normalize_rta(attribute_t* attribute)
 {
-    int i;
-    vec3_t v;
+    WS_REAL sum;
 
     if (attribute->reflection == 0.0 && attribute->transmission == 0.0 && attribute->absorption == 0.0)
     {
@@ -65,9 +64,12 @@ attribute_normalize_rta(attribute_t* attribute)
         return;
     }
 
-    memcpy(&v.v.x, &attribute->reflection, sizeof(WS_REAL) * 3);
-    vec3_normalize(v.xyz);
-    for (i = 0; i != 3; ++i)
-        v.xyz[i] = fabs(v.xyz[i]);
-    memcpy(&attribute->reflection, &v.v.x, sizeof(WS_REAL) * 3);
+    attribute->reflection = fabs(attribute->reflection);
+    attribute->transmission = fabs(attribute->transmission);
+    attribute->absorption = fabs(attribute->absorption);
+    sum = attribute->reflection + attribute->transmission + attribute->absorption;
+    sum = 1.0 / sum;
+    attribute->reflection *= sum;
+    attribute->transmission *= sum;
+    attribute->absorption *= sum;
 }

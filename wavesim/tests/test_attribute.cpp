@@ -63,16 +63,24 @@ TEST(NAME, normalize_one_negative)
 {
     attribute_t a = attribute(-1, 1, 1);
     attribute_normalize_rta(&a);
-    EXPECT_THAT(a.reflection, DoubleEq(1.0/std::sqrt(3.0)));
-    EXPECT_THAT(a.transmission, DoubleEq(1.0/std::sqrt(3.0)));
-    EXPECT_THAT(a.absorption, DoubleEq(1.0/std::sqrt(3.0)));
+    EXPECT_THAT(a.reflection + a.transmission + a.absorption, DoubleEq(1.0));
+    EXPECT_THAT(a.reflection, Ge(0.0));
+    EXPECT_THAT(a.transmission, Ge(0.0));
+    EXPECT_THAT(a.absorption, Ge(0.0));
+    EXPECT_THAT(a.reflection, Le(1.0));
+    EXPECT_THAT(a.transmission, Le(1.0));
+    EXPECT_THAT(a.absorption, Le(1.0));
 }
 
 TEST(NAME, normalize_two_negatives)
 {
     attribute_t a = attribute(-1, -1, 1);
     attribute_normalize_rta(&a);
-    EXPECT_THAT(a.reflection, DoubleEq(1.0/std::sqrt(3.0)));
-    EXPECT_THAT(a.transmission, DoubleEq(1.0/std::sqrt(3.0)));
-    EXPECT_THAT(a.absorption, DoubleEq(1.0/std::sqrt(3.0)));
+    EXPECT_THAT(a.reflection + a.transmission + a.absorption, DoubleEq(1.0));
+    EXPECT_THAT(a.reflection, Ge(0.0));
+    EXPECT_THAT(a.transmission, Ge(0.0));
+    EXPECT_THAT(a.absorption, Ge(0.0));
+    EXPECT_THAT(a.reflection, Le(1.0));
+    EXPECT_THAT(a.transmission, Le(1.0));
+    EXPECT_THAT(a.absorption, Le(1.0));
 }

@@ -14,8 +14,8 @@ typedef struct simulation_t
 
 } simulation_t;
 
-WAVESIM_PUBLIC_API simulation_t*
-simulation_create(void);
+WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
+simulation_create(simulation_t** simulation);
 
 WAVESIM_PUBLIC_API void
 simulation_destroy(simulation_t* simulation);

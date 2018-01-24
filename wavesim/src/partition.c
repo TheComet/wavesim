@@ -92,14 +92,14 @@ determine_cell_attribute(attribute_t* cell_attribute,
 }
 
 /* ------------------------------------------------------------------------- */
-partition_t*
-partition_create(void)
+wsret
+partition_create(partition_t** partition)
 {
-    partition_t* md = (partition_t*)MALLOC(sizeof *md);
-    if (md == NULL)
-        OUT_OF_MEMORY(NULL);
-    partition_construct(md);
-    return md;
+    *partition = MALLOC(sizeof **partition);
+    if (*partition == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    partition_construct(*partition);
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -136,12 +136,12 @@ partition_clear(partition_t* partition)
 }
 
 /* ------------------------------------------------------------------------- */
-int
+wsret
 partition_add_area(partition_t* partition, const WS_REAL bb[6], WS_REAL sound_speed)
 {
     partition_area_t* area = vector_emplace(&partition->areas);
     if (area == NULL)
-        OUT_OF_MEMORY(-1);
+        WSRET(WS_ERR_OUT_OF_MEMORY);
 
     area->aabb = aabb(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
     area->sound_speed = sound_speed;
@@ -215,7 +215,7 @@ partition_area_already_occupied(const partition_t* partition, const WS_REAL aabb
 
     return NULL;
 }
-static int
+static wsret
 decompose_systematic_recursive(partition_t* partition,
                                int32_t parent_area_idx,
                                const octree_t* octree,
@@ -273,7 +273,7 @@ decompose_systematic_recursive(partition_t* partition,
                         {
                             aabb_t* new_seed = vector_emplace(&potential_new_seeds);
                             if (new_seed == NULL)
-                                OUT_OF_MEMORY(-1);
+                                WSRET(WS_ERR_OUT_OF_MEMORY);
                             *new_seed = cell;
                         }
                         AABB_AZ(cell) += partition->grid_size.v.z;
@@ -310,7 +310,7 @@ decompose_systematic_recursive(partition_t* partition,
         partition_area_t* parent_area = vector_get_element(&partition->areas, parent_area_idx);
         int32_t* adjacent_area_idx = vector_emplace(&parent_area->adcacent_areas);
         if (adjacent_area_idx == NULL)
-            OUT_OF_MEMORY(-1);
+            WSRET(WS_ERR_OUT_OF_MEMORY);
         *adjacent_area_idx = this_area_idx;
     }
 
@@ -320,18 +320,18 @@ decompose_systematic_recursive(partition_t* partition,
      * expand new areas. Do this now.
      */
     VECTOR_FOR_EACH(&potential_new_seeds, aabb_t, new_seed)
-        int result;
+        wsret result;
         if (partition_area_already_occupied(partition, new_seed->xyzxyz) != NULL)
             continue;
         result = decompose_systematic_recursive(partition, this_area_idx, octree, medium, *new_seed);
-        if (result != 0)
+        if (result != WS_OK)
             return result;
     VECTOR_END_EACH
 
     (void)medium;
-    return 0;
+    return WS_OK;
 }
-int
+wsret
 partition_decompose_systematic(partition_t* partition,
                                const octree_t* octree,
                                const partition_t* medium)

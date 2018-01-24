@@ -20,8 +20,8 @@ typedef struct partition_t
     partition_decomposition_func decompose;
 } partition_t;
 
-WAVESIM_PRIVATE_API partition_t*
-partition_create(void);
+WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+partition_create(partition_t** partition);
 
 WAVESIM_PRIVATE_API void
 partition_destroy(partition_t* partition);
