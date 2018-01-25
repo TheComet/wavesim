@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
-#include "wavesim/partition.h"
+#include "wavesim/medium.h"
 
-#define NAME partition
+#define NAME medium
 
 using namespace ::testing;
 

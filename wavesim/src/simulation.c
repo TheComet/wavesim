@@ -25,12 +25,12 @@ simulation_destroy(simulation_t* simulation)
 void
 simulation_construct(simulation_t* simulation)
 {
-    partition_construct(&simulation->partition);
+    medium_construct(&simulation->medium);
 }
 
 /* ------------------------------------------------------------------------- */
 void
 simulation_destruct(simulation_t* simulation)
 {
-    partition_destruct(&simulation->partition);
+    medium_destruct(&simulation->medium);
 }

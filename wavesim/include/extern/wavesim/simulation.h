@@ -2,7 +2,7 @@
 #define SIMULATION_H
 
 #include "wavesim/config.h"
-#include "wavesim/partition.h"
+#include "wavesim/medium.h"
 
 C_BEGIN
 
@@ -10,7 +10,7 @@ typedef struct simulation_t
 {
     WS_REAL max_frequency;
     int spatial_samples;
-    partition_t partition;
+    medium_t medium;
 
 } simulation_t;
 
