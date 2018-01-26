@@ -18,9 +18,8 @@ typedef struct log_t
 
 WAVESIM_PUBLIC_API extern log_t g_ws_log;
 
-typedef struct llog_t llog_t;
 WAVESIM_PUBLIC_API wsret
-llog_create(llog_t** log);
+log_create(log_t** log);
 
 WAVESIM_PUBLIC_API void
 log_destroy(log_t* log);

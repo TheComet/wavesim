@@ -14,7 +14,10 @@ typedef enum wsret
     WS_ERR_NOT_IMPLEMENTED          = -4,
     WS_ERR_SUBDIVIDED_NON_LEAF_NODE = -5,
     WS_ERR_FOPEN_FAILED             = -6,
-    WS_ERR_READ_ERROR               = -7
+    WS_ERR_READ_ERROR               = -7,
+    WS_ERR_TOO_FEW_INDICES          = -8,
+    WS_ERR_INDICES_ARENT_A_TRI      = -9,
+    WS_ERR_VERTEX_INDEX_NOT_FOUND   = -10,
 } wsret;
 
 WAVESIM_PUBLIC_API const char*

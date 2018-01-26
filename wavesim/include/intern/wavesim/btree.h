@@ -72,7 +72,7 @@ WAVESIM_PRIVATE_API int
 btree_insert(btree_t* btree, uint32_t hash, void* value);
 
 /*!
- * @brief Sets the value btreeped to the specified hash in the btree.
+ * @brief Sets the value to the specified hash in the btree.
  * @note If the hash is not found, this function silently fails.
  * @param[in] btree A pointer to the btree object to change the value of.
  * @param[in] hash The unique key associated with the value you want to change.

@@ -10,7 +10,7 @@
 
 /* ------------------------------------------------------------------------- */
 static wsret
-process_vertices(vector_t* vertex_buffer, char* buffer, char** save_ptr)
+process_vertices(vector_t* vertex_buffer, char** save_ptr)
 {
     char* coord;
     int i;
@@ -19,7 +19,7 @@ process_vertices(vector_t* vertex_buffer, char* buffer, char** save_ptr)
     /* Mandatory xyz components */
     for (i = 0; i != 3; ++i)
     {
-        coord = ws_strtok(buffer, " ", save_ptr);
+        coord = ws_strtok(NULL, " ", save_ptr);
         if (coord == NULL)
             return -1;
         vertex.xyz[i] = atof(coord);
@@ -27,7 +27,7 @@ process_vertices(vector_t* vertex_buffer, char* buffer, char** save_ptr)
     }
 
     /* Optional "w" component */
-    coord = ws_strtok(buffer, " ", save_ptr);
+    coord = ws_strtok(NULL, " ", save_ptr);
     if (coord)
         vec3_div_scalar(vertex.xyz, atof(coord));
 
@@ -42,28 +42,58 @@ process_vertices(vector_t* vertex_buffer, char* buffer, char** save_ptr)
 
 /* ------------------------------------------------------------------------- */
 static wsret
-process_indices(vector_t* index_buffer, char* buffer, char** save_ptr)
+process_face_elements(vector_t* index_buffer, char** line_save_ptr)
 {
     char* index_str;
+    char* token_save_ptr;
+    int i;
 
-    while ((index_str = ws_strtok(buffer, " ", save_ptr)) != NULL)
+    for (i = 0; i != 3; ++i)
     {
-        /* Any strings containing "/" are not indices */
-        if (strchr(index_str, '/') != NULL)
-            continue;
+        /* Get next face element in current line */
+        index_str = ws_strtok(NULL, " ", line_save_ptr);
+        if (index_str == NULL)
+        {
+            return WS_ERR_TOO_FEW_INDICES;
+        }
 
-        uint32_t* index = vector_emplace(index_buffer);
+        /* split index/texcoord/normal -- we're only interested in the index */
+        index_str = ws_strtok(index_str, "/", &token_save_ptr);
+        if (index_str == NULL)
+        {
+            return WS_ERR_TOO_FEW_INDICES;
+        }
+
+        int32_t* index = vector_emplace(index_buffer);
         if (index == NULL)
             WSRET(WS_ERR_OUT_OF_MEMORY);
         *index = atoi(index_str);
+    }
+
+    /* Make sure what we parsed was actually a tri and not a quad/ngon */
+    if (ws_strtok(NULL, " ", line_save_ptr) != NULL)
+    {
+        return WS_ERR_INDICES_ARENT_A_TRI;
     }
 
     return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
+void
+remap_indices(vector_t* index_buffer, int vertex_count)
+{
+    VECTOR_FOR_EACH(index_buffer, int32_t, index)
+        if (*index < 0)
+            *index = *index + vertex_count; /* -1 refers to the last vertex */
+        else
+            --(*index); /* obj uses offsets starting at 1, we use 0 */
+    VECTOR_END_EACH
+}
+
+/* ------------------------------------------------------------------------- */
 wsret
-obj_import_mesh(mesh_t** mesh, const char* filename)
+obj_import_mesh(const char* filename, mesh_t* mesh)
 {
     FILE* fp;
     char buffer[BUF_LEN];
@@ -78,7 +108,7 @@ obj_import_mesh(mesh_t** mesh, const char* filename)
         WSRET(WS_ERR_FOPEN_FAILED);
 
     vector_construct(&vertex_buffer, sizeof(double));
-    vector_construct(&index_buffer, 4); /* We're using uint32_t for IBs */
+    vector_construct(&index_buffer, 4); /* We're using int32_t for IBs */
     while (fgets(buffer, BUF_LEN, fp) != NULL)
     {
         token = ws_strtok(buffer, " ", &save_ptr);
@@ -91,7 +121,7 @@ obj_import_mesh(mesh_t** mesh, const char* filename)
             /* Vertices begin with "v" */
             if (strcmp(token, "v") == 0)
             {
-                if ((retval = process_vertices(&vertex_buffer, buffer, &save_ptr) < 0))
+                if ((retval = process_vertices(&vertex_buffer, &save_ptr) < 0))
                     goto parse_failed;
                 break;
             }
@@ -99,7 +129,7 @@ obj_import_mesh(mesh_t** mesh, const char* filename)
             /* Index buffer, begins with "f" */
             if (strcmp(token, "f") == 0)
             {
-                if ((retval = process_indices(&index_buffer, buffer, &save_ptr) < 0))
+                if ((retval = process_face_elements(&index_buffer, &save_ptr) < 0))
                     goto parse_failed;
                 break;
             }
@@ -114,13 +144,13 @@ obj_import_mesh(mesh_t** mesh, const char* filename)
         goto ferror_occurred;
     }
 
-    if ((retval = mesh_create(mesh)) != WS_OK)
-        goto mesh_create_failed;
+    remap_indices(&index_buffer, vector_count(&vertex_buffer) / 3);
 
-    if (mesh_copy_from_buffers(*mesh,
+    /* Note: This call clears the mesh's existing buffers for us */
+    if ((retval = mesh_copy_from_buffers(mesh,
             vertex_buffer.data, index_buffer.data,
             (WS_IB)vector_count(&vertex_buffer) / 3, (WS_IB)vector_count(&index_buffer),
-            MESH_VB_DOUBLE, MESH_IB_UINT32) != WS_OK)
+            MESH_VB_DOUBLE, MESH_IB_INT32)) != WS_OK)
     {
         goto mesh_copy_buffers_failed;
     }
@@ -130,8 +160,7 @@ obj_import_mesh(mesh_t** mesh, const char* filename)
 
     return WS_OK;
 
-    mesh_copy_buffers_failed   : mesh_destroy(*mesh);
-    mesh_create_failed         :
+    mesh_copy_buffers_failed   :
     ferror_occurred            :
     parse_failed               : fclose(fp);
                                  vector_clear_free(&vertex_buffer);

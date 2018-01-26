@@ -37,9 +37,46 @@ TEST(NAME, tokenize_empty_string)
 }
 
 TEST(NAME, tokenize_string_with_only_tokens)
-{    char* saveptr;
+{
+    char* saveptr;
     char str[] = "             ";
     EXPECT_THAT(ws_strtok(str, " ", &saveptr), IsNull());
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
+}
+
+TEST(NAME, tokenize_with_multiple_tokens)
+{
+    char* saveptr;
+    char str[] = "  this  \t  is \t a test";
+    EXPECT_THAT(ws_strtok(str, " \t", &saveptr), StrEq("this"));
+    EXPECT_THAT(ws_strtok(NULL, " \t", &saveptr), StrEq("is"));
+    EXPECT_THAT(ws_strtok(NULL, " \t", &saveptr), StrEq("a"));
+    EXPECT_THAT(ws_strtok(NULL, " \t", &saveptr), StrEq("test"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
+}
+
+TEST(NAME, tokenize_with_leading_delimiters)
+{
+    char* saveptr;
+    char str[] = "  this is a test";
+    EXPECT_THAT(ws_strtok(str, " ", &saveptr), StrEq("this"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), StrEq("is"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), StrEq("a"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), StrEq("test"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
+}
+
+TEST(NAME, tokenize_with_trailing_delimiters)
+{
+    char* saveptr;
+    char str[] = "this is a test  ";
+    EXPECT_THAT(ws_strtok(str, " ", &saveptr), StrEq("this"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), StrEq("is"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), StrEq("a"));
+    EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), StrEq("test"));
     EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
     EXPECT_THAT(ws_strtok(NULL, " ", &saveptr), IsNull());
 }

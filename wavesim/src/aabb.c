@@ -56,6 +56,15 @@ aabb_from_3_points(const WS_REAL p1[3], const WS_REAL p2[3], const WS_REAL p3[3]
 }
 
 /* ------------------------------------------------------------------------- */
+aabb_t
+aabb_from_face(const face_t* face)
+{
+    return aabb_from_3_points(face->vertices[0].position.xyz,
+                              face->vertices[1].position.xyz,
+                              face->vertices[2].position.xyz);
+}
+
+/* ------------------------------------------------------------------------- */
 void
 aabb_expand_point(WS_REAL aabb[6], const WS_REAL p[3])
 {

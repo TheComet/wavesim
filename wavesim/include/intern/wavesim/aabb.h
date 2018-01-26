@@ -6,6 +6,8 @@
 
 C_BEGIN
 
+typedef struct face_t face_t;
+
 typedef union aabb_t
 {
     struct {
@@ -54,6 +56,12 @@ aabb_zero(void);
  */
 WAVESIM_PRIVATE_API aabb_t
 aabb_from_3_points(const WS_REAL p1[3], const WS_REAL p2[3], const WS_REAL p3[3]);
+
+/*!
+ * @brief Calculates the axis-aligned bounding-box of a face.
+ */
+WAVESIM_PRIVATE_API aabb_t
+aabb_from_face(const face_t* face);
 
 /*!
  * @brief Expands an existing axis-aligned bounding-box (if necessary) to

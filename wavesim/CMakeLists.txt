@@ -17,21 +17,21 @@ include (CMakeDependentOption)
 ###############################################################################
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    set (MEM_DBG_DEFAULT 1)
+    set (DEBUG_FEATURES 1)
 else ()
-    set (MEM_DBG_DEFAULT 0)
+    set (DEBUG_FEATURES 0)
 endif ()
 
 set (PROJECT_NAME "WAVESIM")  # Required for export.h.in
 option (WAVESIM_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." off)
 set (WAVESIM_BUILD_TYPE "SHARED" CACHE STRING "Whether to build as shared or static")
-cmake_dependent_option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage reports" ON "CMAKE_BUILD_TYPE MATCHES Debug" OFF)
-cmake_dependent_option (WAVESIM_MEMORY_BACKTRACE "Generates backtraces to each malloc call that doesn't get matched to a free. Impacts performance, but can help track down memory leaks easily." ON "CMAKE_BUILD_TYPE MATCHES Debug;WAVESIM_MEMORY_DEBUGGING" OFF)
+option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage reports" ${DEBUG_FEATURES})
+option (WAVESIM_MEMORY_BACKTRACE "Generates backtraces to each malloc call that doesn't get matched to a free. Impacts performance, but can help track down memory leaks easily." ${DEBUG_FEATURES})
 option (WAVESIM_PYTHON "Build python bindings. The library must be shared." ON)
 option (WAVESIM_PIC "Position independent code when building as a static library" ON)
 set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
 option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
-cmake_dependent_option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ON "CMAKE_BUILD_TYPE MATCHES Debug" OFF)
+option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ${DEBUG_FEATURES})
 
 # Determine visibility macros if the library is a shared library.
 if (WAVESIM_BUILD_TYPE MATCHES "SHARED")
@@ -139,12 +139,15 @@ add_library (wavesim_obj OBJECT
     "src/btree.c"
     "${CMAKE_CURRENT_BINARY_DIR}/src/build_info.c"
     "src/face.c"
+    "src/hash.c"
     "src/intersections.c"
     "src/log.c"
     "src/memory.c"
     "src/mesh.c"
     "src/mesh_builder.c"
-    "src/obj_export.c"
+    "src/obj_export_common.c"
+    "src/obj_export_medium.c"
+    "src/obj_export_octree.c"
     "src/obj_import.c"
     "src/octree.c"
     "src/medium.c"
@@ -241,6 +244,7 @@ if (${WAVESIM_TESTS})
         "tests/test_intersections.cpp"
         "tests/test_mesh.cpp"
         "tests/test_mesh_builder.cpp"
+        "tests/test_obj_import.cpp"
         "tests/test_octree.cpp"
         "tests/test_medium.cpp"
         "tests/test_string.cpp"

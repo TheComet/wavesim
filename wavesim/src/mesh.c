@@ -171,6 +171,14 @@ mesh_get_index_from_buffer(void* ib, WS_IB index, mesh_ib_type_e ib_type)
 
 /* ------------------------------------------------------------------------- */
 face_t
+mesh_get_face(const mesh_t* mesh, WS_IB face_index)
+{
+    return mesh_get_face_from_buffers(mesh->vb, mesh->ib, mesh->ab, face_index, mesh->vb_type, mesh->ib_type);
+}
+
+
+/* ------------------------------------------------------------------------- */
+face_t
 mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
                            WS_IB face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)

@@ -1,17 +1,11 @@
 #include "wavesim/attribute.h"
 #include "wavesim/intersections.h"
+#include "wavesim/log.h"
 #include "wavesim/memory.h"
 #include "wavesim/mesh.h"
 #include "wavesim/octree.h"
 #include "wavesim/medium.h"
 #include <string.h>
-
-typedef struct medium_area_t
-{
-    aabb_t aabb;
-    WS_REAL sound_speed;
-    vector_t adcacent_areas; /* int32_t (indices into medium->areas) */
-} medium_area_t;
 
 static int
 determine_cell_attribute(attribute_t* cell_attribute,
@@ -114,7 +108,7 @@ medium_destroy(medium_t* medium)
 void
 medium_construct(medium_t* medium)
 {
-    vector_construct(&medium->areas, sizeof(medium_area_t));
+    vector_construct(&medium->partitions, sizeof(medium_partition_t));
     medium->decompose = medium_decompose_systematic;
 }
 
@@ -129,23 +123,23 @@ medium_destruct(medium_t* medium)
 void
 medium_clear(medium_t* medium)
 {
-    VECTOR_FOR_EACH(&medium->areas, medium_area_t, area)
-        vector_clear_free(&area->adcacent_areas);
+    VECTOR_FOR_EACH(&medium->partitions, medium_partition_t, partition)
+        vector_clear_free(&partition->adcacent_partitions);
     VECTOR_END_EACH
-    vector_clear_free(&medium->areas);
+    vector_clear_free(&medium->partitions);
 }
 
 /* ------------------------------------------------------------------------- */
 wsret
-medium_add_area(medium_t* medium, const WS_REAL bb[6], WS_REAL sound_speed)
+medium_add_partition(medium_t* medium, const WS_REAL bb[6], WS_REAL sound_speed)
 {
-    medium_area_t* area = vector_emplace(&medium->areas);
-    if (area == NULL)
+    medium_partition_t* partition = vector_emplace(&medium->partitions);
+    if (partition == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
 
-    area->aabb = aabb(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
-    area->sound_speed = sound_speed;
-    vector_construct(&area->adcacent_areas, sizeof(int32_t));
+    partition->aabb = aabb(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
+    partition->sound_speed = sound_speed;
+    vector_construct(&partition->adcacent_partitions, sizeof(int32_t));
 
     return 0;
 }
@@ -205,19 +199,29 @@ get_adjacent_slice(const medium_t* medium, const WS_REAL aabb[6], direction_e di
 
     return adjacent;
 }
-static medium_area_t*
-medium_area_already_occupied(const medium_t* medium, const WS_REAL aabb[6])
+static int
+medium_partition_already_occupied(const medium_t* medium, const WS_REAL aabb[6])
 {
-    VECTOR_FOR_EACH(&medium->areas, medium_area_t, area)
-        if (intersect_aabb_aabb_test(area->aabb.xyzxyz, aabb))
-            return area;
+    /* First make sure it's within bounds */
+    int i;
+    for (i = 0; i != 3; ++i)
+        if (aabb[i+0] < medium->boundary.b.min.xyz[i] ||
+            aabb[i+3] > medium->boundary.b.max.xyz[i])
+        {
+            return 1;
+        }
+
+    /* Next, check if it intersects with any other partition in the medium */
+    VECTOR_FOR_EACH(&medium->partitions, medium_partition_t, partition)
+        if (intersect_aabb_aabb_test(partition->aabb.xyzxyz, aabb))
+            return 1;
     VECTOR_END_EACH
 
-    return NULL;
+    return 0;
 }
 static wsret
 decompose_systematic_recursive(medium_t* medium,
-                               int32_t parent_area_idx,
+                               int32_t parent_partition_idx,
                                const octree_t* octree,
                                const medium_t* mediumdef,
                                aabb_t seed)
@@ -225,7 +229,7 @@ decompose_systematic_recursive(medium_t* medium,
     int direction;
     int occupied_slices;
     vector_t potential_new_seeds;
-    int32_t this_area_idx;
+    int32_t this_partition_idx;
 
     /* Determine the cell type of our seed */
     attribute_t seed_attr;
@@ -236,9 +240,9 @@ decompose_systematic_recursive(medium_t* medium,
      * cell that has different attributes.
      */
     vector_construct(&potential_new_seeds, sizeof(aabb_t));
-    occupied_slices = 0;
-    while (occupied_slices < DIRECTION_COUNT)
+    do
     {
+        occupied_slices = 0;
         for (direction = 0; direction != DIRECTION_COUNT; ++direction)
         {
             aabb_t slice;
@@ -247,7 +251,7 @@ decompose_systematic_recursive(medium_t* medium,
             /* Calculate a slice adjacent to this seed and make sure it doesn't
              * already exist in the medium. */
             slice = get_adjacent_slice(medium, seed.xyzxyz, direction);
-            if (medium_area_already_occupied(medium, slice.xyzxyz) != NULL)
+            if (medium_partition_already_occupied(medium, slice.xyzxyz))
             {
                 ++occupied_slices;
                 continue;
@@ -294,36 +298,37 @@ decompose_systematic_recursive(medium_t* medium,
              * seed now */
             aabb_expand_aabb(seed.xyzxyz, slice.xyzxyz);
         }
-    }
+    } while (occupied_slices < DIRECTION_COUNT);
 
     /*
-     * At this point, the seed has been expanded as much as possible. Add it to
-     * the medium as a new area.
+     * At this point, the seed has been expanded as much as possible without
+     * intersecting existing partitions in the medium. Add it to the medium as
+     * a new partition.
      */
-    this_area_idx = vector_count(&medium->areas);
-    if (medium_add_area(medium, seed.xyzxyz, 1) != 0)
+    this_partition_idx = vector_count(&medium->partitions);
+    if (medium_add_partition(medium, seed.xyzxyz, 1) != 0)
         return -1;
 
-    /* Add ourselves to the parent area's adjacent list, if possible */
-    if (parent_area_idx > -1)
+    /* Add ourselves to the parent partition's adjacent list, if possible */
+    if (parent_partition_idx > -1)
     {
-        medium_area_t* parent_area = vector_get_element(&medium->areas, parent_area_idx);
-        int32_t* adjacent_area_idx = vector_emplace(&parent_area->adcacent_areas);
-        if (adjacent_area_idx == NULL)
+        medium_partition_t* parent_partition = vector_get_element(&medium->partitions, parent_partition_idx);
+        int32_t* adjacent_partition_idx = vector_emplace(&parent_partition->adcacent_partitions);
+        if (adjacent_partition_idx == NULL)
             WSRET(WS_ERR_OUT_OF_MEMORY);
-        *adjacent_area_idx = this_area_idx;
+        *adjacent_partition_idx = this_partition_idx;
     }
 
     /*
      * During expansion, we tracked which cells had different attributes than
      * our own. All of these cells are potential new seeds from which we can
-     * expand new areas. Do this now.
+     * expand new partitions.
      */
     VECTOR_FOR_EACH(&potential_new_seeds, aabb_t, new_seed)
         wsret result;
-        if (medium_area_already_occupied(medium, new_seed->xyzxyz) != NULL)
+        if (medium_partition_already_occupied(medium, new_seed->xyzxyz))
             continue;
-        result = decompose_systematic_recursive(medium, this_area_idx, octree, mediumdef, *new_seed);
+        result = decompose_systematic_recursive(medium, this_partition_idx, octree, mediumdef, *new_seed);
         if (result != WS_OK)
             return result;
     VECTOR_END_EACH
@@ -370,13 +375,21 @@ medium_build_from_mesh(medium_t* medium,
     octree_t octree;
     wsret result;
 
-    /* Clear areas from last time */
+    /* Clear partitions from last time */
     medium_clear(medium);
 
     /* Copy arguments into medium structure, medium building relies on
      * them */
     vec3_copy(&medium->grid_size, grid_size);
-    medium->boundary = mediumdef == NULL ? mesh->aabb : mediumdef->boundary;
+    if (mediumdef == NULL)
+    {
+        ws_log_info(&g_ws_log, "[warning] No medium definition was provided. Falling back to mesh AABB and default air parameters.");
+        medium->boundary = mesh->aabb;
+    }
+    else
+    {
+        medium->boundary = mediumdef->boundary;
+    }
 
     /* Need an octree */
     octree_construct(&octree);
@@ -385,6 +398,8 @@ medium_build_from_mesh(medium_t* medium,
 
     if ((result = medium->decompose(medium, &octree, mediumdef)) != WS_OK)
         goto bail;
+
+    ws_log_info(&g_ws_log, "Decomposed mesh into %d partitions", vector_count(&medium->partitions));
 
     bail : octree_destruct(&octree);
     return result;
