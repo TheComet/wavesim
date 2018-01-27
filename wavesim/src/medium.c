@@ -74,7 +74,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
              * attributes, into our return value. that
              * 1 = reflection + transmission + absorption.
              */
-            vec3_div_scalar(rta_avg.xyz, vector_count(&query_result));
+            vec3_div_scalar(rta_avg.xyz, (WS_REAL)vector_count(&query_result));
             cell_attribute->absorption = rta_avg.v.x;
             cell_attribute->reflection = rta_avg.v.y;
             cell_attribute->transmission = rta_avg.v.z;
@@ -305,7 +305,7 @@ decompose_systematic_recursive(medium_t* medium,
      * intersecting existing partitions in the medium. Add it to the medium as
      * a new partition.
      */
-    this_partition_idx = vector_count(&medium->partitions);
+    this_partition_idx = (int32_t)vector_count(&medium->partitions);
     if (medium_add_partition(medium, seed.xyzxyz, 1) != 0)
         return -1;
 

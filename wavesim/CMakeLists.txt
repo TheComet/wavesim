@@ -133,6 +133,8 @@ endif ()
 # Wavesim core
 ###############################################################################
 
+# Headers are required for Visual Studio to list them in the project
+file (GLOB WAVESIM_HEADERS "include/extern/wavesim/*.h" "include/intern/wavesim/*.h")
 add_library (wavesim_obj OBJECT
     "src/aabb.c"
     "src/attribute.c"
@@ -158,7 +160,8 @@ add_library (wavesim_obj OBJECT
     "src/vector.c"
     "src/vertex.c"
     "src/wavesim.c"
-    "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c")
+    "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c"
+	${WAVESIM_HEADERS})
 
 set_property(TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
 
@@ -176,10 +179,10 @@ target_compile_options (wavesim_obj
         /EHa /MTd /W4 /WX /wd4706 /D_CRT_SECURE_NO_DEPRECATE
     >
     PUBLIC $<$<C_COMPILER_ID:GNU>:
-        -Wall -Wextra -Werror -pedantic -pedantic-errors
+        -Wall -Wextra -Werror -pedantic -pedantic-errors -Wshadow -Wconversion
     >
     PUBLIC $<$<C_COMPILER_ID:Clang>:
-        -Wall -Wextra -Werror -pedantic -pedantic-errors
+        -Wall -Wextra -Werror -pedantic -pedantic-errors -Wshadow -Wconversion
     >
 )
 
@@ -195,13 +198,16 @@ add_dependencies (wavesim_obj wavesim_generate_build_info)
 
 if (${WAVESIM_PYTHON})
     find_package (PythonLibs 3 REQUIRED)
+	# Headers are required for Visual Studio to list them in the project
+	file (GLOB WAVESIM_PYTHON_HEADERS "include/python/*.h")
     add_library (wavesim_python_obj OBJECT
         "src/python/wavesim_module.c"
         "src/python/wavesim_module_Attribute.c"
         "src/python/wavesim_module_Face.c"
         "src/python/wavesim_module_Mesh.c"
         "src/python/wavesim_module_MeshIterator.c"
-        "src/python/wavesim_module_Vertex.c")
+        "src/python/wavesim_module_Vertex.c"
+		${WAVESIM_PYTHON_HEADERS})
     set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_python_obj
         PRIVATE
@@ -215,10 +221,10 @@ if (${WAVESIM_PYTHON})
             /EHa /MTd /W4 /WX /wd4115 /D_CRT_SECURE_NO_DEPRECATE
         >
         PUBLIC $<$<C_COMPILER_ID:GNU>:
-            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers -Wshadow
         >
         PUBLIC $<$<C_COMPILER_ID:Clang>:
-            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers
+            -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers -Wshadow
         >
     )
     
@@ -344,6 +350,7 @@ export (TARGETS wavesim FILE WaveSimConfig.cmake)
 
 message (STATUS "------------------------------------------------------------")
 message (STATUS "Wavesim settings")
+message (STATUS " + Configuration: ${CMAKE_BUILD_TYPE}")
 message (STATUS " + Build type: ${WAVESIM_BUILD_TYPE}")
 message (STATUS " + PIC (Position independent code): ${WAVESIM_PIC}")
 message (STATUS " + Precision: ${WAVESIM_PRECISION}")

@@ -79,20 +79,19 @@ obj_write_aabb_indices(obj_exporter_t* exporter, const WS_REAL aabb[6])
     /* These are the 12 edges of the bounding box */
     struct {
         vec3_t a, b;
-    } edges[12] = {
-        {aaa, aab},
-        {aaa, aba},
-        {aaa, baa},
-        {aab, abb},
-        {aab, bab},
-        {aba, abb},
-        {aba, bba},
-        {baa, bab},
-        {baa, bba},
-        {abb, bbb},
-        {bab, bbb},
-        {bba, bbb}
-    };
+    } edges[12]; 
+    edges[0].a = aaa; edges[0].b = aab;
+    edges[0].a = aaa; edges[0].b = aba;
+    edges[0].a = aaa; edges[0].b = baa;
+    edges[0].a = aab; edges[0].b = abb;
+    edges[0].a = aab; edges[0].b = bab;
+    edges[0].a = aba; edges[0].b = abb;
+    edges[0].a = aba; edges[0].b = bba;
+    edges[0].a = baa; edges[0].b = bab;
+    edges[0].a = baa; edges[0].b = bba;
+    edges[0].a = abb; edges[0].b = bbb;
+    edges[0].a = bab; edges[0].b = bbb;
+    edges[0].a = bba; edges[0].b = bbb;
 
     for (i = 0; i != 12; ++i)
     {

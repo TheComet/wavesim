@@ -8,6 +8,16 @@ C_BEGIN
 
 typedef struct face_t face_t;
 
+/*!
+ * @brief Axis-aligned bounding-box.
+ * 
+ * Access the minimum (left, bottom, front) coordinates with b.min and the
+ * maximum (right, top, back) coordinates with b.max. The two coordinates
+ * represent two global positions in 3D space, in which the AABB is spanned.
+
+ * You can also access the data as 6 consecutive floats with the xyzxyz
+ * property. This is required in most calculation routines.
+ */
 typedef union aabb_t
 {
     struct {
@@ -17,6 +27,12 @@ typedef union aabb_t
     WS_REAL xyzxyz[6];
 } aabb_t;
 
+/*!
+ * @brief Convenience macros for accessing the bounding box components.
+ * A="min"
+ * B="max"
+ * X/Y/Z = coordinate
+ */
 #define AABB_AX(X) X.b.min.v.x
 #define AABB_AY(X) X.b.min.v.y
 #define AABB_AZ(X) X.b.min.v.z
@@ -24,6 +40,10 @@ typedef union aabb_t
 #define AABB_BY(X) X.b.max.v.y
 #define AABB_BZ(X) X.b.max.v.z
 
+/*!
+ * @brief Calculates the dimensions of the bounding box as a vec3_t object
+ * (width, height, depth).
+ */
 #define AABB_DIMS(X) \
     vec3(AABB_BX(X) - AABB_AX(X), \
          AABB_BY(X) - AABB_AY(X), \

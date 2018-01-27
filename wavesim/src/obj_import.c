@@ -32,7 +32,7 @@ process_vertices(vector_t* vertex_buffer, char** save_ptr)
         vec3_div_scalar(vertex.xyz, atof(coord));
 
     /* Push them into the vertex buffer */
-    i = vector_count(vertex_buffer);
+    i = (int)vector_count(vertex_buffer);
     if (vector_resize(vertex_buffer, i + 3) < 0)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     memcpy(vector_get_element(vertex_buffer, i), vertex.xyz, sizeof(vertex.xyz));
@@ -144,7 +144,7 @@ obj_import_mesh(const char* filename, mesh_t* mesh)
         goto ferror_occurred;
     }
 
-    remap_indices(&index_buffer, vector_count(&vertex_buffer) / 3);
+    remap_indices(&index_buffer, (int)vector_count(&vertex_buffer) / 3);
 
     /* Note: This call clears the mesh's existing buffers for us */
     if ((retval = mesh_copy_from_buffers(mesh,

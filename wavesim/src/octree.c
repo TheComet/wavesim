@@ -161,7 +161,7 @@ determine_smallest_subdivision(WS_REAL smallest_subdivision[3], const mesh_t* me
     }
 
     /* If any of the axes are 0 in length, just set it to another axis */
-    for (int i = 0; i != 3; ++i)
+    for (i = 0; i != 3; ++i)
         if (smallest_subdivision[i] <= WS_EPSILON || smallest_subdivision[i] == INFINITY)
             smallest_subdivision[i] = fmax(fmax(smallest_subdivision[0], smallest_subdivision[1]), smallest_subdivision[2]);
 }

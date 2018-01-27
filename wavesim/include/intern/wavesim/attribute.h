@@ -5,6 +5,9 @@
 
 C_BEGIN
 
+/*!
+ * @brief 
+ */
 typedef struct attribute_t
 {
     WS_REAL reflection;
