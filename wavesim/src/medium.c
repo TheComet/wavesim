@@ -10,9 +10,9 @@
 static int
 determine_cell_attribute(attribute_t* cell_attribute,
                          const octree_t* octree,
-                         const WS_REAL cell_aabb[6])
+                         const wsreal_t cell_aabb[6])
 {
-    unsigned int i;
+    wsib_t i;
     vector_t query_result;
 
     /* XXX This is super ugly, maybe add a result_construct() function that takes a mesh? */
@@ -29,7 +29,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
                             intersecting faces */
         vec3_set_zero(rta_avg.xyz);
 
-        for (i = 0; i != vector_count(&query_result) / 3; ++i)
+        for (i = 0; i != (wsib_t)vector_count(&query_result) / 3; ++i)
         {
 
             /* Do intersection test of face with our cell */
@@ -37,7 +37,11 @@ determine_cell_attribute(attribute_t* cell_attribute,
             const mesh_t* m = octree->mesh;
             face_t face = mesh_get_face_from_buffers(m->vb, query_result.data, m->ab,
                                                     i, m->vb_type, m->ib_type);
-            if (intersect_face_aabb(&intersect_result, &face, cell_aabb) == 0)
+            if (intersect_face_aabb(&intersect_result,
+                    face.vertices[0].position.xyz,
+                    face.vertices[1].position.xyz,
+                    face.vertices[2].position.xyz,
+                    cell_aabb) == 0)
                 continue; /* face doesn't intersect our cell, so ignore it */
 
             /*
@@ -74,7 +78,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
              * attributes, into our return value. that
              * 1 = reflection + transmission + absorption.
              */
-            vec3_div_scalar(rta_avg.xyz, (WS_REAL)vector_count(&query_result));
+            vec3_div_scalar(rta_avg.xyz, (wsreal_t)vector_count(&query_result));
             cell_attribute->absorption = rta_avg.v.x;
             cell_attribute->reflection = rta_avg.v.y;
             cell_attribute->transmission = rta_avg.v.z;
@@ -131,7 +135,7 @@ medium_clear(medium_t* medium)
 
 /* ------------------------------------------------------------------------- */
 wsret
-medium_add_partition(medium_t* medium, const WS_REAL bb[6], WS_REAL sound_speed)
+medium_add_partition(medium_t* medium, const wsreal_t bb[6], wsreal_t sound_speed)
 {
     medium_partition_t* partition = vector_emplace(&medium->partitions);
     if (partition == NULL)
@@ -164,7 +168,7 @@ typedef enum direction_e
     DIRECTION_COUNT
 } direction_e;
 static aabb_t
-get_adjacent_slice(const medium_t* medium, const WS_REAL aabb[6], direction_e direction)
+get_adjacent_slice(const medium_t* medium, const wsreal_t aabb[6], direction_e direction)
 {
     aabb_t adjacent;
     memcpy(adjacent.xyzxyz, aabb, sizeof(adjacent.xyzxyz));
@@ -200,7 +204,7 @@ get_adjacent_slice(const medium_t* medium, const WS_REAL aabb[6], direction_e di
     return adjacent;
 }
 static int
-medium_partition_already_occupied(const medium_t* medium, const WS_REAL aabb[6])
+medium_partition_already_occupied(const medium_t* medium, const wsreal_t aabb[6])
 {
     /* First make sure it's within bounds */
     int i;
@@ -221,7 +225,7 @@ medium_partition_already_occupied(const medium_t* medium, const WS_REAL aabb[6])
 }
 static wsret
 decompose_systematic_recursive(medium_t* medium,
-                               int32_t parent_partition_idx,
+                               size_t parent_partition_idx,
                                const octree_t* octree,
                                const medium_t* mediumdef,
                                aabb_t seed)
@@ -229,7 +233,7 @@ decompose_systematic_recursive(medium_t* medium,
     int direction;
     int occupied_slices;
     vector_t potential_new_seeds;
-    int32_t this_partition_idx;
+    size_t this_partition_idx;
 
     /* Determine the cell type of our seed */
     attribute_t seed_attr;
@@ -305,15 +309,15 @@ decompose_systematic_recursive(medium_t* medium,
      * intersecting existing partitions in the medium. Add it to the medium as
      * a new partition.
      */
-    this_partition_idx = (int32_t)vector_count(&medium->partitions);
+    this_partition_idx = vector_count(&medium->partitions);
     if (medium_add_partition(medium, seed.xyzxyz, 1) != 0)
         return -1;
 
     /* Add ourselves to the parent partition's adjacent list, if possible */
-    if (parent_partition_idx > -1)
+    if (parent_partition_idx != VECTOR_ERROR)
     {
         medium_partition_t* parent_partition = vector_get_element(&medium->partitions, parent_partition_idx);
-        int32_t* adjacent_partition_idx = vector_emplace(&parent_partition->adcacent_partitions);
+        size_t* adjacent_partition_idx = vector_emplace(&parent_partition->adcacent_partitions);
         if (adjacent_partition_idx == NULL)
             WSRET(WS_ERR_OUT_OF_MEMORY);
         *adjacent_partition_idx = this_partition_idx;
@@ -350,7 +354,7 @@ medium_decompose_systematic(medium_t* medium,
         AABB_AY(medium->boundary) + medium->grid_size.v.y,
         AABB_AZ(medium->boundary) + medium->grid_size.v.z
     );
-    return decompose_systematic_recursive(medium, -1, octree, mediumdef, seed);
+    return decompose_systematic_recursive(medium, VECTOR_ERROR, octree, mediumdef, seed);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -370,7 +374,7 @@ wsret
 medium_build_from_mesh(medium_t* medium,
                        const medium_t* mediumdef,
                        const mesh_t* mesh,
-                       const WS_REAL grid_size[3])
+                       const wsreal_t grid_size[3])
 {
     octree_t octree;
     wsret result;

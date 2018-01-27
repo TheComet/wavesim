@@ -44,7 +44,7 @@ face_calculate_aabb(const face_t* face)
 
 /* ------------------------------------------------------------------------- */
 void
-face_interpolate_attributes_barycentric(const face_t* face, attribute_t* attr, const WS_REAL bary[3])
+face_interpolate_attributes_barycentric(const face_t* face, attribute_t* attr, const wsreal_t bary[3])
 {
     int i;
 

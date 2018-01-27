@@ -13,7 +13,7 @@ static wsret
 process_vertices(vector_t* vertex_buffer, char** save_ptr)
 {
     char* coord;
-    int i;
+    size_t i;
     vec3_t vertex;
 
     /* Mandatory xyz components */
@@ -32,8 +32,8 @@ process_vertices(vector_t* vertex_buffer, char** save_ptr)
         vec3_div_scalar(vertex.xyz, atof(coord));
 
     /* Push them into the vertex buffer */
-    i = (int)vector_count(vertex_buffer);
-    if (vector_resize(vertex_buffer, i + 3) < 0)
+    i = vector_count(vertex_buffer);
+    if (vector_resize(vertex_buffer, i + 3) == VECTOR_ERROR)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     memcpy(vector_get_element(vertex_buffer, i), vertex.xyz, sizeof(vertex.xyz));
 
@@ -149,7 +149,7 @@ obj_import_mesh(const char* filename, mesh_t* mesh)
     /* Note: This call clears the mesh's existing buffers for us */
     if ((retval = mesh_copy_from_buffers(mesh,
             vertex_buffer.data, index_buffer.data,
-            (WS_IB)vector_count(&vertex_buffer) / 3, (WS_IB)vector_count(&index_buffer),
+            (wsib_t)vector_count(&vertex_buffer) / 3, (wsib_t)vector_count(&index_buffer),
             MESH_VB_DOUBLE, MESH_IB_INT32)) != WS_OK)
     {
         goto mesh_copy_buffers_failed;

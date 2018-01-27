@@ -66,7 +66,7 @@ ws_vlog(log_t* log, const char* fmt, va_list ap, int type)
     len += 2; /* newline + null terminator */
     if (len > log->buffer_length)
     {
-        char* buf = MALLOC((len + 1) * sizeof(char));
+        char* buf = MALLOC((size_t)len * sizeof(char));
         if (buf == NULL)
         {
             fprintf(stderr, "%s\n", wsret_to_string(WS_ERR_OUT_OF_MEMORY));
@@ -75,7 +75,7 @@ ws_vlog(log_t* log, const char* fmt, va_list ap, int type)
         if (log->buffer != NULL)
             FREE(log->buffer);
         log->buffer = buf;
-        log->buffer_length = (len + 1) * sizeof(char);
+        log->buffer_length = (size_t)len * sizeof(char);
     }
 
     vsprintf(log->buffer, fmt, ap);

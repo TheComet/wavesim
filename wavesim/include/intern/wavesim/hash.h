@@ -13,7 +13,13 @@ WAVESIM_PRIVATE_API uint32_t
 hash_combine(uint32_t lhs, uint32_t rhs);
 
 WAVESIM_PRIVATE_API uint32_t
-hash_vec3(const WS_REAL v[3]);
+hash_vec3(const wsreal_t v[3]);
+
+WAVESIM_PRIVATE_API uint32_t
+hash_index(const wsib_t index);
+
+WAVESIM_PRIVATE_API uint32_t
+hash_face_indices(const wsib_t index[3]);
 
 C_END
 

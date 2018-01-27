@@ -20,46 +20,6 @@
  * define visibility macros
  * ------------------------------------------------------------------------- */
 
-/*
- * define public API macro, depending on whether the library is being
- * built or being linked.
- */
-#define ${PROJECT_NAME}_HELPER_API_EXPORT ${${PROJECT_NAME}_HELPER_API_EXPORT}
-#define ${PROJECT_NAME}_HELPER_API_IMPORT ${${PROJECT_NAME}_HELPER_API_IMPORT}
-#define ${PROJECT_NAME}_HELPER_API_LOCAL  ${${PROJECT_NAME}_HELPER_API_LOCAL}
-#if defined(${PROJECT_NAME}_BUILDING) /* defined by CMake when library is being compiled */
-#   define ${PROJECT_NAME}_PUBLIC_API ${PROJECT_NAME}_HELPER_API_EXPORT
-#else
-#   define ${PROJECT_NAME}_PUBLIC_API ${PROJECT_NAME}_HELPER_API_IMPORT
-#endif
-#define ${PROJECT_NAME}_PRIVATE_API ${PROJECT_NAME}_HELPER_API_LOCAL
 
-/* --------------------------------------------------------------
- * C++11 stuff
- * --------------------------------------------------------------*/
-
-#   if defined(__cplusplus) && __cplusplus >= 201103L
-#       define OVERRIDE override
-#       define FINAL final
-#   else
-#       define OVERRIDE
-#       define FINAL
-#   endif
-
-/* ----------------------------------------------------------------------------
- * C linkage
- * ------------------------------------------------------------------------- */
-
-#ifdef __cplusplus
-#   define C_BEGIN extern "C" {
-#else
-#   define C_BEGIN
-#endif
-
-#ifdef __cplusplus
-#   define C_END }
-#else
-#   define C_END
-#endif
 
 #endif /* ${PROJECT_NAME}_EXPORT_H */

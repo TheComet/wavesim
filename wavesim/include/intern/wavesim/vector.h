@@ -15,15 +15,14 @@
 
 C_BEGIN
 
-#define DATA_POINTER_TYPE unsigned char
-#define VECTOR_ERROR (intptr_t)-1
+#define VECTOR_ERROR (size_t)-1
 
 typedef struct vector_t
 {
-    intptr_t element_size;       /* how large one element is in bytes */
-    intptr_t capacity;           /* how many elements actually fit into the allocated space */
-    intptr_t count;              /* number of elements inserted */
-    DATA_POINTER_TYPE* data;     /* pointer to the contiguous section of memory */
+    size_t element_size;  /* how large one element is in bytes */
+    size_t capacity;      /* how many elements actually fit into the allocated space */
+    size_t count;         /* number of elements inserted */
+    uint8_t* data;        /* pointer to the contiguous section of memory */
 } vector_t;
 
 /*!
@@ -33,7 +32,7 @@ typedef struct vector_t
  * @return Returns the newly created vector object.
  */
 WAVESIM_PRIVATE_API vector_t*
-vector_create(const intptr_t element_size);
+vector_create(const size_t element_size);
 
 /*!
  * @brief Initialises an existing vector object.
@@ -45,7 +44,7 @@ vector_create(const intptr_t element_size);
  */
 WAVESIM_PRIVATE_API void
 vector_construct(vector_t* vector,
-                 const intptr_t element_size);
+                 const size_t element_size);
 
 /*!
  * @brief Destroys an existing vector object and frees all memory allocated by
@@ -81,8 +80,8 @@ vector_clear_free(vector_t* vector);
  * @param[in] size The new size of the vector.
  * @return Returns -1 on failure, 0 on success.
  */
-WAVESIM_PRIVATE_API intptr_t
-vector_resize(vector_t* vector, intptr_t size);
+WAVESIM_PRIVATE_API size_t
+vector_resize(vector_t* vector, size_t size);
 
 /*!
  * @brief Gets the number of elements that have been inserted into the vector.
@@ -109,7 +108,7 @@ vector_resize(vector_t* vector, intptr_t size);
  * @return Returns -1 if the push failed. Otherwise, returns the index of the
  * element that was pushed.
  */
-WAVESIM_PRIVATE_API intptr_t
+WAVESIM_PRIVATE_API size_t
 vector_push(vector_t* vector, void* data);
 
 /*!
@@ -130,7 +129,7 @@ vector_emplace(vector_t* vector);
  * @brief Copies the contents of another vector and pushes it into the vector.
  * @return Returns 0 if successful, -1 if otherwise.
  */
-WAVESIM_PRIVATE_API intptr_t
+WAVESIM_PRIVATE_API size_t
 vector_push_vector(vector_t* vector, const vector_t* source_vector);
 
 /*!
@@ -174,7 +173,7 @@ vector_back(const vector_t* vector);
  * @return A pointer to the emplaced element. See warning and use with caution.
  */
 WAVESIM_PRIVATE_API void*
-vector_insert_emplace(vector_t* vector, intptr_t index);
+vector_insert_emplace(vector_t* vector, size_t index);
 
 /*!
  * @brief Inserts (copies) a new element at the specified index.
@@ -190,7 +189,7 @@ vector_insert_emplace(vector_t* vector, intptr_t index);
  * @return Returns -1 on error, 0 on success.
  */
 WAVESIM_PRIVATE_API int
-vector_insert(vector_t* vector, intptr_t index, void* data);
+vector_insert(vector_t* vector, size_t index, void* data);
 
 /*!
  * @brief Erases the specified element from the vector.
@@ -200,7 +199,7 @@ vector_insert(vector_t* vector, intptr_t index, void* data);
  * ranges from **0** to **vector_count()-1**.
  */
 WAVESIM_PRIVATE_API void
-vector_erase_index(vector_t* vector, intptr_t index);
+vector_erase_index(vector_t* vector, size_t index);
 
 /*!
  * @brief Removes the element in the vector pointed to by **element**.
@@ -224,7 +223,7 @@ vector_erase_element(vector_t* vector, void* element);
  * returned.
  */
 WAVESIM_PRIVATE_API void*
-vector_get_element(const vector_t*, intptr_t index);
+vector_get_element(const vector_t*, size_t index);
 
 /*!
  * @brief Convenient macro for iterating a vector's elements.
@@ -242,20 +241,20 @@ vector_get_element(const vector_t*, intptr_t index);
  * @param[in] var The name of a temporary variable you'd like to use within the
  * for-loop to reference the current element.
  */
-#define VECTOR_FOR_EACH(vector, var_type, var) {                     \
-    var_type* var;                                                           \
-    DATA_POINTER_TYPE* internal_##var_end_of_vector = (vector)->data + (vector)->count * (vector)->element_size; \
-    for(var = (var_type*)(vector)->data;                                     \
-        (DATA_POINTER_TYPE*)var != internal_##var_end_of_vector;             \
-        var = (var_type*)(((DATA_POINTER_TYPE*)var) + (vector)->element_size)) {
+#define VECTOR_FOR_EACH(vector, var_type, var) { \
+    var_type* var; \
+    uint8_t* internal_##var_end_of_vector = (vector)->data + (vector)->count * (vector)->element_size; \
+    for(var = (var_type*)(vector)->data; \
+        (uint8_t*)var != internal_##var_end_of_vector; \
+        var = (var_type*)(((uint8_t*)var) + (vector)->element_size)) {
 
 
-#define VECTOR_FOR_EACH_R(vector, var_type, var) {                   \
-    var_type* var;                                                           \
-    DATA_POINTER_TYPE* internal_##var_start_of_vector = (vector)->data - (vector)->element_size; \
+#define VECTOR_FOR_EACH_R(vector, var_type, var) { \
+    var_type* var; \
+    uint8_t* internal_##var_start_of_vector = (vector)->data - (vector)->element_size; \
     for(var = (var_type*)((vector)->data + (vector)->count * (vector)->element_size - (vector)->element_size); \
-        (DATA_POINTER_TYPE*)var != internal_##var_start_of_vector;          \
-        var = (var_type*)(((DATA_POINTER_TYPE*)var) - (vector)->element_size)) {
+        (uint8_t*)var != internal_##var_start_of_vector; \
+        var = (var_type*)(((uint8_t*)var) - (vector)->element_size)) {
 
 /*!
  * @brief Convenient macro for iterating a range of a vector's elements.
@@ -271,10 +270,10 @@ vector_get_element(const vector_t*, intptr_t index);
  */
 #define VECTOR_FOR_EACH_RANGE(vector, var_type, var, begin_index, end_index) { \
     var_type* var;                                                                     \
-    DATA_POINTER_TYPE* internal_##var_end_of_vector = (vector)->data + end_index * (vector)->element_size; \
+    uint8_t* internal_##var_end_of_vector = (vector)->data + end_index * (vector)->element_size; \
     for(var = (var_type*)((vector)->data + begin_index * (vector)->element_size);      \
-        (DATA_POINTER_TYPE*)var != internal_##var_end_of_vector;                       \
-        var = (var_type*)(((DATA_POINTER_TYPE*)var) + (vector)->element_size)) {
+        (uint8_t*)var != internal_##var_end_of_vector;                       \
+        var = (var_type*)(((uint8_t*)var) + (vector)->element_size)) {
 
 /*!
  * @brief Closes a for each scope previously opened by VECTOR_FOR_EACH.
@@ -297,7 +296,7 @@ vector_get_element(const vector_t*, intptr_t index);
  */
 #define VECTOR_ERASE_IN_FOR_LOOP(vector, element_type, element)                \
     vector_erase_element(vector, element);                                     \
-    element = (element_type*)(((DATA_POINTER_TYPE*)element) - (vector)->element_size); \
+    element = (element_type*)(((uint8_t*)element) - (vector)->element_size); \
     internal_##var_end_of_vector = (vector)->data + (vector)->count * (vector)->element_size;
 
 C_END

@@ -17,8 +17,8 @@ static btree_t report;
 
 typedef struct report_info_t
 {
-    uintptr_t location;
-    uintptr_t size;
+    size_t location;
+    size_t size;
 #   ifdef WAVESIM_MEMORY_BACKTRACE
     int backtrace_size;
     char** backtrace;
@@ -49,7 +49,7 @@ memory_init(void)
 
 /* ------------------------------------------------------------------------- */
 void*
-malloc_wrapper(intptr_t size)
+malloc_wrapper(size_t size)
 {
     void* p = NULL;
     report_info_t* info = NULL;
@@ -256,10 +256,10 @@ int memory_deinit(void) { return 0; }
 
 /* ------------------------------------------------------------------------- */
 void
-mutated_string_and_hex_dump(void* data, intptr_t length_in_bytes)
+mutated_string_and_hex_dump(void* data, size_t length_in_bytes)
 {
     char* dump;
-    intptr_t i;
+    size_t i;
 
     /* allocate and copy data into new buffer */
     if (!(dump = malloc(length_in_bytes + 1)))

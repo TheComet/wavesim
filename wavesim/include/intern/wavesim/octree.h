@@ -72,6 +72,14 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
 WAVESIM_PRIVATE_API int
 octree_query_aabb(const octree_t* octree, vector_t* result, const double aabb[6]);
 
+/*!
+ * @brief Checks whether a point is located inside or outside of the 3D mesh.
+ * @note The mesh must be a closed mesh (i.e. no holes) for this check to have
+ * any meaning.
+ */
+WAVESIM_PRIVATE_API int
+octree_query_point_is_inside_mesh(const octree_t* octree, const wsreal_t p[3]);
+
 C_END
 
 #endif /* OCTREE_H */

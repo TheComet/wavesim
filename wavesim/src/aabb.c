@@ -5,7 +5,7 @@
 
 /* ------------------------------------------------------------------------- */
 aabb_t
-aabb(WS_REAL ax, WS_REAL ay, WS_REAL az, WS_REAL bx, WS_REAL by, WS_REAL bz)
+aabb(wsreal_t ax, wsreal_t ay, wsreal_t az, wsreal_t bx, wsreal_t by, wsreal_t bz)
 {
     assert(ax <= bx);
     assert(ay <= by);
@@ -40,7 +40,7 @@ aabb_zero(void)
 
 /* ------------------------------------------------------------------------- */
 aabb_t
-aabb_from_3_points(const WS_REAL p1[3], const WS_REAL p2[3], const WS_REAL p3[3])
+aabb_from_3_points(const wsreal_t p1[3], const wsreal_t p2[3], const wsreal_t p3[3])
 {
     aabb_t ret = aabb(
         fmin(p1[0], p2[0]),
@@ -66,7 +66,7 @@ aabb_from_face(const face_t* face)
 
 /* ------------------------------------------------------------------------- */
 void
-aabb_expand_point(WS_REAL aabb[6], const WS_REAL p[3])
+aabb_expand_point(wsreal_t aabb[6], const wsreal_t p[3])
 {
     int i;
     for (i = 0; i != 3; ++i)
@@ -80,7 +80,7 @@ aabb_expand_point(WS_REAL aabb[6], const WS_REAL p[3])
 
 /* ------------------------------------------------------------------------- */
 void
-aabb_expand_aabb(WS_REAL aabb[6], const WS_REAL aabb_other[6])
+aabb_expand_aabb(wsreal_t aabb[6], const wsreal_t aabb_other[6])
 {
     aabb_expand_point(aabb, &aabb_other[0]);
     aabb_expand_point(aabb, &aabb_other[3]);

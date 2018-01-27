@@ -40,13 +40,13 @@ WAVESIM_PUBLIC_API void
 obj_exporter_close(obj_exporter_t* exporter);
 
 WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
-obj_write_vertex(obj_exporter_t* exporter, const WS_REAL vert[3]);
+obj_write_vertex(obj_exporter_t* exporter, const wsreal_t vert[3]);
 
 WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
-obj_write_aabb_vertices(obj_exporter_t* exporter, const WS_REAL aabb[6]);
+obj_write_aabb_vertices(obj_exporter_t* exporter, const wsreal_t aabb[6]);
 
 WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
-obj_write_aabb_indices(obj_exporter_t* exporter, const WS_REAL aabb[6]);
+obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6]);
 
 C_END
 

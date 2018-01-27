@@ -5,7 +5,7 @@
 
 /* ------------------------------------------------------------------------- */
 attribute_t
-attribute(WS_REAL reflection, WS_REAL transmission, WS_REAL absorption)
+attribute(wsreal_t reflection, wsreal_t transmission, wsreal_t absorption)
 {
     attribute_t a;
     a.reflection = reflection;
@@ -56,7 +56,7 @@ attribute_is_same(const attribute_t* a1, const attribute_t* a2)
 void
 attribute_normalize_rta(attribute_t* attribute)
 {
-    WS_REAL sum;
+    wsreal_t sum;
 
     if (attribute->reflection == 0.0 && attribute->transmission == 0.0 && attribute->absorption == 0.0)
     {

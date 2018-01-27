@@ -39,10 +39,10 @@ btree_destroy(btree_t* btree)
 static btree_hash_value_t*
 btree_find_lower_bound(const btree_t* btree, uint32_t hash)
 {
-    intptr_t half;
+    size_t half;
     btree_hash_value_t* middle;
     btree_hash_value_t* data;
-    intptr_t len;
+    size_t len;
 
     assert(btree);
 
@@ -68,7 +68,7 @@ btree_find_lower_bound(const btree_t* btree, uint32_t hash)
     }
 
     /* if ("data" is pointing outside of the valid elements in the vector, also return NULL */
-    if ((intptr_t)data >= (intptr_t)btree->vector.data + btree->vector.count * btree->vector.element_size)
+    if ((size_t)data >= (size_t)btree->vector.data + btree->vector.count * btree->vector.element_size)
         return NULL;
     else
         return data;
@@ -98,7 +98,7 @@ btree_insert(btree_t* btree, uint32_t hash, void* value)
         emplaced_data = (btree_hash_value_t*)vector_emplace(&btree->vector);
     else
         emplaced_data = vector_insert_emplace(&btree->vector,
-                          lower_bound - (btree_hash_value_t*)btree->vector.data);
+            (size_t)(lower_bound - (btree_hash_value_t*)btree->vector.data));
 
     if (!emplaced_data)
         return -1;
@@ -214,7 +214,7 @@ btree_erase(btree_t* btree, uint32_t hash)
         return NULL;
 
     value = data->value;
-    vector_erase_element(&btree->vector, (DATA_POINTER_TYPE*)data);
+    vector_erase_element(&btree->vector, data);
     return value;
 }
 
@@ -232,7 +232,7 @@ btree_erase_element(btree_t* btree, void* value)
         return NULL;
 
     data = btree_find_lower_bound(btree, hash);
-    vector_erase_element(&btree->vector, (DATA_POINTER_TYPE*)data);
+    vector_erase_element(&btree->vector, data);
 
     return value;
 }

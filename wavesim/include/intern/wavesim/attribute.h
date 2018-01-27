@@ -10,13 +10,13 @@ C_BEGIN
  */
 typedef struct attribute_t
 {
-    WS_REAL reflection;
-    WS_REAL transmission;
-    WS_REAL absorption;
+    wsreal_t reflection;
+    wsreal_t transmission;
+    wsreal_t absorption;
 } attribute_t;
 
 WAVESIM_PRIVATE_API attribute_t
-attribute(WS_REAL reflection, WS_REAL transmission, WS_REAL absorption);
+attribute(wsreal_t reflection, wsreal_t transmission, wsreal_t absorption);
 
 WAVESIM_PRIVATE_API attribute_t
 attribute_default(void);

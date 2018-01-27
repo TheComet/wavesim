@@ -9,7 +9,7 @@ C_BEGIN
 
 typedef struct simulation_t
 {
-    WS_REAL max_frequency;
+    wsreal_t max_frequency;
     int spatial_samples;
     medium_t medium;
 } simulation_t;

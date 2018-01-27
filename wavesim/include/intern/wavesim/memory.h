@@ -39,7 +39,7 @@ memory_deinit(void);
  * additional work to monitor and track down memory leaks.
  */
 WAVESIM_PRIVATE_API void*
-malloc_wrapper(intptr_t size);
+malloc_wrapper(size_t size);
 
 /*!
  * @brief Does the same thing as a normal call to fee(), but does some
@@ -50,7 +50,7 @@ free_wrapper(void* ptr);
 #endif /* WAVESIM_MEMORY_DEBUGGING */
 
 WAVESIM_PRIVATE_API void
-mutated_string_and_hex_dump(void* data, intptr_t size_in_bytes);
+mutated_string_and_hex_dump(void* data, size_t size_in_bytes);
 
 C_END
 

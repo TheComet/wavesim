@@ -52,22 +52,9 @@ mesh_builder_add_face(mesh_builder_t* mb, face_t face)
 wsret
 mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
 {
-    mesh_vb_type_e vb_type;
     mesh_ib_type_e ib_type;
-    int vb_size, ib_size;
+    size_t ib_size;
     vector_t vb, ib, ab;
-
-    /* Determine what datatype to use for the vertex buffer */
-#if defined(WS_PRECISION_double)
-    vb_type = MESH_VB_DOUBLE;
-    vb_size = sizeof(double);
-#elif defined(WS_PRECISION_float)
-    vb_type = MESH_VB_FLOAT;
-    vb_size = sizeof(float);
-#else
-    vb_type = MESH_VB_LONG_DOUBLE;
-    vb_size = sizeof(long double);
-#endif
 
     /* Determine what datatype to use for the index buffer; there will be
      * 3*faces indices */
@@ -95,19 +82,19 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
         ib_size = 1;
     }
 
-    vector_construct(&vb, vb_size);
+    vector_construct(&vb, sizeof(wsreal_t));
     vector_construct(&ib, ib_size);
     vector_construct(&ab, sizeof(attribute_t));
 
     /* Copy face vertices into buffers, avoiding duplicates */
     VECTOR_FOR_EACH(&mb->faces, face_t, face)
-        unsigned int v;
+        wsib_t v;
 
         /*
          * If a duplicate vertex is found, its index is written to this array.
          */
-        WS_IB duplicate_index[3] = {-1, -1, -1};
-        for (v = 0; v != vector_count(&vb); v += 3)
+        wsib_t duplicate_index[3] = {(wsib_t)-1, (wsib_t)-1, (wsib_t)-1};
+        for (v = 0; v != (wsib_t)vector_count(&vb); v += 3)
         {
             int f;
 
@@ -115,9 +102,9 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
             attribute_t* attr = vector_get_element(&ab, v/3);
             /* Construct a vertex object to make comparison easier */
             vertex_t vb_vertex = vertex(vec3(
-                *(WS_REAL*)vector_get_element(&vb, v+0),
-                *(WS_REAL*)vector_get_element(&vb, v+1),
-                *(WS_REAL*)vector_get_element(&vb, v+2)),
+                *(wsreal_t*)vector_get_element(&vb, v+0),
+                *(wsreal_t*)vector_get_element(&vb, v+1),
+                *(wsreal_t*)vector_get_element(&vb, v+2)),
                 *attr
             );
 
@@ -136,49 +123,27 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
         /* Copy face into buffers */
         for (v = 0; v != 3; ++v)
         {
-            if (duplicate_index[v] == (WS_IB)-1)
+            if (duplicate_index[v] == (wsib_t)-1)
             {
-                union {
-                    uint8_t i8;
-                    uint16_t i16;
-                    uint32_t i32;
-#ifdef WAVESIM_64BIT_INDEX_BUFFERS
-                    uint64_t i64;
-#endif
-                    WS_IB i;
-                } index;
-                if ((index.i = (WS_IB)vector_push(&vb, &face->vertices[v].position.v.x)) == VECTOR_ERROR)
+                /* Push vertex x,y,z coordinates and grab the index to the
+                 * first coordinate, which we will use for the index buffer */
+                size_t index;
+                if ((index = vector_push(&vb, &face->vertices[v].position.v.x)) == VECTOR_ERROR)
                     goto buffer_push_failed;
-                if (         vector_push(&vb, &face->vertices[v].position.v.y) == VECTOR_ERROR)
+                if (vector_push(&vb, &face->vertices[v].position.v.y) == VECTOR_ERROR)
                     goto buffer_push_failed;
-                if (         vector_push(&vb, &face->vertices[v].position.v.z) == VECTOR_ERROR)
-                    goto buffer_push_failed;
-                if (         vector_push(&ab, &face->vertices[v].attr) == VECTOR_ERROR)
+                if (vector_push(&vb, &face->vertices[v].position.v.z) == VECTOR_ERROR)
                     goto buffer_push_failed;
 
-                index.i = index.i / 3;
-                switch (ib_type)
-                {
-                    case MESH_IB_UINT8:
-                        if (vector_push(&ib, &index.i8) == VECTOR_ERROR)
-                            goto buffer_push_failed;
-                        break;
-                    case MESH_IB_UINT16:
-                        if (vector_push(&ib, &index.i8) == VECTOR_ERROR)
-                            goto buffer_push_failed;
-                        break;
-                    case MESH_IB_UINT32:
-                        if (vector_push(&ib, &index.i8) == VECTOR_ERROR)
-                            goto buffer_push_failed;
-                        break;
-#ifdef WAVESIM_64BIT_INDEX_BUFFERS
-                    case MESH_IB_UINT64:
-                        if (vector_push(&ib, &index.i8) == VECTOR_ERROR)
-                            goto buffer_push_failed;
-                        break;
-#endif
-                    default: break;
-                }
+                /* Push vertex attribute */
+                if (vector_push(&ab, &face->vertices[v].attr) == VECTOR_ERROR)
+                    goto buffer_push_failed;
+
+                /* The index buffer indexes vertex coordinate triplets, so
+                 * divide by 3 first */
+                index = index / 3;
+                if (vector_push(&ib, &index) == VECTOR_ERROR)
+                    goto buffer_push_failed;
             }
             else
             {
@@ -193,8 +158,8 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
         goto alloc_mesh_failed;
     if (mesh_copy_from_buffers(*mesh,
                                vb.data, ib.data,
-                               (WS_IB)vector_count(&vb) / 3, (WS_IB)vector_count(&ib),
-                               vb_type, ib_type) != WS_OK)
+                               (wsib_t)vector_count(&vb) / 3, (wsib_t)vector_count(&ib),
+                               MESH_VB_DEFAULT, ib_type) != WS_OK)
         goto copy_buffers_failed;
 
     /* Copy attribute buffer into mesh */

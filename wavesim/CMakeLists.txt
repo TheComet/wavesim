@@ -33,6 +33,9 @@ set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calcul
 option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
 option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ${DEBUG_FEATURES})
 
+string (REPLACE " " "_" WS_PRECISION_CAPS_AND_NO_SPACES ${WAVESIM_PRECISION})
+string (TOUPPER ${WS_PRECISION_CAPS_AND_NO_SPACES} WS_PRECISION_CAPS_AND_NO_SPACES)
+
 # Determine visibility macros if the library is a shared library.
 if (WAVESIM_BUILD_TYPE MATCHES "SHARED")
     if (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU")

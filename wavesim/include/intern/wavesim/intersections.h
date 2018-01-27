@@ -16,18 +16,24 @@ typedef struct intersect_result_t
 } intersect_result_t;
 
 WAVESIM_PRIVATE_API int
-intersect_point_aabb_test(const WS_REAL point[3], const WS_REAL aabb[6]);
+intersect_point_aabb_test(const wsreal_t point[3], const wsreal_t aabb[6]);
 
 WAVESIM_PRIVATE_API int
-intersect_aabb_aabb_test(const WS_REAL aabb1[6], const WS_REAL aabb2[6]);
+intersect_aabb_aabb_test(const wsreal_t aabb1[6], const wsreal_t aabb2[6]);
 
 WAVESIM_PRIVATE_API int
 intersect_line_face(intersect_result_t* result,
-                    const WS_REAL a[3], const WS_REAL b[3], const face_t* face);
+                    const wsreal_t p1[3], const wsreal_t p2[3],
+                    const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3]);
+
+WAVESIM_PRIVATE_API int
+intersect_line_face_test(const wsreal_t p1[3], const wsreal_t p2[3],
+                         const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3]);
 
 WAVESIM_PRIVATE_API int
 intersect_face_aabb(intersect_result_t* result,
-                    const face_t* face, const WS_REAL aabb[6]);
+                    const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3],
+                    const wsreal_t aabb[6]);
 
 /*!
  * @brief Faster test, but doesn't return any points of intersection, just that
@@ -35,7 +41,8 @@ intersect_face_aabb(intersect_result_t* result,
  * @return Returns 1 if an intersection occurred, 0 if no intersection occurred.
  */
 WAVESIM_PRIVATE_API int
-intersect_face_aabb_test(const face_t* face, const WS_REAL aabb[6]);
+intersect_face_aabb_test(const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3],
+                         const wsreal_t aabb[6]);
 
 C_END
 

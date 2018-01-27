@@ -8,12 +8,12 @@ using namespace ::testing;
 TEST(NAME, reset_is_correct)
 {
     aabb_t bb = aabb_reset();
-    EXPECT_THAT(AABB_AX(bb), DoubleEq(std::numeric_limits<WS_REAL>::infinity()));
-    EXPECT_THAT(AABB_AY(bb), DoubleEq(std::numeric_limits<WS_REAL>::infinity()));
-    EXPECT_THAT(AABB_AZ(bb), DoubleEq(std::numeric_limits<WS_REAL>::infinity()));
-    EXPECT_THAT(AABB_BX(bb), DoubleEq(-std::numeric_limits<WS_REAL>::infinity()));
-    EXPECT_THAT(AABB_BY(bb), DoubleEq(-std::numeric_limits<WS_REAL>::infinity()));
-    EXPECT_THAT(AABB_BZ(bb), DoubleEq(-std::numeric_limits<WS_REAL>::infinity()));
+    EXPECT_THAT(AABB_AX(bb), DoubleEq(std::numeric_limits<wsreal_t>::infinity()));
+    EXPECT_THAT(AABB_AY(bb), DoubleEq(std::numeric_limits<wsreal_t>::infinity()));
+    EXPECT_THAT(AABB_AZ(bb), DoubleEq(std::numeric_limits<wsreal_t>::infinity()));
+    EXPECT_THAT(AABB_BX(bb), DoubleEq(-std::numeric_limits<wsreal_t>::infinity()));
+    EXPECT_THAT(AABB_BY(bb), DoubleEq(-std::numeric_limits<wsreal_t>::infinity()));
+    EXPECT_THAT(AABB_BZ(bb), DoubleEq(-std::numeric_limits<wsreal_t>::infinity()));
 }
 
 TEST(NAME, constructor_assigns_values_correctly)

@@ -10,7 +10,7 @@ TEST(NAME, init_sets_correct_values)
     struct btree_t btree;
     btree.vector.count = 4;
     btree.vector.capacity = 56;
-    btree.vector.data = (DATA_POINTER_TYPE*)4783;
+    btree.vector.data = (uint8_t*)4783;
     btree.vector.element_size = 283;
 
     btree_construct(&btree);

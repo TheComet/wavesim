@@ -27,7 +27,7 @@ obj_exporter_close(obj_exporter_t* exporter)
 
 /* ------------------------------------------------------------------------- */
 wsret
-obj_write_vertex(obj_exporter_t* exporter, const WS_REAL vert[3])
+obj_write_vertex(obj_exporter_t* exporter, const wsreal_t vert[3])
 {
     int result = btree_insert(&exporter->vi_map, hash_vec3(vert), (void*)(intptr_t)exporter->index_counter);
     if (result == 0) /* Key didn't exist yet */
@@ -43,7 +43,7 @@ obj_write_vertex(obj_exporter_t* exporter, const WS_REAL vert[3])
 
 /* ------------------------------------------------------------------------- */
 wsret
-obj_write_aabb_vertices(obj_exporter_t* exporter, const WS_REAL aabb[6])
+obj_write_aabb_vertices(obj_exporter_t* exporter, const wsreal_t aabb[6])
 {
     wsret result;
 
@@ -62,7 +62,7 @@ obj_write_aabb_vertices(obj_exporter_t* exporter, const WS_REAL aabb[6])
 
 /* ------------------------------------------------------------------------- */
 wsret
-obj_write_aabb_indices(obj_exporter_t* exporter, const WS_REAL aabb[6])
+obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6])
 {
     int i;
 

@@ -6,7 +6,7 @@
 
 /* ------------------------------------------------------------------------- */
 int
-intersect_point_aabb_test(const WS_REAL point[3], const WS_REAL aabb[6])
+intersect_point_aabb_test(const wsreal_t point[3], const wsreal_t aabb[6])
 {
     return (
         point[0] >= aabb[0] && point[0] <= aabb[3] &&
@@ -17,7 +17,7 @@ intersect_point_aabb_test(const WS_REAL point[3], const WS_REAL aabb[6])
 
 /* ------------------------------------------------------------------------- */
 int
-intersect_aabb_aabb_test(const WS_REAL aabb1[6], const WS_REAL aabb2[6])
+intersect_aabb_aabb_test(const wsreal_t aabb1[6], const wsreal_t aabb2[6])
 {
     int i;
     for (i = 0; i != 3; ++i)
@@ -27,10 +27,12 @@ intersect_aabb_aabb_test(const WS_REAL aabb1[6], const WS_REAL aabb2[6])
 
 /* ------------------------------------------------------------------------- */
 int
-intersect_line_face(intersect_result_t* result, const WS_REAL p1[3], const WS_REAL p2[3], const face_t* face)
+intersect_line_face(intersect_result_t* result,
+                    const wsreal_t p1[3], const wsreal_t p2[3],
+                    const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3])
 {
     vec3_t u, v, n, w, dir, w0, intersect;
-    WS_REAL determinant, a, b, r, uu, vv, uv, wu, wv, s, t;
+    wsreal_t determinant, a, b, r, uu, vv, uv, wu, wv, s, t;
     result->count = 0;
 
     /*
@@ -39,20 +41,20 @@ intersect_line_face(intersect_result_t* result, const WS_REAL p1[3], const WS_RE
      */
 
     /* Get face edge vectors and plane normal */
-    u = face->vertices[1].position;
-    vec3_sub_vec3(u.xyz, face->vertices[0].position.xyz);
-    v = face->vertices[2].position;
-    vec3_sub_vec3(v.xyz, face->vertices[0].position.xyz);
+    vec3_copy(&u, v2);
+    vec3_sub_vec3(u.xyz, v1);
+    vec3_copy(&v, v3);
+    vec3_sub_vec3(v.xyz, v1);
     n = u;
     vec3_cross(n.xyz, v.xyz);
 
     /* Not checking for degenerate triangle, but could do so if n == 0 */
 
     /* Calculate ray direction vector */
-    memcpy(dir.xyz, p2, sizeof(WS_REAL) * 3);
-    memcpy(w0.xyz, p1, sizeof(WS_REAL) * 3);
+    vec3_copy(&dir, p2);
+    vec3_copy(&w0, p1);
     vec3_sub_vec3(dir.xyz, p1);
-    vec3_sub_vec3(w0.xyz, face->vertices[0].position.xyz);
+    vec3_sub_vec3(w0.xyz, v1);
 
     a = -vec3_dot(n.xyz, w0.xyz);
     b = vec3_dot(n.xyz, dir.xyz);
@@ -75,7 +77,7 @@ intersect_line_face(intersect_result_t* result, const WS_REAL p1[3], const WS_RE
 
     /* Cache dot products */
     w = intersect;
-    vec3_sub_vec3(w.xyz, face->vertices[0].position.xyz);
+    vec3_sub_vec3(w.xyz, v1);
     uu = vec3_dot(u.xyz, u.xyz);
     vv = vec3_dot(v.xyz, v.xyz);
     uv = vec3_dot(u.xyz, v.xyz);
@@ -100,7 +102,18 @@ intersect_line_face(intersect_result_t* result, const WS_REAL p1[3], const WS_RE
 
 /* ------------------------------------------------------------------------- */
 int
-intersect_face_aabb(intersect_result_t* result, const face_t* f, const WS_REAL aabb[6])
+intersect_line_face_test(const wsreal_t p1[3], const wsreal_t p2[3],
+                         const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3])
+{
+    intersect_result_t result;
+    return intersect_line_face(&result, p1, p2, v1, v2, v3);
+}
+
+/* ------------------------------------------------------------------------- */
+int
+intersect_face_aabb(intersect_result_t* result,
+                    const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3],
+                    const wsreal_t aabb[6])
 {
     intersect_result_t edge;
     result->count = 0;
@@ -120,29 +133,29 @@ intersect_face_aabb(intersect_result_t* result, const face_t* f, const WS_REAL a
     face_t l2 = face(vertex(aba, attribute_default()), vertex(abb, attribute_default()), vertex(aab, attribute_default()));*/
 
     /* Test all 12 edges of the bounding box for intersections with the face */
-    if (intersect_line_face(&edge, aaa.xyz, aab.xyz, f))
+    if (intersect_line_face(&edge, aaa.xyz, aab.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, aaa.xyz, aba.xyz, f))
+    if (intersect_line_face(&edge, aaa.xyz, aba.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, aaa.xyz, baa.xyz, f))
+    if (intersect_line_face(&edge, aaa.xyz, baa.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, aab.xyz, abb.xyz, f))
+    if (intersect_line_face(&edge, aab.xyz, abb.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, aab.xyz, bab.xyz, f))
+    if (intersect_line_face(&edge, aab.xyz, bab.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, aba.xyz, abb.xyz, f))
+    if (intersect_line_face(&edge, aba.xyz, abb.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, aba.xyz, bba.xyz, f))
+    if (intersect_line_face(&edge, aba.xyz, bba.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, baa.xyz, bab.xyz, f))
+    if (intersect_line_face(&edge, baa.xyz, bab.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, baa.xyz, bba.xyz, f))
+    if (intersect_line_face(&edge, baa.xyz, bba.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, abb.xyz, bbb.xyz, f))
+    if (intersect_line_face(&edge, abb.xyz, bbb.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, bab.xyz, bbb.xyz, f))
+    if (intersect_line_face(&edge, bab.xyz, bbb.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
-    if (intersect_line_face(&edge, bba.xyz, bbb.xyz, f))
+    if (intersect_line_face(&edge, bba.xyz, bbb.xyz, v1, v2, v3))
         result->shape[result->count++] = edge.shape[0];
 
     /* Test the 3 edges of the face for intersections with all 6 faces on the bounding box
@@ -153,7 +166,8 @@ intersect_face_aabb(intersect_result_t* result, const face_t* f, const WS_REAL a
 
 /* ------------------------------------------------------------------------- */
 int
-intersect_face_aabb_test(const face_t* face, const WS_REAL aabb[6])
+intersect_face_aabb_test(const wsreal_t v1[3], const wsreal_t v2[3], const wsreal_t v3[3],
+                         const wsreal_t aabb[6])
 {
     intersect_result_t edge;
 
@@ -161,9 +175,9 @@ intersect_face_aabb_test(const face_t* face, const WS_REAL aabb[6])
      * If any of the face vertices are inside the bounding box, then we know
      * the face intersects.
      */
-    if (intersect_point_aabb_test(face->vertices[0].position.xyz, aabb) ||
-        intersect_point_aabb_test(face->vertices[0].position.xyz, aabb) ||
-        intersect_point_aabb_test(face->vertices[0].position.xyz, aabb))
+    if (intersect_point_aabb_test(v1, aabb) ||
+        intersect_point_aabb_test(v2, aabb) ||
+        intersect_point_aabb_test(v3, aabb))
     {
         return 1;
     }
@@ -179,18 +193,18 @@ intersect_face_aabb_test(const face_t* face, const WS_REAL aabb[6])
     vec3_t bbb = vec3(aabb[3], aabb[4], aabb[5]);
 
     /* Test all 12 edges of the bounding box for intersections with the face */
-    if (intersect_line_face(&edge, aaa.xyz, aab.xyz, face)) return 1;
-    if (intersect_line_face(&edge, aaa.xyz, aba.xyz, face)) return 1;
-    if (intersect_line_face(&edge, aaa.xyz, baa.xyz, face)) return 1;
-    if (intersect_line_face(&edge, aab.xyz, abb.xyz, face)) return 1;
-    if (intersect_line_face(&edge, aab.xyz, bab.xyz, face)) return 1;
-    if (intersect_line_face(&edge, aba.xyz, abb.xyz, face)) return 1;
-    if (intersect_line_face(&edge, aba.xyz, bba.xyz, face)) return 1;
-    if (intersect_line_face(&edge, baa.xyz, bab.xyz, face)) return 1;
-    if (intersect_line_face(&edge, baa.xyz, bba.xyz, face)) return 1;
-    if (intersect_line_face(&edge, abb.xyz, bbb.xyz, face)) return 1;
-    if (intersect_line_face(&edge, bab.xyz, bbb.xyz, face)) return 1;
-    if (intersect_line_face(&edge, bba.xyz, bbb.xyz, face)) return 1;
+    if (intersect_line_face(&edge, aaa.xyz, aab.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, aaa.xyz, aba.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, aaa.xyz, baa.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, aab.xyz, abb.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, aab.xyz, bab.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, aba.xyz, abb.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, aba.xyz, bba.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, baa.xyz, bab.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, baa.xyz, bba.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, abb.xyz, bbb.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, bab.xyz, bbb.xyz, v1, v2, v3)) return 1;
+    if (intersect_line_face(&edge, bba.xyz, bbb.xyz, v1, v2, v3)) return 1;
 
     return 0;
 }

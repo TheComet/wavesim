@@ -23,7 +23,7 @@ typedef struct medium_t
 typedef struct medium_partition_t
 {
     aabb_t aabb;
-    WS_REAL sound_speed;
+    wsreal_t sound_speed;
     vector_t adcacent_partitions; /* int32_t (indices into medium->partitions) */
 } medium_partition_t;
 
@@ -43,7 +43,7 @@ WAVESIM_PRIVATE_API void
 medium_clear(medium_t* medium);
 
 WAVESIM_PRIVATE_API int
-medium_add_partition(medium_t* medium, const WS_REAL bounding_box[6], WS_REAL sound_speed);
+medium_add_partition(medium_t* medium, const wsreal_t bounding_box[6], wsreal_t sound_speed);
 
 WAVESIM_PRIVATE_API void
 medium_set_decomposition_method(medium_t* medium,
@@ -63,7 +63,7 @@ WAVESIM_PRIVATE_API wsret
 medium_build_from_mesh(medium_t* medium,
                        const medium_t* mediumdef,
                        const mesh_t* mesh,
-                       const WS_REAL grid_size[3]);
+                       const wsreal_t grid_size[3]);
 
 C_END
 

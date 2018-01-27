@@ -1,3 +1,5 @@
+#include "wavesim/btree.h"
+#include "wavesim/hash.h"
 #include "wavesim/octree.h"
 #include "wavesim/memory.h"
 #include "wavesim/mesh.h"
@@ -143,9 +145,10 @@ octree_subdivide(octree_t* octree, octree_node_t* node)
 
 /* ------------------------------------------------------------------------- */
 static void
-determine_smallest_subdivision(WS_REAL smallest_subdivision[3], const mesh_t* mesh)
+determine_smallest_subdivision(wsreal_t smallest_subdivision[3], const mesh_t* mesh)
 {
-    int f, i;
+    wsib_t f;
+    int i;
 
     /* The smallest face bounding box makes the most sense */
     smallest_subdivision[0] = INFINITY;
@@ -170,8 +173,9 @@ determine_smallest_subdivision(WS_REAL smallest_subdivision[3], const mesh_t* me
 static wsret WS_WARN_UNUSED
 determine_child_index_buffers(const octree_t* octree, octree_node_t* node)
 {
-    int i, c;
-    for (i = 0; i != vector_count(&node->index_buffer); i += 3)
+    wsib_t i;
+    int c;
+    for (i = 0; i != (wsib_t)vector_count(&node->index_buffer); i += 3)
     {
         /*
          * Here we use the index buffer of the *node* (instead of the mesh) to
@@ -180,7 +184,7 @@ determine_child_index_buffers(const octree_t* octree, octree_node_t* node)
          * same datatype as the mesh's index buffer (which, if nothing broke,
          * should always be the case).
          */
-        WS_IB indices[3];
+        wsib_t indices[3];
         vec3_t face[3];
         indices[0] = mesh_get_index_from_buffer(node->index_buffer.data, i + 0, octree->mesh->ib_type);
         indices[1] = mesh_get_index_from_buffer(node->index_buffer.data, i + 1, octree->mesh->ib_type);
@@ -209,7 +213,7 @@ determine_child_index_buffers(const octree_t* octree, octree_node_t* node)
     return WS_OK;
 }
 static wsret WS_WARN_UNUSED
-octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const WS_REAL smallest_subdivision[3])
+octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const wsreal_t smallest_subdivision[3])
 {
     wsret result;
     unsigned int i;
@@ -287,7 +291,7 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
 
 /* ------------------------------------------------------------------------- */
 static int
-octree_query_aabb_recursive(const octree_node_t* node, vector_t* result, const WS_REAL bb[6])
+octree_query_aabb_recursive(const octree_node_t* node, vector_t* result, const wsreal_t bb[6])
 {
     if (intersect_aabb_aabb_test(node->aabb.xyzxyz, bb) == 0)
         return 1;
@@ -309,9 +313,82 @@ octree_query_aabb_recursive(const octree_node_t* node, vector_t* result, const W
 
     return 0;
 }
-
 int
-octree_query_aabb(const octree_t* octree, vector_t* result, const WS_REAL aabb[6])
+octree_query_aabb(const octree_t* octree, vector_t* result, const wsreal_t aabb[6])
 {
     return octree_query_aabb_recursive(&octree->root, result, aabb);
+}
+
+/* ------------------------------------------------------------------------- */
+int
+octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mesh_t* mesh, const wsreal_t p[3], btree_t* tested_indices)
+{
+    wsib_t i;
+    int intersect_count = 0;
+    vec3_t p1, p2;
+
+    /*
+     * The way this algorithm works is we project the mesh onto a 2D plane (the
+     * easiest way being to just eliminate one of the main axes) and do a
+     * line-face intersection test along the eliminated axis through the
+     * specified point and count how many faces it intersects. An even number
+     * of intersections means the point lies outside of the mesh, and odd
+     * number means inside.
+     *
+     * For this implementation we don't project, we just cast a ray from +Z to
+     * -Z through point p, where +Z and -Z lie outside of the octree's bounding
+     * box, so the line is guaranteed to intersect all faces in the mesh.
+     */
+
+    /* Only select partitions that are leaf nodes */
+    if (node->children != NULL)
+    {
+        for (i = 0; i != 8; ++i)
+            intersect_count += octree_query_point_is_inside_mesh_recursive(&node->children[i], mesh, p, tested_indices);
+        return intersect_count;
+    }
+
+    /*
+     * We are a leaf node, do intersection test from -Z to +Z for all faces in
+     * our partition.
+     */
+    vec3_copy(&p1, p);
+    vec3_copy(&p2, p);
+    p1.v.z = AABB_AZ(mesh->aabb) - 1; /* From -Z... */
+    p2.v.z = AABB_BZ(mesh->aabb) + 1; /* ...to +Z */
+    for (i = 0; i != (wsib_t)vector_count(&node->index_buffer); i += 3)
+    {
+        wsret result;
+        wsib_t indices[3];
+        vec3_t vertices[3];
+        indices[0] = mesh_get_index_from_buffer(node->index_buffer.data, i + 0, mesh->ib_type);
+        indices[1] = mesh_get_index_from_buffer(node->index_buffer.data, i + 1, mesh->ib_type);
+        indices[2] = mesh_get_index_from_buffer(node->index_buffer.data, i + 2, mesh->ib_type);
+
+        /* Make sure we don't test duplicates */
+        result = btree_insert(tested_indices, hash_face_indices(indices), (void*)1);
+        if (result == 1)
+            continue; /* face was already tested */
+        if (result == -1)
+            return -1;
+
+        /* Get face vertices and do intersection test */
+        vertices[0] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[0], mesh->vb_type);
+        vertices[1] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[1], mesh->vb_type);
+        vertices[2] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[2], mesh->vb_type);
+        intersect_count += intersect_line_face_test(p1.xyz, p2.xyz, vertices[0].xyz, vertices[1].xyz, vertices[2].xyz);
+    }
+
+    return intersect_count;
+}
+
+int
+octree_query_point_is_inside_mesh(const octree_t* octree, const wsreal_t p[3])
+{
+    int result;
+    btree_t tested_indices;
+    btree_construct(&tested_indices);
+    result = octree_query_point_is_inside_mesh_recursive(&octree->root, octree->mesh, p, &tested_indices);
+    btree_clear_free(&tested_indices);
+    return result;
 }
