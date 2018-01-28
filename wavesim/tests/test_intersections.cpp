@@ -42,12 +42,11 @@ TEST(NAME, line_face_intersects_1)
     wsreal_t v1[3] = {-1,  0,  1};
     wsreal_t v2[3] = { 1,  0,  1};
     wsreal_t v3[3] = { 0,  0, -1};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    ASSERT_THAT(result.count, Eq(1));
-    EXPECT_THAT(result.shape[0].v.x, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].v.y, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].v.z, DoubleEq(0.0));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(1));
+    EXPECT_THAT(result.v.x, DoubleEq(0.0));
+    EXPECT_THAT(result.v.y, DoubleEq(0.0));
+    EXPECT_THAT(result.v.z, DoubleEq(0.0));
 }
 
 TEST(NAME, line_face_intersects_2)
@@ -58,12 +57,11 @@ TEST(NAME, line_face_intersects_2)
     wsreal_t v1[3] = {-1 , 1,  0};
     wsreal_t v2[3] = { 1 , 1,  0};
     wsreal_t v3[3] = { 0, -1,  0};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    ASSERT_THAT(result.count, Eq(1));
-    EXPECT_THAT(result.shape[0].v.x, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].v.y, DoubleEq(0.0));
-    EXPECT_THAT(result.shape[0].v.z, DoubleEq(0.0));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(1));
+    EXPECT_THAT(result.v.x, DoubleEq(0.0));
+    EXPECT_THAT(result.v.y, DoubleEq(0.0));
+    EXPECT_THAT(result.v.z, DoubleEq(0.0));
 }
 
 TEST(NAME, line_face_intersects_close)
@@ -74,9 +72,8 @@ TEST(NAME, line_face_intersects_close)
     wsreal_t v1[3] = {-1,  1,  0};
     wsreal_t v2[3] = { 1,  1,  0};
     wsreal_t v3[3] = { 0, -1,  0};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    ASSERT_THAT(result.count, Eq(1));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(1));
 }
 
 TEST(NAME, line_face_misses_1)
@@ -87,9 +84,8 @@ TEST(NAME, line_face_misses_1)
     wsreal_t v1[3] = {-1,  0,  1};
     wsreal_t v2[3] = { 1,  0,  1};
     wsreal_t v3[3] = { 0,  0,  1};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    EXPECT_THAT(result.count, Eq(0));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(0));
 }
 
 TEST(NAME, line_face_misses_2)
@@ -100,9 +96,8 @@ TEST(NAME, line_face_misses_2)
     wsreal_t v1[3] = {-1,  1,  0};
     wsreal_t v2[3] = { 1,  1,  0};
     wsreal_t v3[3] = { 0, -1,  0};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    EXPECT_THAT(result.count, Eq(0));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(0));
 }
 
 TEST(NAME, line_face_misses_close)
@@ -113,9 +108,8 @@ TEST(NAME, line_face_misses_close)
     wsreal_t v1[3] = {-1,  1,  0};
     wsreal_t v2[3] = { 1,  1,  0};
     wsreal_t v3[3] = { 0, -1,  0};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    EXPECT_THAT(result.count, Eq(0));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(0));
 }
 
 TEST(NAME, line_face_segment_too_short)
@@ -126,9 +120,8 @@ TEST(NAME, line_face_segment_too_short)
     wsreal_t v1[3] = {-1,  0,  1};
     wsreal_t v2[3] = { 1,  0,  1};
     wsreal_t v3[3] = { 0,  0, -1};
-    intersect_result_t result;
-    intersect_line_face(&result, p1, p2, v1, v2, v3);
-    EXPECT_THAT(result.count, Eq(0));
+    vec3_t result;
+    ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(0));
 }
 
 TEST(NAME, line_face_parallel_to_triangle_plane)

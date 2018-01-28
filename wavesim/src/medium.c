@@ -32,8 +32,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
         for (i = 0; i != (wsib_t)vector_count(&query_result) / 3; ++i)
         {
 
-            /* Do intersection test of face with our cell */
-            intersect_result_t intersect_result ;
+            /* Do intersection test of face with our cell *
             const mesh_t* m = octree->mesh;
             face_t face = mesh_get_face_from_buffers(m->vb, query_result.data, m->ab,
                                                     i, m->vb_type, m->ib_type);
@@ -42,28 +41,8 @@ determine_cell_attribute(attribute_t* cell_attribute,
                     face.vertices[1].position.xyz,
                     face.vertices[2].position.xyz,
                     cell_aabb) == 0)
-                continue; /* face doesn't intersect our cell, so ignore it */
+                continue; * face doesn't intersect our cell, so ignore it */
 
-            /*
-             * Average the intersection positions, they all lie in the face's
-             * plane and will allow us to interpolate the vertex attributes
-             * accordingly.
-             */
-            {
-                int j;
-                vec3_t avg_pos;
-                attribute_t attr;
-
-                vec3_set_zero(avg_pos.xyz);
-                for (j = 0; j != intersect_result.count; ++j)
-                    vec3_add_vec3(avg_pos.xyz, intersect_result.shape[j].xyz);
-                vec3_div_scalar(avg_pos.xyz, intersect_result.count);
-
-                face_interpolate_attributes_barycentric(&face, &attr, avg_pos.xyz);
-                rta_avg.v.x += attr.absorption;
-                rta_avg.v.y += attr.reflection;
-                rta_avg.v.z += attr.transmission;
-            }
         }
 
         /* It's possible that no faces intersected */

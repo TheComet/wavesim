@@ -376,7 +376,7 @@ octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mes
         vertices[0] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[0], mesh->vb_type);
         vertices[1] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[1], mesh->vb_type);
         vertices[2] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[2], mesh->vb_type);
-        intersect_count += intersect_line_face_test(p1.xyz, p2.xyz, vertices[0].xyz, vertices[1].xyz, vertices[2].xyz);
+        intersect_count += intersect_line_triangle_test(p1.xyz, p2.xyz, vertices[0].xyz, vertices[1].xyz, vertices[2].xyz);
     }
 
     return intersect_count;
