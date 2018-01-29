@@ -255,60 +255,60 @@ intersect_triangle_aabb_test(const wsreal_t v0[3], const wsreal_t v1[3], const w
      */
 
     /* n00: p0=v0z*v1y - v0y*v1z, p2=v2z*f0y - v2y*f0z */
-    p0 = v0[2]*v1[1] - v0[1]*v1[2];
-    p2 = v2[2]*f0.v.y - v2[2]*f0.v.z;
+    p0 = v0c.v.z*v1c.v.y - v0c.v.y*v1c.v.z;
+    p2 = v2c.v.z*f0.v.y - v2c.v.z*f0.v.z;
     r = e1*fabs(f0.v.z) + e2*fabs(f0.v.y);
     if (fmax(p0, p2) < -r || fmin(p0, p2) > r) return 0; /* Axis is a separating axis */
     /* n01: p0=v0z*f1y - v0y*f1z, p1=v2y*v1z - v1y*v2z */
-    p0 = v0[2]*f1.v.y - v0[1]*f1.v.z;
-    p1 = v2[1]*v1[2] - v1[1]*v2[2];
+    p0 = v0c.v.z*f1.v.y - v0c.v.y*f1.v.z;
+    p1 = v2c.v.y*v1c.v.z - v1c.v.y*v2c.v.z;
     r = e1*fabs(f1.v.z) + e2*fabs(f1.v.y);
     if (fmax(p0, p1) < -r || fmin(p0, p1) > r) return 0;
     /* n02: p0=v0y*v2z - v2y*v0z, p1=v1z*f2y - v1y*f2z */
-    p0 = v0[1]*v2[2] - v2[1]*v0[2];
-    p1 = v1[2]*f2.v.y - v1[1]*f2.v.z;
+    p0 = v0c.v.y*v2c.v.z - v2c.v.y*v0c.v.z;
+    p1 = v1c.v.z*f2.v.y - v1c.v.y*f2.v.z;
     r = e1*fabs(f2.v.z) + e2*fabs(f2.v.y);
     if (fmax(p0, p1) < -r || fmin(p0, p1) > r) return 0;
     /* n10: p0=v0x*v1z - v1x*v0z, p2=v2z*f0x - v2x*f0z */
-    p0 = v0[0]*v1[2] - v1[0]*v0[2];
-    p2 = v2[2]*f0.v.x - v2[0]*f0.v.z;
+    p0 = v0c.v.x*v1c.v.z - v1c.v.x*v0c.v.z;
+    p2 = v2c.v.z*f0.v.x - v2c.v.x*f0.v.z;
     r = e0*fabs(f0.v.z) + e2*fabs(f0.v.x);
     if (fmax(p0, p2) < -r || fmin(p0, p2) > r) return 0;
     /* n11: p0=v0z*f1x - v0x*f1z, p1=v1x*v2z - v2x*v1z */
-    p0 = v0[2]*f1.v.x - v0[0]*f1.v.z;
-    p1 = v1[0]*v2[2] - v2[0]*v1[2];
+    p0 = v0c.v.z*f1.v.x - v0c.v.x*f1.v.z;
+    p1 = v1c.v.x*v2c.v.z - v2c.v.x*v1c.v.z;
     r = e0*fabs(f1.v.z) + e2*fabs(f1.v.x);
     if (fmax(p0, p1) < -r || fmin(p0, p1) > r) return 0;
     /* n12: p0=v2x*v0z - v0x*v2z, p1=v1x*f2z - v1z*f2x */
-    p0 = v2[0]*v0[2] - v0[0]*v2[2];
-    p1 = v1[0]*f2.v.z - v1[2]*f2.v.x;
+    p0 = v2c.v.x*v0c.v.z - v0c.v.x*v2c.v.z;
+    p1 = v1c.v.x*f2.v.z - v1c.v.z*f2.v.x;
     r = e0*fabs(f2.v.z) + e2*fabs(f2.v.x);
     if (fmax(p0, p1) < -r || fmin(p0, p1) > r) return 0;
     /* n20: p0=v1x*v0y - v0x*v1y, p2=v2x*f0y - v2y*f0x */
-    p0 = v1[0]*v0[1] - v0[0]*v1[1];
-    p2 = v2[0]*f0.v.y - v2[1]*f0.v.x;
+    p0 = v1c.v.x*v0c.v.y - v0c.v.x*v1c.v.y;
+    p2 = v2c.v.x*f0.v.y - v2c.v.y*f0.v.x;
     r = e0*fabs(f0.v.y) + e1*fabs(f0.v.x);
     if (fmax(p0, p2) < -r || fmin(p0, p2) > r) return 0;
     /* n21: p0=v0x*f1y - v0y*f1x, p1=v2x*v1y - v1x*v2y */
-    p0 = v0[0]*f1.v.y - v0[1]*f1.v.x;
-    p1 = v2[0]*v1[1] - v1[0]*v2[1];
+    p0 = v0c.v.x*f1.v.y - v0c.v.y*f1.v.x;
+    p1 = v2c.v.x*v1c.v.y - v1c.v.x*v2c.v.y;
     r = e0*fabs(f1.v.y) + e1*fabs(f1.v.x);
     if (fmax(p0, p1) < -r || fmin(p0, p1) > r) return 0;
     /* n22: p0=v0x*v2y - v2x*v0y, p1=v1y*f2x - v1x*f2y */
-    p0 = v0[0]*v2[1] - v2[0]*v0[1];
-    p1 = v1[1]*f2.v.x - v1[0]*f2.v.y;
+    p0 = v0c.v.x*v2c.v.y - v2c.v.x*v0c.v.y;
+    p1 = v1c.v.y*f2.v.x - v1c.v.x*f2.v.y;
     r = e0*fabs(f2.v.y) + e1*fabs(f2.v.x);
     if (fmax(p0, p1) < -r || fmin(p0, p1) > r) return 0;
 
     /* Test the three axes corresponding to the face normals of AABB b */
     /* Exit if... */
-    /* ... [-e1,e1] and [min(v1.x,v2.x,v3.x), max(v1.x,v2.x,v3.x)] do not overlap */
-    if (fmax(fmax(v0[0], v1[0]), v2[0]) < -e0 || fmin(fmin(v0[0], v1[0]), v2[0]) > e0) return 0;
-    /* ... [-e2,e2] and [min(v1.y,v2.y,v3.y), max(v1.y,v2.y,v3.y)] do not overlap */
-    if (fmax(fmax(v0[1], v1[1]), v2[1]) < -e1 || fmin(fmin(v0[1], v1[1]), v2[1]) > e1) return 0;
-    /* ... [-e1,e1] and [min(v1.x,v2.x,v3.x), max(v1.x,v2.x,v3.x)] do not overlap */
-    if (fmax(fmax(v0[2], v1[2]), v2[2]) < -e2 || fmin(fmin(v0[2], v1[2]), v2[2]) > e2) return 0;
+    /* ... [-e1,e1] and [min(v1c.x,v2c.x,v3.x), max(v1c.x,v2c.x,v3.x)] do not overlap */
+    if (fmax(fmax(v0c.v.x, v1c.v.x), v2c.v.x) < -e0 || fmin(fmin(v0c.v.x, v1c.v.x), v2c.v.x) > e0) return 0;
+    /* ... [-e2,e2] and [min(v1c.y,v2c.y,v3.y), max(v1c.y,v2c.y,v3.y)] do not overlap */
+    if (fmax(fmax(v0c.v.y, v1c.v.y), v2c.v.y) < -e1 || fmin(fmin(v0c.v.y, v1c.v.y), v2c.v.y) > e1) return 0;
+    /* ... [-e1,e1] and [min(v1c.x,v2c.x,v3.x), max(v1c.x,v2c.x,v3.x)] do not overlap */
+    if (fmax(fmax(v0c.v.z, v1c.v.z), v2c.v.z) < -e2 || fmin(fmin(v0c.v.z, v1c.v.z), v2c.v.z) > e2) return 0;
 
     /* Test separating axis corresponding to triangle face normal */
-    return intersect_plane_aabb_test(v0, v1, v2, aabb);
+    return intersect_plane_aabb_test(v0c.xyz, v1c.xyz, v2c.xyz, aabb);
 }
