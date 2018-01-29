@@ -48,7 +48,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node);
     octree->mesh->ib_count / 3
 
 WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
-octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision);
+octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth);
 
 /*!
  * @brief Queries the octree for which faces intersect the specified bounding

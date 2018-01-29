@@ -228,7 +228,7 @@ static void init_attribute_buffer(mesh_t* mesh, wsib_t vertex_count)
 {
     wsib_t i;
     for (i = 0; i != vertex_count; ++i)
-        mesh->ab[i] = (attribute_t){0, 0, 1}; /* full absorption by default */
+        attribute_set_default_solid(&mesh->ab[i]);
 }
 
 /* ------------------------------------------------------------------------- */

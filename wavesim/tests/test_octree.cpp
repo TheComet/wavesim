@@ -31,7 +31,7 @@ protected:
 TEST_F(NAME, build_from_empty_mesh)
 {
     mesh_create(&m);
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(0));
+    EXPECT_THAT(octree_build_from_mesh(o, m, 6), Eq(0));
 }
 
 TEST_F(NAME, large_and_small_triangles)
@@ -50,7 +50,7 @@ TEST_F(NAME, large_and_small_triangles)
     EXPECT_THAT(mesh_builder_build(&m, mb), Eq(WS_OK));
     mesh_builder_destroy(mb);
 
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0.01, 0.01, 0.01)), Eq(WS_OK));
+    EXPECT_THAT(octree_build_from_mesh(o, m, 6), Eq(WS_OK));
     EXPECT_THAT(obj_export_octree("octree.large_and_small_triangles.obj", o), Eq(WS_OK));
 }
 
@@ -58,7 +58,7 @@ TEST_F(NAME, build_from_cube_mesh)
 {
     EXPECT_THAT(mesh_create(&m), Eq(WS_OK));
     mesh_cube(m, aabb(-1, -1, -1, 1, 1, 1));
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(WS_OK));
+    EXPECT_THAT(octree_build_from_mesh(o, m, 6), Eq(WS_OK));
     EXPECT_THAT(obj_export_octree("octree.build_from_cube_mesh.obj", o), Eq(WS_OK));
     // Check boundaries
     EXPECT_THAT(AABB_AX(o->root.aabb), DoubleEq(-1));
@@ -88,7 +88,7 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
     EXPECT_THAT(mesh_builder_build(&m, mb), Eq(WS_OK));
     mesh_builder_destroy(mb);
 
-    EXPECT_THAT(octree_build_from_mesh(o, m, vec3(0, 0, 0)), Eq(WS_OK));
+    EXPECT_THAT(octree_build_from_mesh(o, m, 6), Eq(WS_OK));
     EXPECT_THAT(obj_export_octree("octree.cube_mesh_with_small_triangles.obj", o), Eq(WS_OK));
     // Check boundaries
     EXPECT_THAT(AABB_AX(o->root.aabb), DoubleEq(-1));

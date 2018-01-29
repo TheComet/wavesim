@@ -146,6 +146,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node)
 }
 
 /* ------------------------------------------------------------------------- */
+#if 0
 static void
 determine_smallest_subdivision(wsreal_t smallest_subdivision[3], const mesh_t* mesh)
 {
@@ -170,6 +171,7 @@ determine_smallest_subdivision(wsreal_t smallest_subdivision[3], const mesh_t* m
         if (smallest_subdivision[i] <= WS_EPSILON || smallest_subdivision[i] == INFINITY)
             smallest_subdivision[i] = fmax(fmax(smallest_subdivision[0], smallest_subdivision[1]), smallest_subdivision[2]);
 }
+#endif
 
 /* ------------------------------------------------------------------------- */
 static wsret WS_WARN_UNUSED
@@ -215,7 +217,7 @@ determine_child_index_buffers(const octree_t* octree, octree_node_t* node)
     return WS_OK;
 }
 static wsret WS_WARN_UNUSED
-octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const wsreal_t smallest_subdivision[3])
+octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, int max_depth)
 {
     wsret result;
     unsigned int i;
@@ -224,10 +226,9 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const ws
     if (vector_count(&node->index_buffer) <= 3)
         return WS_OK;
 
-    /* Abort if below smallest division */
-    for (i = 0; i != 3; ++i)
-        if (node->aabb.b.max.xyz[i] - node->aabb.b.min.xyz[i] < smallest_subdivision[i])
-            return WS_OK;
+    /* Abort if max depth has been reached */
+    if (max_depth == 0)
+        return WS_OK;
 
     /* Subdivide and do AABB intersection tests to fill child index buffers */
     if ((result = octree_subdivide(octree, node)) != WS_OK)
@@ -243,7 +244,7 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const ws
         if (vector_count(&node->index_buffer) != vector_count(&node->children[i].index_buffer))
         {
             for (i = 0; i != 8; ++i)
-                if ((result = octree_build_from_mesh_recursive(octree, &node->children[i], smallest_subdivision)) != WS_OK)
+                if ((result = octree_build_from_mesh_recursive(octree, &node->children[i], max_depth - 1)) != WS_OK)
                     return result;
             return WS_OK;
         }
@@ -254,10 +255,8 @@ octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, const ws
     return WS_OK;
 }
 wsret
-octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_subdivision)
+octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth)
 {
-    int i;
-
     /* Clear old octree if it exists */
     octree_clear(octree);
 
@@ -279,14 +278,7 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
     if (mesh_face_count(octree->mesh) == 0)
         return 0;
 
-    for (i = 0; i != 3; ++i)
-        if (smallest_subdivision.xyz[i] <= WS_EPSILON)
-        {
-            determine_smallest_subdivision(smallest_subdivision.xyz, mesh);
-            break;
-        }
-
-    if (octree_build_from_mesh_recursive(octree, &octree->root, smallest_subdivision.xyz) < 0)
+    if (octree_build_from_mesh_recursive(octree, &octree->root, max_depth) < 0)
         return -1;
     return 0;
 }

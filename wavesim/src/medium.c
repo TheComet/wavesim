@@ -6,6 +6,7 @@
 #include "wavesim/octree.h"
 #include "wavesim/medium.h"
 #include <string.h>
+#include <assert.h>
 
 static int
 determine_cell_attribute(attribute_t* cell_attribute,
@@ -13,57 +14,86 @@ determine_cell_attribute(attribute_t* cell_attribute,
                          const wsreal_t cell_aabb[6])
 {
     wsib_t i;
+    wsreal_t weights_sum;
     vector_t query_result;
+    vec3_t cell_center;
 
     /* XXX This is super ugly, maybe add a result_construct() function that takes a mesh? */
     vector_construct(&query_result, octree->mesh->ib_size);
     if (octree_query_potential_faces(octree, &query_result, cell_aabb) < 1)
         goto octree_query_failed;
 
+    /* Calculate the center of the AABB, required for attribute interpolation */
+    vec3_copy(&cell_center, cell_aabb);
+    vec3_add_vec3(cell_center.xyz, cell_aabb+3);
+    vec3_mul_scalar(cell_center.xyz, 0.5);
+
     /*
      * Octree delivers a number of faces that *might* intersect the cell AABB,
      * but we cannot be sure until we do a proper intersection test.
      */
+    attribute_set_zero(cell_attribute);
+    weights_sum = 0.0;
+    for (i = 0; i != (wsib_t)vector_count(&query_result) / 3; ++i)
     {
-        vec3_t rta_avg;  /* absorption, reflection, transmission average of all
-                            intersecting faces */
-        vec3_set_zero(rta_avg.xyz);
+        int v;
 
-        for (i = 0; i != (wsib_t)vector_count(&query_result) / 3; ++i)
+        /* Do intersection test of face with our cell */
+        const mesh_t* m = octree->mesh;
+        face_t face = mesh_get_face_from_buffers(m->vb, query_result.data, m->ab,
+                                                i, m->vb_type, m->ib_type);
+        if (intersect_triangle_aabb_test(
+                face.vertices[0].position.xyz,
+                face.vertices[1].position.xyz,
+                face.vertices[2].position.xyz,
+                cell_aabb) == 0)
+            continue; /* face doesn't intersect our cell, so ignore it */
+
+        /*
+         * Using Shepard's method, weight all vertex attributes according to
+         * their distance to the cell's AABB center.
+         *
+         * https://en.wikipedia.org/wiki/Inverse_distance_weighting
+         */
+        for (v = 0; v != 3; ++v)
         {
-
-            /* Do intersection test of face with our cell *
-            const mesh_t* m = octree->mesh;
-            face_t face = mesh_get_face_from_buffers(m->vb, query_result.data, m->ab,
-                                                    i, m->vb_type, m->ib_type);
-            if (intersect_face_aabb(&intersect_result,
-                    face.vertices[0].position.xyz,
-                    face.vertices[1].position.xyz,
-                    face.vertices[2].position.xyz,
-                    cell_aabb) == 0)
-                continue; * face doesn't intersect our cell, so ignore it */
-
-        }
-
-        /* It's possible that no faces intersected */
-        if (vec3_is_zero(rta_avg.xyz))
-        {
-            attribute_set_default(cell_attribute);
-        }
-        else
-        {
-            /*
-             * Average and copy the "rta" vector, which is the sum of all
-             * attributes, into our return value. that
-             * 1 = reflection + transmission + absorption.
-             */
-            vec3_div_scalar(rta_avg.xyz, (wsreal_t)vector_count(&query_result));
-            cell_attribute->absorption = rta_avg.v.x;
-            cell_attribute->reflection = rta_avg.v.y;
-            cell_attribute->transmission = rta_avg.v.z;
+            wsreal_t weight;
+            vec3_t distance = face.vertices[v].position;
+            vec3_sub_vec3(distance.xyz, cell_center.xyz);
+            weight = vec3_length_squared(distance.xyz);
+            if (weight == 0.0) /* catch division by 0, if the cell center is  right on top of a vertex */
+            {
+                *cell_attribute = face.vertices[v].attr;
+                goto only_one_vertex_matters;
+            }
+            weight = 1.0 / weight; /* We're using p=2, since weight is the squared length */
+            cell_attribute->reflection   += face.vertices[v].attr.reflection * weight;
+            cell_attribute->transmission += face.vertices[v].attr.transmission * weight;
+            cell_attribute->absorption   += face.vertices[v].attr.absorption * weight;
+            weights_sum += weight;
         }
     }
 
+    /* It's possible that no faces intersected, in which case we assume it's air */
+    if (weights_sum == 0.0)
+    {
+        attribute_set_default_air(cell_attribute);
+    }
+    else
+    {
+        weights_sum = 1.0 / weights_sum;
+        cell_attribute->absorption *= weights_sum;
+        cell_attribute->reflection *= weights_sum;
+        cell_attribute->transmission *= weights_sum;
+        /* Need to normalize it so 1 = reflection + transmission + absorption */
+        weights_sum = cell_attribute->reflection + cell_attribute->transmission + cell_attribute->absorption;
+        weights_sum = 1.0 / weights_sum;
+        cell_attribute->absorption *= weights_sum;
+        cell_attribute->reflection *= weights_sum;
+        cell_attribute->transmission *= weights_sum;
+    }
+
+    only_one_vertex_matters:
     octree_query_failed : vector_clear_free(&query_result);
     return -1;
 }
@@ -138,13 +168,16 @@ medium_set_decomposition_method(medium_t* medium,
 /* ------------------------------------------------------------------------- */
 typedef enum direction_e
 {
-    UP = 0,
-    DOWN,
-    LEFT,
-    RIGHT,
-    FRONT,
-    BACK,
-    DIRECTION_COUNT
+    UP    = 0x01,
+    DOWN  = 0x02,
+    LEFT  = 0x04,
+    RIGHT = 0x08,
+    FRONT = 0x10,
+    BACK  = 0x20,
+    DIR_ITER_START = 0x01,
+    DIR_ITER_END   = 0x40,
+    ALL_DIRECTIONS = UP | DOWN | LEFT | RIGHT | FRONT | BACK,
+    DIRECTION_COUNT = 6
 } direction_e;
 static aabb_t
 get_adjacent_slice(const medium_t* medium, const wsreal_t aabb[6], direction_e direction)
@@ -209,8 +242,8 @@ decompose_systematic_recursive(medium_t* medium,
                                const medium_t* mediumdef,
                                aabb_t seed)
 {
-    int direction;
-    int occupied_slices;
+    size_t direction;
+    size_t occupied_direction_flags;
     vector_t potential_new_seeds;
     size_t this_partition_idx;
 
@@ -225,18 +258,24 @@ decompose_systematic_recursive(medium_t* medium,
     vector_construct(&potential_new_seeds, sizeof(aabb_t));
     do
     {
-        occupied_slices = 0;
-        for (direction = 0; direction != DIRECTION_COUNT; ++direction)
+        occupied_direction_flags = 0;
+        for (direction = DIR_ITER_START; direction != DIR_ITER_END; direction <<= 1)
         {
             aabb_t slice;
             aabb_t cell;
+            int slice_is_same_as_seed;
+
+            /* Check if this direction has been flagged as occupied. If so, no
+             * need to do anything */
+            if (occupied_direction_flags & direction)
+                continue;
 
             /* Calculate a slice adjacent to this seed and make sure it doesn't
              * already exist in the medium. */
             slice = get_adjacent_slice(medium, seed.xyzxyz, direction);
             if (medium_partition_already_occupied(medium, slice.xyzxyz))
             {
-                ++occupied_slices;
+                occupied_direction_flags |= direction;
                 continue;
             }
 
@@ -248,6 +287,7 @@ decompose_systematic_recursive(medium_t* medium,
                 AABB_AY(slice) + medium->grid_size.v.y,
                 AABB_AZ(slice) + medium->grid_size.v.z
             );
+            slice_is_same_as_seed = 1;
             while (AABB_BX(cell) <= AABB_BX(slice))
             {
                 while (AABB_BY(cell) <= AABB_BY(slice))
@@ -256,12 +296,13 @@ decompose_systematic_recursive(medium_t* medium,
                     {
                         attribute_t cell_attribute;
                         determine_cell_attribute(&cell_attribute, octree, cell.xyzxyz);
-                        if (attribute_is_same(&seed_attr, &cell_attribute) != 0)
+                        if (attribute_is_same(&seed_attr, &cell_attribute) == 0)
                         {
                             aabb_t* new_seed = vector_emplace(&potential_new_seeds);
                             if (new_seed == NULL)
                                 goto ran_out_of_memory;
                             *new_seed = cell;
+                            slice_is_same_as_seed = 0;
                         }
                         AABB_AZ(cell) += medium->grid_size.v.z;
                         AABB_BZ(cell) += medium->grid_size.v.z;
@@ -276,22 +317,28 @@ decompose_systematic_recursive(medium_t* medium,
                 AABB_AX(cell) += medium->grid_size.v.x;
                 AABB_BX(cell) += medium->grid_size.v.x;
             }
+            if (slice_is_same_as_seed == 0)
+            {
+                occupied_direction_flags |= direction;
+                continue;
+            }
 
             /* Since slice has the same attributes, we can merge it with our
              * seed now */
             aabb_expand_aabb(seed.xyzxyz, slice.xyzxyz);
         }
-    } while (occupied_slices < DIRECTION_COUNT);
-    vector_clear_free(&potential_new_seeds);
+    } while (occupied_direction_flags != ALL_DIRECTIONS);
 
     /*
      * At this point, the seed has been expanded as much as possible without
      * intersecting existing partitions in the medium. Add it to the medium as
      * a new partition.
      */
+    assert(medium_partition_already_occupied(medium, seed.xyzxyz) == 0);
     this_partition_idx = vector_count(&medium->partitions);
     if (medium_add_partition(medium, seed.xyzxyz, 1) != 0)
         goto ran_out_of_memory;
+    ws_log_info(&g_ws_log, "Adding partition #%d (%f,%f,%f,%f,%f,%f)", this_partition_idx, seed.xyzxyz[0], seed.xyzxyz[1], seed.xyzxyz[2], seed.xyzxyz[3], seed.xyzxyz[4], seed.xyzxyz[5]);
 
     /* Add ourselves to the parent partition's adjacent list, if possible */
     if (parent_partition_idx != VECTOR_ERROR)
@@ -320,6 +367,7 @@ decompose_systematic_recursive(medium_t* medium,
         }
     VECTOR_END_EACH
 
+    vector_clear_free(&potential_new_seeds);
     (void)mediumdef;
     return WS_OK;
 
@@ -382,13 +430,13 @@ medium_build_from_mesh(medium_t* medium,
 
     /* Need an octree */
     octree_construct(&octree);
-    if ((result = octree_build_from_mesh(&octree, mesh, medium->grid_size)) != WS_OK)
+    if ((result = octree_build_from_mesh(&octree, mesh, 2)) != WS_OK)
         goto bail;
 
     if ((result = medium->decompose(medium, &octree, mediumdef)) != WS_OK)
         goto bail;
 
-    ws_log_info(&g_ws_log, "Decomposed mesh into %d partitions", vector_count(&medium->partitions));
+    ws_log_info(&g_ws_log, "Decomposed mesh into %d partitions", (int)vector_count(&medium->partitions));
 
     bail : octree_destruct(&octree);
     return result;

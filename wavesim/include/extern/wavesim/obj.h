@@ -31,7 +31,7 @@ obj_export_medium(const char* filename, const medium_t* mesh);
 WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
 obj_export_octree(const char* filename, const octree_t* octree);
 
-/* --- Implementation Details --- */
+/* --- Basic functionality used in all export/import functions --- */
 
 WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
 obj_exporter_open(obj_exporter_t* exporter, const char* filename);

@@ -58,7 +58,8 @@ ws_vlog(log_t* log, const char* fmt, va_list ap, int type)
 
     va_list ap2;
     va_copy(ap2, ap);
-    len = vsnprintf(NULL, 0, fmt, ap);
+    len = vsnprintf(NULL, 0, fmt, ap2);
+    va_end(ap2);
 
     if (len < 0)
         return;
@@ -80,7 +81,6 @@ ws_vlog(log_t* log, const char* fmt, va_list ap, int type)
 
     vsprintf(log->buffer, fmt, ap);
     strcat(log->buffer, "\n");
-    va_end(ap2);
 
     if (type == 0)
         log->info(log->buffer);

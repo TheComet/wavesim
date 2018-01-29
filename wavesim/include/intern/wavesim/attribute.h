@@ -22,10 +22,16 @@ WAVESIM_PRIVATE_API attribute_t
 attribute_default(void);
 
 WAVESIM_PRIVATE_API void
-attribute_set_default(attribute_t* attribute);
+attribute_set_default_solid(attribute_t* attribute);
+
+WAVESIM_PRIVATE_API void
+attribute_set_default_air(attribute_t* attribute);
 
 WAVESIM_PRIVATE_API void
 attribute_set_zero(attribute_t* attribute);
+
+WAVESIM_PRIVATE_API int
+attribute_is_zero(attribute_t* attribute);
 
 WAVESIM_PRIVATE_API int
 attribute_is_same(const attribute_t* a1, const attribute_t* a2);

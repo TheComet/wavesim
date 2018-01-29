@@ -11,7 +11,7 @@ TEST(NAME, high_ceiling)
 {
     mesh_t* mesh;
     medium_t* medium;
-    vec3_t grid_size = vec3(4, 4, 4);
+    vec3_t grid_size = vec3(2, 2, 2);
     ASSERT_THAT(mesh_create(&mesh), Eq(WS_OK));
     ASSERT_THAT(obj_import_mesh("../wavesim/models/high-ceiling.obj", mesh), Eq(WS_OK));
     ASSERT_THAT(medium_create(&medium), Eq(WS_OK));

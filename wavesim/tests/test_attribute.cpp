@@ -13,13 +13,22 @@ TEST(NAME, construct_default)
     EXPECT_THAT(a.absorption, DoubleEq(1.0));
 }
 
-TEST(NAME, set_default)
+TEST(NAME, set_default_solid)
 {
     attribute_t a = attribute(5, 5, 5);
-    attribute_set_default(&a);
+    attribute_set_default_solid(&a);
     EXPECT_THAT(a.reflection, DoubleEq(0.0));
     EXPECT_THAT(a.transmission, DoubleEq(0.0));
     EXPECT_THAT(a.absorption, DoubleEq(1.0));
+}
+
+TEST(NAME, set_default_air)
+{
+    attribute_t a = attribute(5, 5, 5);
+    attribute_set_default_solid(&a);
+    EXPECT_THAT(a.reflection, DoubleEq(0.0));
+    EXPECT_THAT(a.transmission, DoubleEq(1.0));
+    EXPECT_THAT(a.absorption, DoubleEq(0.0));
 }
 
 TEST(NAME, construct_with_values)

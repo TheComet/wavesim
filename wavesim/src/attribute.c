@@ -19,17 +19,26 @@ attribute_t
 attribute_default(void)
 {
     attribute_t result;
-    attribute_set_default(&result);
+    attribute_set_default_solid(&result);
     return result;
 }
 
 /* ------------------------------------------------------------------------- */
 void
-attribute_set_default(attribute_t* attribute)
+attribute_set_default_solid(attribute_t* attribute)
 {
     attribute->absorption = 1;
     attribute->reflection = 0;
     attribute->transmission = 0;
+}
+
+/* ------------------------------------------------------------------------- */
+void
+attribute_set_default_air(attribute_t* attribute)
+{
+    attribute->absorption = 0;
+    attribute->reflection = 0;
+    attribute->transmission = 1;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -39,6 +48,15 @@ attribute_set_zero(attribute_t* attribute)
     attribute->absorption = 0;
     attribute->reflection = 0;
     attribute->transmission = 0;
+}
+
+/* ------------------------------------------------------------------------- */
+int
+attribute_is_zero(attribute_t* attribute)
+{
+    return (attribute->reflection == 0.0 &&
+            attribute->transmission == 0.0 &&
+            attribute->absorption == 0.0);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -60,7 +78,7 @@ attribute_normalize_rta(attribute_t* attribute)
 
     if (attribute->reflection == 0.0 && attribute->transmission == 0.0 && attribute->absorption == 0.0)
     {
-        attribute_set_default(attribute);
+        attribute_set_default_solid(attribute);
         return;
     }
 
