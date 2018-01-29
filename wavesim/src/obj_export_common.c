@@ -80,18 +80,18 @@ obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6])
     struct {
         vec3_t a, b;
     } edges[12]; 
-    edges[0].a = aaa; edges[0].b = aab;
-    edges[0].a = aaa; edges[0].b = aba;
-    edges[0].a = aaa; edges[0].b = baa;
-    edges[0].a = aab; edges[0].b = abb;
-    edges[0].a = aab; edges[0].b = bab;
-    edges[0].a = aba; edges[0].b = abb;
-    edges[0].a = aba; edges[0].b = bba;
-    edges[0].a = baa; edges[0].b = bab;
-    edges[0].a = baa; edges[0].b = bba;
-    edges[0].a = abb; edges[0].b = bbb;
-    edges[0].a = bab; edges[0].b = bbb;
-    edges[0].a = bba; edges[0].b = bbb;
+    edges[0].a  = aaa; edges[0].b  = aab;
+    edges[1].a  = aaa; edges[1].b  = aba;
+    edges[2].a  = aaa; edges[2].b  = baa;
+    edges[3].a  = aab; edges[3].b  = abb;
+    edges[4].a  = aab; edges[4].b  = bab;
+    edges[5].a  = aba; edges[5].b  = abb;
+    edges[6].a  = aba; edges[6].b  = bba;
+    edges[7].a  = baa; edges[7].b  = bab;
+    edges[8].a  = baa; edges[8].b  = bba;
+    edges[9].a  = abb; edges[9].b  = bbb;
+    edges[10].a = bab; edges[10].b = bbb;
+    edges[11].a = bba; edges[11].b = bbb;
 
     for (i = 0; i != 12; ++i)
     {

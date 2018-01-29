@@ -34,6 +34,16 @@ TEST(NAME, point_outside_aabb)
         EXPECT_THAT(intersect_point_aabb_test(points[i], bb.xyzxyz), Eq(false));
 }
 
+TEST(NAME, adjacent_aabbs_dont_intersect)
+{
+    EXPECT_THAT(intersect_aabb_aabb_test(aabb(0, 0, 0, 1, 1, 1).xyzxyz, aabb(1, 0, 0, 2, 1, 1).xyzxyz), Eq(false));
+    EXPECT_THAT(intersect_aabb_aabb_test(aabb(0, 0, 0, 1, 1, 1).xyzxyz, aabb(0, 1, 0, 1, 2, 1).xyzxyz), Eq(false));
+    EXPECT_THAT(intersect_aabb_aabb_test(aabb(0, 0, 0, 1, 1, 1).xyzxyz, aabb(0, 0, 1, 1, 1, 2).xyzxyz), Eq(false));
+    EXPECT_THAT(intersect_aabb_aabb_test(aabb(0, 0, 0, 1, 1, 1).xyzxyz, aabb(-1, 0, 0, 0, 1, 1).xyzxyz), Eq(false));
+    EXPECT_THAT(intersect_aabb_aabb_test(aabb(0, 0, 0, 1, 1, 1).xyzxyz, aabb(0, -1, 0, 1, 0, 1).xyzxyz), Eq(false));
+    EXPECT_THAT(intersect_aabb_aabb_test(aabb(0, 0, 0, 1, 1, 1).xyzxyz, aabb(0, 0, -1, 1, 1, 0).xyzxyz), Eq(false));
+}
+
 TEST(NAME, line_face_intersects_1)
 {
     // This line will intersect the face at 0, 0, 0

@@ -1,12 +1,14 @@
 #include "wavesim/btree.h"
 #include "wavesim/hash.h"
-#include "wavesim/octree.h"
+#include "wavesim/intersections.h"
+#include "wavesim/log.h"
 #include "wavesim/memory.h"
 #include "wavesim/mesh.h"
-#include "wavesim/intersections.h"
+#include "wavesim/octree.h"
 #include "string.h"
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
 #define IDX(x, y, z) \
     x*4 + y*2 + z
@@ -291,32 +293,98 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
 
 /* ------------------------------------------------------------------------- */
 static int
-octree_query_aabb_recursive(const octree_node_t* node, vector_t* result, const wsreal_t bb[6])
+octree_query_potential_faces_recursive(const octree_node_t* node, vector_t* result, const wsreal_t bb[6])
 {
+    /* This node and all children are of no interest */
     if (intersect_aabb_aabb_test(node->aabb.xyzxyz, bb) == 0)
         return 1;
 
+    /*
+     * We want to keep drilling deeper until the node size is smaller or equal
+     * to the specified bounding box. Going any deeper is useless because all
+     * children beyond that point will intersect anyway, and going shallower is
+     * less efficient because we'd have to do more index buffer copies.
+     */
     if (node->children != NULL)
     {
-        int i, child_result;
-        for (i = 0; i != 8; ++i)
+        vec3_t node_dims = AABB_DIMS(node->aabb);
+        if (node_dims.v.x > bb[3] - bb[0] ||
+            node_dims.v.y > bb[4] - bb[1] ||
+            node_dims.v.z > bb[5] - bb[2])
         {
-            child_result = octree_query_aabb_recursive(&node->children[i], result, bb);
-            if (child_result != 0)
-                return child_result;
+            int i, node_counter = 0;
+            for (i = 0; i != 8; ++i)
+            {
+                int child_result = octree_query_potential_faces_recursive(&node->children[i], result, bb);
+                if (child_result == -1)
+                    return child_result;
+                node_counter += child_result;
+            }
+            return node_counter;
         }
     }
-    else
+
+    /*
+     * We're at the bottom, add this node's indices to the result list and
+     * avoid duplicate faces. In the worst case, we have to do a linear search
+     * for indices 7 times (if the bounding box happens to intersect all 8
+     * neighbouring nodes).
+     *
+     * Note that because we don't know the type of data in the result vector
+     * or in the node vector, we have to do a direct memory comparison of
+     * 3 element chunks.
+     *
+     * TODO: Maybe profile this, depending on how complex the mesh is it might
+     * matter.
+     */
     {
-        vector_push_vector(result, &node->index_buffer);
+        size_t node_chunk_idx;
+        const vector_t* vn = &node->index_buffer;
+        size_t chunk_size = vn->element_size * 3;
+        size_t node_chunk_count = vector_count(vn) / 3;
+        size_t result_chunk_count = vector_count(result) / 3;
+
+        assert(vector_count(vn) % 3 == 0);
+        assert(vector_count(result) % 3 == 0);
+
+        /* For all index triplets in the node... */
+        for (node_chunk_idx = 0; node_chunk_idx != node_chunk_count; node_chunk_idx++)
+        {
+            /* Try to find the current triplet in the result index buffer */
+            size_t result_chunk_idx = 0;
+            for (result_chunk_idx = 0; result_chunk_idx != result_chunk_count; result_chunk_idx++)
+            {
+                if (memcmp(&vn->data[node_chunk_idx*chunk_size],
+                           &result->data[result_chunk_idx*chunk_size],
+                           chunk_size) != 0)
+                    goto identical_face_found;
+            }
+
+            /*
+             * Duplicate indices not found, append this chunk to the vector by
+             * emplacing 3 times.
+             */
+            if (vector_emplace(result) == NULL) return -1;
+            if (vector_emplace(result) == NULL) return -1;
+            if (vector_emplace(result) == NULL) return -1;
+            memcpy(result->data + (result->count * result->element_size) - chunk_size,
+                   &vn->data[node_chunk_idx*chunk_size],
+                   chunk_size);
+
+            identical_face_found: continue;
+        }
     }
 
     return 0;
 }
 int
-octree_query_aabb(const octree_t* octree, vector_t* result, const wsreal_t aabb[6])
+octree_query_potential_faces(const octree_t* octree, vector_t* result, const wsreal_t aabb[6])
 {
-    return octree_query_aabb_recursive(&octree->root, result, aabb);
+    int affected_node_count = octree_query_potential_faces_recursive(&octree->root, result, aabb);
+#ifdef DEBUG
+    ws_log_info("Octree AABB query intersected %d nodes", affected_node_count);
+#endif
+    return affected_node_count;
 }
 
 /* ------------------------------------------------------------------------- */

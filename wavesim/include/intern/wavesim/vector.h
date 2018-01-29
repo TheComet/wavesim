@@ -223,7 +223,7 @@ vector_erase_element(vector_t* vector, void* element);
  * returned.
  */
 WAVESIM_PRIVATE_API void*
-vector_get_element(const vector_t*, size_t index);
+vector_get_element(const vector_t* vector, size_t index);
 
 /*!
  * @brief Convenient macro for iterating a vector's elements.

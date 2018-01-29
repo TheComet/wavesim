@@ -20,7 +20,7 @@ intersect_aabb_aabb_test(const wsreal_t aabb1[6], const wsreal_t aabb2[6])
 {
     int i;
     for (i = 0; i != 3; ++i)
-        if (aabb1[i+3] < aabb2[i+0] || aabb1[i+0] > aabb2[i+3]) return 0;
+        if (aabb1[i+3] <= aabb2[i+0] || aabb1[i+0] >= aabb2[i+3]) return 0;
     return 1;
 }
 

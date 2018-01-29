@@ -17,7 +17,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
 
     /* XXX This is super ugly, maybe add a result_construct() function that takes a mesh? */
     vector_construct(&query_result, octree->mesh->ib_size);
-    if (octree_query_aabb(octree, &query_result, cell_aabb) != 0)
+    if (octree_query_potential_faces(octree, &query_result, cell_aabb) < 1)
         goto octree_query_failed;
 
     /*
@@ -260,7 +260,7 @@ decompose_systematic_recursive(medium_t* medium,
                         {
                             aabb_t* new_seed = vector_emplace(&potential_new_seeds);
                             if (new_seed == NULL)
-                                WSRET(WS_ERR_OUT_OF_MEMORY);
+                                goto ran_out_of_memory;
                             *new_seed = cell;
                         }
                         AABB_AZ(cell) += medium->grid_size.v.z;
@@ -282,6 +282,7 @@ decompose_systematic_recursive(medium_t* medium,
             aabb_expand_aabb(seed.xyzxyz, slice.xyzxyz);
         }
     } while (occupied_slices < DIRECTION_COUNT);
+    vector_clear_free(&potential_new_seeds);
 
     /*
      * At this point, the seed has been expanded as much as possible without
@@ -290,7 +291,7 @@ decompose_systematic_recursive(medium_t* medium,
      */
     this_partition_idx = vector_count(&medium->partitions);
     if (medium_add_partition(medium, seed.xyzxyz, 1) != 0)
-        return -1;
+        goto ran_out_of_memory;
 
     /* Add ourselves to the parent partition's adjacent list, if possible */
     if (parent_partition_idx != VECTOR_ERROR)
@@ -298,7 +299,7 @@ decompose_systematic_recursive(medium_t* medium,
         medium_partition_t* parent_partition = vector_get_element(&medium->partitions, parent_partition_idx);
         size_t* adjacent_partition_idx = vector_emplace(&parent_partition->adcacent_partitions);
         if (adjacent_partition_idx == NULL)
-            WSRET(WS_ERR_OUT_OF_MEMORY);
+            goto ran_out_of_memory;
         *adjacent_partition_idx = this_partition_idx;
     }
 
@@ -313,11 +314,16 @@ decompose_systematic_recursive(medium_t* medium,
             continue;
         result = decompose_systematic_recursive(medium, this_partition_idx, octree, mediumdef, *new_seed);
         if (result != WS_OK)
+        {
+            vector_clear_free(&potential_new_seeds);
             return result;
+        }
     VECTOR_END_EACH
 
     (void)mediumdef;
     return WS_OK;
+
+    ran_out_of_memory: WSRET(WS_ERR_OUT_OF_MEMORY);
 }
 wsret
 medium_decompose_systematic(medium_t* medium,
@@ -366,7 +372,7 @@ medium_build_from_mesh(medium_t* medium,
     vec3_copy(&medium->grid_size, grid_size);
     if (mediumdef == NULL)
     {
-        ws_log_info(&g_ws_log, "[warning] No medium definition was provided. Falling back to mesh AABB and default air parameters.");
+        ws_log_info(&g_ws_log, "[warning] No medium definition was provided. Falling back to mesh AABB and default parameters.");
         medium->boundary = mesh->aabb;
     }
     else

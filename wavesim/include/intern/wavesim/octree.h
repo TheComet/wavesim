@@ -70,7 +70,7 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, vec3_t smallest_sub
  * outside of the octree boundary.
  */
 WAVESIM_PRIVATE_API int
-octree_query_aabb(const octree_t* octree, vector_t* result, const double aabb[6]);
+octree_query_potential_faces(const octree_t* octree, vector_t* result, const double aabb[6]);
 
 /*!
  * @brief Checks whether a point is located inside or outside of the 3D mesh.
