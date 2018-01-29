@@ -310,5 +310,5 @@ intersect_triangle_aabb_test(const wsreal_t v0[3], const wsreal_t v1[3], const w
     if (fmax(fmax(v0c.v.z, v1c.v.z), v2c.v.z) < -e2 || fmin(fmin(v0c.v.z, v1c.v.z), v2c.v.z) > e2) return 0;
 
     /* Test separating axis corresponding to triangle face normal */
-    return intersect_plane_aabb_test(v0c.xyz, v1c.xyz, v2c.xyz, aabb);
+    return intersect_plane_aabb_test(v0, v1, v2, aabb);
 }

@@ -124,6 +124,16 @@ TEST(NAME, line_face_segment_too_short)
     ASSERT_THAT(intersect_line_triangle_cartesian(result.xyz, p1, p2, v1, v2, v3), Eq(0));
 }
 
+TEST(NAME, line_face_parallel_to_triangle_plane)
+{
+    ASSERT_THAT(true, Eq(false));
+}
+
+TEST(NAME, line_face_lines_inside_triangle_plane)
+{
+    ASSERT_THAT(true, Eq(false));
+}
+
 TEST(NAME, face_aabb__face_intersects_aabb_edge)
 {
     wsreal_t v1[3] = {-0.5, 1.5, 1.0};
@@ -169,12 +179,38 @@ TEST(NAME, face_aabb_random_test_2)
     ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
 }
 
-TEST(NAME, line_face_parallel_to_triangle_plane)
+TEST(NAME, face_aabb_corner_1_hit)
 {
-    ASSERT_THAT(true, Eq(false));
+    wsreal_t v1[3] = {2.06742, 2.04637, 0.064936};
+    wsreal_t v2[3] = {2.14564, 1.73473, -0.068178};
+    wsreal_t v3[3] = {1.858, 2.0414, -0.008601};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
 }
 
-TEST(NAME, line_face_lines_inside_triangle_plane)
+TEST(NAME, face_aabb_corner_1_miss)
 {
-    ASSERT_THAT(true, Eq(false));
+    wsreal_t v1[3] = {2.06742, 2.04637, 0.064936};
+    wsreal_t v2[3] = {2.14564, 1.73473, -0.068178};
+    wsreal_t v3[3] = {1.858, 2.0414, -0.063498};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_2_hit)
+{
+    wsreal_t v1[3] = {0.243852, 2.05632, -0.068178};
+    wsreal_t v2[3] = {-0.113127, 1.83417, -0.008601};
+    wsreal_t v3[3] = {-0.077066, 2.04052, 0.064936};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_2_miss)
+{
+    wsreal_t v1[3] = {0.243852, 2.10969, -0.068178};
+    wsreal_t v2[3] = {-0.113127, 1.97005, -0.008601};
+    wsreal_t v3[3] = {-0.077066, 2.04052, 0.064936};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
 }
