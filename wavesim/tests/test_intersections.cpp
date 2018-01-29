@@ -152,13 +152,58 @@ TEST(NAME, face_aabb__face_inside_aabb)
     ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
 }
 
-TEST(NAME, face_aabb__face_edge_intersects_aabb_face)
+TEST(NAME, face_aabb__face_edge_intersects_aabb_face_1)
 {
     wsreal_t v1[3] = {0.5, 0.5, 1.0};
     wsreal_t v2[3] = {0.5, -1.5, 1.0};
     wsreal_t v3[3] = {2.5, -1.5, 1.0};
     wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
     ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb__face_edge_misses_aabb_face_1)
+{
+    wsreal_t v1[3] = {0.5, -0.1, 1.0};
+    wsreal_t v2[3] = {0.5, -2.1, 1.0};
+    wsreal_t v3[3] = {2.5, -2.1, 1.0};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb__face_edge_intersects_aabb_face_2)
+{
+    wsreal_t v1[3] = {2.5, 1.166667, 3.166667};
+    wsreal_t v2[3] = {0.5, 1.166667, 3.166667};
+    wsreal_t v3[3] = {0.5, 1.166667, 1.166667};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb__face_edge_misses_aabb_face_2)
+{
+    wsreal_t v1[3] = {2.5, 1.166667, 4.166667};
+    wsreal_t v2[3] = {0.5, 1.166667, 4.166667};
+    wsreal_t v3[3] = {0.5, 1.166667, 2.166667};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb__face_edge_intersects_aabb_face_3)
+{
+    wsreal_t v1[3] = {-1.5, 2.9, 1.0};
+    wsreal_t v2[3] = {-1.5, 0.9, 1.0};
+    wsreal_t v3[3] = {0.5, 0.9, 1.0};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb__face_edge_misses_aabb_face_3)
+{
+    wsreal_t v1[3] = {-2.1, 2.9, 1.0};
+    wsreal_t v2[3] = {-2.1, 0.9, 1.0};
+    wsreal_t v3[3] = {-0.1, 0.9, 1.0};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
 }
 
 TEST(NAME, face_aabb_random_test_1)
@@ -178,6 +223,12 @@ TEST(NAME, face_aabb_random_test_2)
     wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
     ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
 }
+
+// ----------------------------------------------------------------------------
+// Here we place a small triangle at each of the 8 corners of the AABB and move
+// it slightly in range and out of range and test for collision. The numbers
+// used were generated using blender.
+// ----------------------------------------------------------------------------
 
 TEST(NAME, face_aabb_corner_1_hit)
 {
@@ -211,6 +262,114 @@ TEST(NAME, face_aabb_corner_2_miss)
     wsreal_t v1[3] = {0.243852, 2.10969, -0.068178};
     wsreal_t v2[3] = {-0.113127, 1.97005, -0.008601};
     wsreal_t v3[3] = {-0.077066, 2.04052, 0.064936};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_3_hit)
+{
+    wsreal_t v1[3] = {-0.113285, 0.246623, -0.05575};
+    wsreal_t v2[3] = {-0.004857, -0.063243, 0.077364};
+    wsreal_t v3[3] = {0.069539, -0.090289, 0.003827};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_3_miss)
+{
+    wsreal_t v1[3] = {-0.113285, 0.246623, -0.05575};
+    wsreal_t v2[3] = {-0.004857, -0.063243, 0.077364};
+    wsreal_t v3[3] = {0.04498, -0.090289, 0.003827};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_4_hit)
+{
+    wsreal_t v1[3] = {1.77072, -0.138888, -0.040964};
+    wsreal_t v2[3] = {2.07856, 0.075068, -0.00144};
+    wsreal_t v3[3] = {2.0801, 0.00305, 0.05716};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_4_miss)
+{
+    wsreal_t v1[3] = {1.77072, -0.138888, -0.040964};
+    wsreal_t v2[3] = {2.07856, 0.060398, -0.00144};
+    wsreal_t v3[3] = {2.0801, 0.00305, 0.05716};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_5_hit)
+{
+    wsreal_t v1[3] = {1.83598, -0.160644, 1.95757};
+    wsreal_t v2[3] = {2.05632, 0.104544, 2.03891};
+    wsreal_t v3[3] = {2.1156, 0.090686, 1.98892};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_5_miss)
+{
+    wsreal_t v1[3] = {1.83598, -0.160644, 1.95757};
+    wsreal_t v2[3] = {2.05632, 0.104544, 2.07793};
+    wsreal_t v3[3] = {2.1156, 0.073493, 1.98892};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_6_hit)
+{
+    wsreal_t v1[3] = {2.15026, 1.80039, 1.9392};
+    wsreal_t v2[3] = {1.91743, 2.05469, 2.05955};
+    wsreal_t v3[3] = {1.95193, 2.10979 ,1.97055};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_6_miss)
+{
+    wsreal_t v1[3] = {2.15026, 1.80039, 1.9392};
+    wsreal_t v2[3] = {1.91743, 2.05469, 2.05955};
+    wsreal_t v3[3] = {1.99092, 2.10979 ,1.97055};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_7_hit)
+{
+    wsreal_t v1[3] = {-0.031554, 1.90762, 2.05752};
+    wsreal_t v2[3] = {0.198773, 2.16528, 1.93951};
+    wsreal_t v3[3] = {-0.094749, 1.978456, 1.97181};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_7_miss)
+{
+    wsreal_t v1[3] = {-0.031554, 1.929785, 2.05752};
+    wsreal_t v2[3] = {0.198773, 2.16528, 1.93951};
+    wsreal_t v3[3] = {-0.094749, 1.978456, 1.97181};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
+}
+
+TEST(NAME, face_aabb_corner_8_hit)
+{
+    wsreal_t v1[3] = {-0.18047, 0.166927, 1.937108};
+    wsreal_t v2[3] = {0.084902, -0.02823, 2.05512};
+    wsreal_t v3[3] = {0.04554, -0.097607, 1.969404};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, face_aabb_corner_8_miss)
+{
+    wsreal_t v1[3] = {-0.18047, 0.166927, 1.937108};
+    wsreal_t v2[3] = {0.063209, -0.02823, 2.05512};
+    wsreal_t v3[3] = {0.04554, -0.097607, 1.969404};
     wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
     ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
 }

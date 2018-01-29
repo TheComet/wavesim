@@ -302,11 +302,11 @@ intersect_triangle_aabb_test(const wsreal_t v0[3], const wsreal_t v1[3], const w
 
     /* Test the three axes corresponding to the face normals of AABB b */
     /* Exit if... */
-    /* ... [-e1,e1] and [min(v1c.x,v2c.x,v3.x), max(v1c.x,v2c.x,v3.x)] do not overlap */
+    /* ... [-e0,e0] and [min(v1x,v2x,v3x), max(v1x,v2x,v3x)] do not overlap */
     if (fmax(fmax(v0c.v.x, v1c.v.x), v2c.v.x) < -e0 || fmin(fmin(v0c.v.x, v1c.v.x), v2c.v.x) > e0) return 0;
-    /* ... [-e2,e2] and [min(v1c.y,v2c.y,v3.y), max(v1c.y,v2c.y,v3.y)] do not overlap */
+    /* ... [-e1,e1] and [min(v1y,v2y,v3y), max(v1y,v2y,v3y)] do not overlap */
     if (fmax(fmax(v0c.v.y, v1c.v.y), v2c.v.y) < -e1 || fmin(fmin(v0c.v.y, v1c.v.y), v2c.v.y) > e1) return 0;
-    /* ... [-e1,e1] and [min(v1c.x,v2c.x,v3.x), max(v1c.x,v2c.x,v3.x)] do not overlap */
+    /* ... [-e2,e2] and [min(v1z,v2z,v3z), max(v1z,v2z,v3z)] do not overlap */
     if (fmax(fmax(v0c.v.z, v1c.v.z), v2c.v.z) < -e2 || fmin(fmin(v0c.v.z, v1c.v.z), v2c.v.z) > e2) return 0;
 
     /* Test separating axis corresponding to triangle face normal */
