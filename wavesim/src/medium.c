@@ -8,6 +8,72 @@
 #include <string.h>
 #include <assert.h>
 
+/* ------------------------------------------------------------------------- */
+/*!
+ * Subdivides an AABB into smaller "cells" and iterates through every cell.
+ * This function begins a new iteration. Thereafter, call iterate_cells_next()
+ * to get to the next cell.
+ * @param[out] cell The first cell to be iterated is written to this paramter.
+ * @param[in] extents The AABB to subdivide.
+ * @param[in] cell_size The x,y,z dimensions of a single cell.
+ */
+static void
+iterate_cells_begin(wsreal_t cell[6], const wsreal_t extents[6], const wsreal_t cell_size[3])
+{
+    /* Begin in lower left corner... */
+    memcpy(cell, extents, sizeof(wsreal_t)*3);
+    memcpy(cell+3, extents, sizeof(wsreal_t)*3);
+    vec3_add_vec3(cell+3, cell_size);
+}
+
+/* ------------------------------------------------------------------------- */
+/*!
+ * Subdivides an AABB into smaller "cells" and iterates through every cell.
+ * This function continues to the next cell after having begun an iteration
+ * with iterate_cells_begin().
+ * @param[out] cell The next cell AABB will be written to this parameter.
+ * @param[in] extents The AABB to subdivide.
+ * @return Returns 1 if the cell written to "cell" is still within the extents.
+ * Returns 0 if all cells have been iterated.
+ */
+static int
+iterate_cells_next(wsreal_t cell[6], const wsreal_t extents[6])
+{
+    /* Advance on the Z axis */
+    wsreal_t z_size = cell[5] - cell[2];
+    cell[2] = cell[5];
+    cell[5] += z_size;
+
+    if (cell[5] > extents[5])
+    {
+        /* Reset Z axis and advance on the Y axis */
+        wsreal_t y_size = cell[4] - cell[1];
+        cell[1] = cell[4];
+        cell[4] += y_size;
+        cell[2] = extents[2];
+        cell[5] = extents[2] + z_size;
+
+        if (cell[4] > extents[4])
+        {
+            /* Reset Y axis and advance on the X axis */
+            wsreal_t x_size = cell[3] - cell[0];
+            cell[0] = cell[3];
+            cell[3] += x_size;
+            cell[1] = extents[1];
+            cell[4] = extents[1] + y_size;
+
+            if (cell[3] > extents[3])
+            {
+                /* Done */
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
+/* ------------------------------------------------------------------------- */
 static int
 determine_cell_attribute(attribute_t* cell_attribute,
                          const octree_t* octree,
@@ -281,42 +347,21 @@ decompose_systematic_recursive(medium_t* medium,
 
             /* Iterate through all cells in the slice and confirm that these cells
              * have the same attributes as our seed cell */
-            cell = aabb(
-                AABB_AX(slice), AABB_AY(slice), AABB_AZ(slice),
-                AABB_AX(slice) + medium->grid_size.v.x,
-                AABB_AY(slice) + medium->grid_size.v.y,
-                AABB_AZ(slice) + medium->grid_size.v.z
-            );
             slice_is_same_as_seed = 1;
-            while (AABB_BX(cell) <= AABB_BX(slice))
+            iterate_cells_begin(cell.xyzxyz, slice.xyzxyz, medium->grid_size.xyz);
+            do
             {
-                while (AABB_BY(cell) <= AABB_BY(slice))
+                attribute_t cell_attribute;
+                determine_cell_attribute(&cell_attribute, octree, cell.xyzxyz);
+                if (attribute_is_same(&seed_attr, &cell_attribute) == 0)
                 {
-                    while (AABB_BZ(cell) <= AABB_BZ(slice))
-                    {
-                        attribute_t cell_attribute;
-                        determine_cell_attribute(&cell_attribute, octree, cell.xyzxyz);
-                        if (attribute_is_same(&seed_attr, &cell_attribute) == 0)
-                        {
-                            aabb_t* new_seed = vector_emplace(&potential_new_seeds);
-                            if (new_seed == NULL)
-                                goto ran_out_of_memory;
-                            *new_seed = cell;
-                            slice_is_same_as_seed = 0;
-                        }
-                        AABB_AZ(cell) += medium->grid_size.v.z;
-                        AABB_BZ(cell) += medium->grid_size.v.z;
-                    }
-                    AABB_AZ(cell) = AABB_AZ(slice); /* Reset Z coordinates for next ieration */
-                    AABB_BZ(cell) = AABB_AZ(slice) + medium->grid_size.v.z;
-                    AABB_AY(cell) += medium->grid_size.v.y;
-                    AABB_BY(cell) += medium->grid_size.v.y;
+                    aabb_t* new_seed = vector_emplace(&potential_new_seeds);
+                    if (new_seed == NULL)
+                        goto ran_out_of_memory;
+                    *new_seed = cell;
+                    slice_is_same_as_seed = 0;
                 }
-                AABB_AY(cell) = AABB_AY(slice); /* Reset Y coordinates for next iteration */
-                AABB_BY(cell) = AABB_AY(slice) + medium->grid_size.v.y;
-                AABB_AX(cell) += medium->grid_size.v.x;
-                AABB_BX(cell) += medium->grid_size.v.x;
-            }
+            } while(iterate_cells_next(cell.xyzxyz, slice.xyzxyz));
             if (slice_is_same_as_seed == 0)
             {
                 occupied_direction_flags |= direction;
@@ -403,6 +448,30 @@ medium_decompose_greedy_random(medium_t* medium,
 }
 
 /* ------------------------------------------------------------------------- */
+static int
+integrity_checks_out(const medium_t* medium, const medium_t* mediumdef)
+{
+    aabb_t cell;
+    int integrity = 1;
+    (void)mediumdef;
+    ws_log_info(&g_ws_log, "Integrity check...");
+
+    iterate_cells_begin(cell.xyzxyz, medium->boundary.xyzxyz, medium->grid_size.xyz);
+    do
+    {
+        if (medium_partition_already_occupied(medium, cell.xyzxyz))
+        {
+            integrity = 0;
+            ws_log_info(&g_ws_log, "Integrity failure, missing partition at (%f,%f,%f,%f,%f,%f)", AABB_AX(cell), AABB_AY(cell), AABB_AZ(cell), AABB_BX(cell), AABB_BY(cell), AABB_BZ(cell));
+        }
+    } while(iterate_cells_next(cell.xyzxyz, medium->boundary.xyzxyz));
+
+    if (integrity)
+        ws_log_info(&g_ws_log, "Integrity check successful");
+    return integrity;
+}
+
+/* ------------------------------------------------------------------------- */
 wsret
 medium_build_from_mesh(medium_t* medium,
                        const medium_t* mediumdef,
@@ -435,6 +504,10 @@ medium_build_from_mesh(medium_t* medium,
 
     if ((result = medium->decompose(medium, &octree, mediumdef)) != WS_OK)
         goto bail;
+
+#ifdef DEBUG
+    integrity_checks_out(medium, mediumdef);
+#endif
 
     ws_log_info(&g_ws_log, "Decomposed mesh into %d partitions", (int)vector_count(&medium->partitions));
 

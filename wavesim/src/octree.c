@@ -372,11 +372,7 @@ octree_query_potential_faces_recursive(const octree_node_t* node, vector_t* resu
 int
 octree_query_potential_faces(const octree_t* octree, vector_t* result, const wsreal_t aabb[6])
 {
-    int affected_node_count = octree_query_potential_faces_recursive(&octree->root, result, aabb);
-#ifdef DEBUG
-    ws_log_info("Octree AABB query intersected %d nodes", affected_node_count);
-#endif
-    return affected_node_count;
+    return octree_query_potential_faces_recursive(&octree->root, result, aabb);
 }
 
 /* ------------------------------------------------------------------------- */

@@ -383,3 +383,43 @@ TEST(NAME, face_aabb_corner_8_miss)
     wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
     ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(0));
 }
+
+// ----------------------------------------------------------------------------
+// Edge cases
+// ----------------------------------------------------------------------------
+
+TEST(NAME, smaller_face_lies_within_aabb_face)
+{
+    wsreal_t v1[3] = {0, 1.9, 1.9};
+    wsreal_t v2[3] = {0, 1.9, 0.1};
+    wsreal_t v3[3] = {0, 0.1, 0.1};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, larger_face_lies_within_aabb_face)
+{
+    wsreal_t v1[3] = {0, 2.1, 2.1};
+    wsreal_t v2[3] = {0, 2.1, -0.1};
+    wsreal_t v3[3] = {0, -0.1, -0.1};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, aabb_corner_touches_edge_of_face)
+{
+    wsreal_t v1[3] = {0, 3, 1};
+    wsreal_t v2[3] = {0, 1, -1};
+    wsreal_t v3[3] = {0, 3, -1};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}
+
+TEST(NAME, aabb_edge_touches_edge_of_face)
+{
+    wsreal_t v1[3] = {1, 3, 1};
+    wsreal_t v2[3] = {1, 1, -1};
+    wsreal_t v3[3] = {1, 3, -1};
+    wsreal_t bb[6] = {0, 0, 0, 2, 2, 2};
+    ASSERT_THAT(intersect_triangle_aabb_test(v1, v2, v3, bb), Eq(1));
+}

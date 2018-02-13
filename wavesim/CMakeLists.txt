@@ -164,7 +164,7 @@ add_library (wavesim_obj OBJECT
     "src/vertex.c"
     "src/wavesim.c"
     "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c"
-	${WAVESIM_HEADERS})
+    ${WAVESIM_HEADERS})
 
 set_property(TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
 
@@ -174,8 +174,12 @@ target_include_directories (wavesim_obj
         "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
         "${CMAKE_CURRENT_SOURCE_DIR}/include/extern")
 
-# The library is being built
-target_compile_definitions (wavesim_obj PRIVATE WAVESIM_BUILDING)
+target_compile_definitions (wavesim_obj
+    PRIVATE WAVESIM_BUILDING  # The library is being built
+    PRIVATE $<$<CONFIG:Debug>:
+        DEBUG
+    >
+)
 
 target_compile_options (wavesim_obj
     PUBLIC $<$<C_COMPILER_ID:MSVC>:
@@ -201,8 +205,8 @@ add_dependencies (wavesim_obj wavesim_generate_build_info)
 
 if (${WAVESIM_PYTHON})
     find_package (PythonLibs 3 REQUIRED)
-	# Headers are required for Visual Studio to list them in the project
-	file (GLOB WAVESIM_PYTHON_HEADERS "include/python/*.h")
+    # Headers are required for Visual Studio to list them in the project
+    file (GLOB WAVESIM_PYTHON_HEADERS "include/python/*.h")
     add_library (wavesim_python_obj OBJECT
         "src/python/wavesim_module.c"
         "src/python/wavesim_module_Attribute.c"
@@ -210,7 +214,7 @@ if (${WAVESIM_PYTHON})
         "src/python/wavesim_module_Mesh.c"
         "src/python/wavesim_module_MeshIterator.c"
         "src/python/wavesim_module_Vertex.c"
-		${WAVESIM_PYTHON_HEADERS})
+        ${WAVESIM_PYTHON_HEADERS})
     set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_python_obj
         PRIVATE
@@ -230,9 +234,12 @@ if (${WAVESIM_PYTHON})
             -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers -Wshadow
         >
     )
-    
-    # The library is being built
-    target_compile_definitions (wavesim_python_obj PRIVATE WAVESIM_BUILDING)
+    target_compile_definitions (wavesim_obj
+        PRIVATE WAVESIM_BUILDING  # The library is being built
+        PRIVATE $<$<CONFIG:Debug>:
+            DEBUG
+        >
+    )
 endif ()
 
 ###############################################################################
@@ -298,9 +305,12 @@ if (${WAVESIM_TESTS})
             -Wno-unused-result
         >
     )
-    
-    # The library is being built
-    target_compile_definitions (wavesim_tests_obj PRIVATE WAVESIM_BUILDING)
+    target_compile_definitions (wavesim_obj
+        PRIVATE WAVESIM_BUILDING  # The library is being built
+        PRIVATE $<$<CONFIG:Debug>:
+            DEBUG
+        >
+    )
 endif ()
 
 ###############################################################################

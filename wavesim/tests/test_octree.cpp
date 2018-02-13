@@ -101,12 +101,12 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
     ASSERT_THAT(octree_face_count(o), Eq(14));
 }
 
-/*
+
 TEST_F(NAME, from_cube_obj)
 {
     mesh_create(&m);
     obj_import_mesh("../wavesim/models/cube.obj", m);
-    octree_build_from_mesh(o, m, vec3(1, 1, 1));
+    octree_build_from_mesh(o, m, 5);
     obj_export_octree("octree.from_cube_obj.obj", o);
 }
 
@@ -114,6 +114,7 @@ TEST_F(NAME, from_high_ceiling_obj)
 {
     mesh_create(&m);
     EXPECT_THAT(obj_import_mesh("../wavesim/models/high-ceiling.obj", m), Eq(WS_OK));
-    octree_build_from_mesh(o, m, vec3(2, 2, 2));
+    octree_build_from_mesh(o, m, 3);
     obj_export_octree("octree.from_high_ceiling_obj.obj", o);
-}*/
+}
+
