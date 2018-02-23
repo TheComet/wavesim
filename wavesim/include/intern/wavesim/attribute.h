@@ -2,6 +2,7 @@
 #define ATTRIBUTE_H
 
 #include "wavesim/config.h"
+#include "wavesim/vec3.h"
 
 C_BEGIN
 
@@ -10,9 +11,12 @@ C_BEGIN
  */
 typedef struct attribute_t
 {
+    /* Values between 0.0 and 1.0, where reflection + transmission + absorption = 1 */
     wsreal_t reflection;
     wsreal_t transmission;
     wsreal_t absorption;
+    /*  */
+    vec3_t   velocity;
 } attribute_t;
 
 WAVESIM_PRIVATE_API attribute_t

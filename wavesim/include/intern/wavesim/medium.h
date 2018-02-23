@@ -65,6 +65,9 @@ medium_build_from_mesh(medium_t* medium,
                        const mesh_t* mesh,
                        const wsreal_t grid_size[3]);
 
+#define medium_partition_count(medium) \
+        vector_count(&(medium)->partitions)
+
 C_END
 
 #endif /* PARTITION_H */

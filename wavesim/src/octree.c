@@ -265,7 +265,8 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth)
      * WARNING: This is a pretty terrible hack; we manually set up the index
      * buffer vector to point to the mesh's index buffer, instead of allocating
      * and copying all of the indices. The root node's IB is identical to the
-     * mesh's IB and we save memory by avoiding a copy.
+     * mesh's IB and we save memory by avoiding a copy. Just be extra careful
+     * not to delete this vector at any point.
      */
     octree->mesh = mesh;
     octree->root.aabb = mesh->aabb;
