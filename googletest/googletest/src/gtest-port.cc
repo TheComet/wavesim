@@ -663,7 +663,7 @@ bool AtomMatchesChar(bool escaped, char pattern_char, char ch) {
 }
 
 // Helper function used by ValidateRegex() to format error messages.
-std::string FormatRegexSyntaxError(const char* regex, int index) {
+static std::string FormatRegexSyntaxError(const char* regex, int index) {
   return (Message() << "Syntax error at index " << index
           << " in simple regular expression \"" << regex << "\": ").GetString();
 }
@@ -915,6 +915,7 @@ GTestLog::~GTestLog() {
     posix::Abort();
   }
 }
+
 // Disable Microsoft deprecation warnings for POSIX functions called from
 // this class (creat, dup, dup2, and close)
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4996)
@@ -1007,7 +1008,8 @@ static CapturedStream* g_captured_stderr = NULL;
 static CapturedStream* g_captured_stdout = NULL;
 
 // Starts capturing an output stream (stdout/stderr).
-void CaptureStream(int fd, const char* stream_name, CapturedStream** stream) {
+static void CaptureStream(int fd, const char* stream_name,
+                          CapturedStream** stream) {
   if (*stream != NULL) {
     GTEST_LOG_(FATAL) << "Only one " << stream_name
                       << " capturer can exist at a time.";
@@ -1016,7 +1018,7 @@ void CaptureStream(int fd, const char* stream_name, CapturedStream** stream) {
 }
 
 // Stops capturing the output stream and returns the captured string.
-std::string GetCapturedStream(CapturedStream** captured_stream) {
+static std::string GetCapturedStream(CapturedStream** captured_stream) {
   const std::string content = (*captured_stream)->GetCapturedString();
 
   delete *captured_stream;
@@ -1046,6 +1048,10 @@ std::string GetCapturedStderr() {
 }
 
 #endif  // GTEST_HAS_STREAM_REDIRECTION
+
+
+
+
 
 size_t GetFileSize(FILE* file) {
   fseek(file, 0, SEEK_END);
