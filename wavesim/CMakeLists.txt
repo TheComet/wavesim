@@ -220,7 +220,7 @@ add_dependencies (wavesim_obj wavesim_generate_build_info)
 # Python bindings
 ###############################################################################
 
-if (${WAVESIM_PYTHON})
+if (WAVESIM_PYTHON)
     find_package (PythonLibs 3 REQUIRED)
     # Headers are required for Visual Studio to list them in the project
     file (GLOB WAVESIM_PYTHON_HEADERS "include/python/*.h")
@@ -263,12 +263,13 @@ endif ()
 # Unit tests
 ###############################################################################
 
-if (${WAVESIM_TESTS})
-    add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
+if (WAVESIM_TESTS)
     add_library (wavesim_tests_obj OBJECT
+        "googletest/src/gtest-all.cc"
+        "googlemock/src/gmock-all.cc"
         "tests/environment_util_global.cpp"
         "tests/utils.cpp"
-        "tests/api.cpp"
+        "tests/api_stub.c"
         "tests/test_aabb.cpp"
         "tests/test_attribute.cpp"
         "tests/test_btree.cpp"
@@ -285,7 +286,7 @@ if (${WAVESIM_TESTS})
         "tests/test_vertex.cpp"
         $<$<BOOL:${WAVESIM_PYTHON}>:
             ${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp>)
-    if (${WAVESIM_PYTHON})
+    if (WAVESIM_PYTHON)
         file (GLOB PYTHON_TEST_SOURCE_FILES "tests/python/*.py")
         set (GENERATE_PYTHON_TESTS_CMD ${CMAKE_COMMAND}
             -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
@@ -307,8 +308,10 @@ if (${WAVESIM_TESTS})
             "${CMAKE_CURRENT_BINARY_DIR}/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
             "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googlemock"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googlemock/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googletest"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googletest/include"
             $<$<BOOL:${WAVESIM_PYTHON}>:${PYTHON_INCLUDE_DIRS}>)
     target_compile_options (wavesim_tests_obj
         PUBLIC $<$<C_COMPILER_ID:MSVC>:
@@ -349,7 +352,6 @@ target_include_directories (wavesim
         $<INSTALL_INTERFACE:include>)
 
 if (WAVESIM_TESTS)
-    target_link_libraries (wavesim PRIVATE gtest)
     add_executable (wavesim_tests "tests/app.c")
     target_link_libraries (wavesim_tests wavesim)
     set_target_properties (wavesim_tests PROPERTIES

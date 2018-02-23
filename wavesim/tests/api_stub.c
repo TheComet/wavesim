@@ -1,5 +1,5 @@
 #include "wavesim/wavesim.h"
-#include "stdio.h"
+#include <stdio.h>
 
 /* ------------------------------------------------------------------------- */
 wsret
