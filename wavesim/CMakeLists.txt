@@ -263,7 +263,6 @@ endif ()
 # Unit tests
 ###############################################################################
 
-set (TEST_SOURCES "tests/api_stub.c")
 if (${WAVESIM_TESTS})
     add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
     add_library (wavesim_tests_obj OBJECT
@@ -349,8 +348,7 @@ target_include_directories (wavesim
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
         $<INSTALL_INTERFACE:include>)
 
-if (${WAVESIM_TESTS})
-    target_link_libraries (wavesim PRIVATE gmock)
+if (WAVESIM_TESTS)
     target_link_libraries (wavesim PRIVATE gtest)
     add_executable (wavesim_tests "tests/app.c")
     target_link_libraries (wavesim_tests wavesim)
@@ -360,7 +358,7 @@ if (${WAVESIM_TESTS})
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
-if (${WAVESIM_PYTHON})
+if (WAVESIM_PYTHON)
     target_link_libraries (wavesim PRIVATE ${PYTHON_LIBRARIES})
 endif()
 
