@@ -25,6 +25,12 @@ WAVESIM_PUBLIC_API int
 wavesim_deinit(void);
 
 /*!
+ * @brief Returns non-zero if the library is initialized. 0 if not initialized.
+ */
+WAVESIM_PUBLIC_API int
+wavesim_is_initialized(void);
+
+/*!
  * @brief Runs all unit tests in the library.
  * @param[in] argv Command line arguments are passed on to googletest/mock
  */

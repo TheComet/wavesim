@@ -252,7 +252,7 @@ if (WAVESIM_PYTHON)
             -Wall -Wextra -Werror -pedantic -pedantic-errors -Wno-missing-field-initializers -Wshadow
         >
     )
-    target_compile_definitions (wavesim_obj
+    target_compile_definitions (wavesim_python_obj
         PRIVATE WAVESIM_BUILDING  # The library is being built
         PRIVATE $<$<CONFIG:Debug>:
             DEBUG
@@ -270,7 +270,7 @@ if (WAVESIM_TESTS)
         "googlemock/src/gmock-all.cc"
         "tests/environment_util_global.cpp"
         "tests/utils.cpp"
-        "tests/api_stub.c"
+        "tests/api.cpp"
         "tests/test_aabb.cpp"
         "tests/test_attribute.cpp"
         "tests/test_btree.cpp"
@@ -303,35 +303,40 @@ if (WAVESIM_TESTS)
             DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp")
         add_dependencies (wavesim_tests_obj wavesim_generate_unit_tests)
     endif ()
-    set_property (TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_tests_obj
         PRIVATE
-            "${CMAKE_CURRENT_BINARY_DIR}/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
             "${CMAKE_CURRENT_SOURCE_DIR}/googlemock"
             "${CMAKE_CURRENT_SOURCE_DIR}/googlemock/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/googletest"
             "${CMAKE_CURRENT_SOURCE_DIR}/googletest/include"
             $<$<BOOL:${WAVESIM_PYTHON}>:${PYTHON_INCLUDE_DIRS}>)
-    target_compile_options (wavesim_tests_obj
-        PUBLIC $<$<C_COMPILER_ID:MSVC>:
-            /MTd /D_CRT_SECURE_NO_DEPRECATE
-        >
-        PUBLIC $<$<C_COMPILER_ID:GNU>:
-            -Wno-unused-result
-        >
-        PUBLIC $<$<C_COMPILER_ID:Clang>:
-            -Wno-unused-result
-        >
-    )
-    target_compile_definitions (wavesim_obj
-        PRIVATE WAVESIM_BUILDING  # The library is being built
-        PRIVATE $<$<CONFIG:Debug>:
-            DEBUG
-        >
-    )
+else ()
+    add_library (wavesim_tests_obj OBJECT "tests/api_stub.c")
 endif ()
+
+set_property (TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
+target_compile_options (wavesim_tests_obj
+    PUBLIC $<$<C_COMPILER_ID:MSVC>:
+        /MTd /D_CRT_SECURE_NO_DEPRECATE
+    >
+    PUBLIC $<$<C_COMPILER_ID:GNU>:
+        -Wno-unused-result
+    >
+    PUBLIC $<$<C_COMPILER_ID:Clang>:
+        -Wno-unused-result
+    >
+)
+target_include_directories (wavesim_tests_obj
+    PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/extern")
+target_compile_definitions (wavesim_tests_obj
+    PRIVATE WAVESIM_BUILDING  # The library is being built
+    PRIVATE $<$<CONFIG:Debug>:
+        DEBUG
+    >
+)
 
 ###############################################################################
 # The actual wavesim library

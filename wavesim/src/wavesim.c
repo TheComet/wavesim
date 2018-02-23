@@ -6,7 +6,7 @@ static int g_was_initialised = 0;
 
 /* ------------------------------------------------------------------------- */
 wsret
-wavesim_init()
+wavesim_init(void)
 {
     if (g_was_initialised)
     {
@@ -26,7 +26,7 @@ wavesim_init()
 
 /* ------------------------------------------------------------------------- */
 int
-wavesim_deinit()
+wavesim_deinit(void)
 {
     if (!g_was_initialised)
         return 0;
@@ -36,4 +36,11 @@ wavesim_deinit()
 
     g_was_initialised = 0;
     return memory_deinit();
+}
+
+/* ------------------------------------------------------------------------- */
+int
+wavesim_is_initialized(void)
+{
+    return g_was_initialised;
 }
