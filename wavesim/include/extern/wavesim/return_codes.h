@@ -3,6 +3,8 @@
 
 #include "wavesim/config.h"
 
+#define WSRET(code) return wsret_wrapper(code)
+
 C_BEGIN
 
 typedef enum wsret
@@ -25,8 +27,6 @@ wsret_to_string(wsret code);
 
 WAVESIM_PUBLIC_API wsret
 wsret_wrapper(wsret code);
-
-#define WSRET(code) return wsret_wrapper(code)
 
 C_END
 

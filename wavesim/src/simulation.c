@@ -184,6 +184,6 @@ simulation_advance(simulation_state_t* state, wsreal_t dt)
 wsret
 simulation_execute(simulation_t* simulation)
 {
-    simulation_advance(simulation->state);
+    simulation_advance(simulation->state, 1e-3);
     return WS_OK;
 }

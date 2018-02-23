@@ -1,8 +1,9 @@
 #ifndef WAVESIM_OBJ_H
 #define WAVESIM_OBJ_H
 
-#include "wavesim/config.h"
 #include "wavesim/btree.h"
+#include "wavesim/config.h"
+#include "wavesim/return_codes.h"
 #include <stdio.h>
 
 C_BEGIN

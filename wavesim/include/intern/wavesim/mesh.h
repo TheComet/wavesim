@@ -1,10 +1,10 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "wavesim/config.h"
 #include "wavesim/aabb.h"
-#include "wavesim/vector.h"
+#include "wavesim/config.h"
 #include "wavesim/face.h"
+#include "wavesim/vector.h"
 
 C_BEGIN
 

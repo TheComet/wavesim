@@ -12,6 +12,8 @@ include (CheckIncludeFiles)
 include (CheckCSourceCompiles)
 include (CMakeDependentOption)
 
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 ###############################################################################
 # Library options and config
 ###############################################################################
@@ -25,13 +27,15 @@ endif ()
 set (PROJECT_NAME "WAVESIM")  # Required for export.h.in
 option (WAVESIM_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." off)
 set (WAVESIM_BUILD_TYPE "SHARED" CACHE STRING "Whether to build as shared or static")
-option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage reports" ${DEBUG_FEATURES})
 option (WAVESIM_MEMORY_BACKTRACE "Generates backtraces to each malloc call that doesn't get matched to a free. Impacts performance, but can help track down memory leaks easily." ${DEBUG_FEATURES})
-option (WAVESIM_PYTHON "Build python bindings. The library must be shared." ON)
+option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage reports" ${DEBUG_FEATURES})
 option (WAVESIM_PIC "Position independent code when building as a static library" ON)
 set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
 option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
+option (WAVESIM_PYTHON "Build python bindings. The library must be shared." ON)
 option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ${DEBUG_FEATURES})
+option (WAVESIM_USE_SYSTEM_FFTW "Forces wavesim to use the system fftw library. If it is not present, an error is thrown." OFF)
+option (WAVESIM_PREFER_SYSTEM_FFTW "If fftw is installed on the host system, wavesim will prefer using it over building fftw internally. If this option is disabled, then the internal fftw library is always built." OFF)
 
 string (REPLACE " " "_" WS_PRECISION_CAPS_AND_NO_SPACES ${WAVESIM_PRECISION})
 string (TOUPPER ${WS_PRECISION_CAPS_AND_NO_SPACES} WS_PRECISION_CAPS_AND_NO_SPACES)
@@ -110,16 +114,29 @@ else ()
     message (WARNING "Git not found. Build will not contain git revision info.")
 endif ()
 
+set (FFTW_FOUND "")
+if (WAVESIM_PREFER_SYSTEM_FFTW OR WAVESIM_USE_SYSTEM_FFTW)
+    set (WAVESIM_FFTW_REQUIRED "")
+    if (WAVESIM_USE_SYSTEM_FFTW)
+        set (WAVESIM_FFTW_REQUIRED "REQUIRED")
+    endif ()
+    find_package (FFTW ${WAVESIM_FFTW_REQUIRED})
+endif ()
+if (NOT FFTW_FOUND)
+    add_subdirectory ("../fftw-3.3.7" "${CMAKE_CURRENT_BINARY_DIR}/fftw-3.3.7")
+    set (FFTW_LIBRARIES fftw3)
+    set (FFTW_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../fftw-3.3.7/api")
+    set_property (TARGET fftw3 PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
+endif ()
+
 set (WAVESIM_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 configure_file ("src/build_info.c.in" "src/build_info.c")
-configure_file ("include/intern/wavesim/export.h.in"
-                "include/wavesim/export.h")
 configure_file ("include/intern/wavesim/config.h.in"
                 "include/wavesim/config.h")
 
 ###############################################################################
-# source files and library definitionvector_count(&octree->faces)
+# source files and library definitions
 ###############################################################################
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
@@ -166,13 +183,14 @@ add_library (wavesim_obj OBJECT
     "src/platform/${PLATFORM_SOURCE_DIR}/backtrace.c"
     ${WAVESIM_HEADERS})
 
-set_property(TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
+set_property (TARGET wavesim_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
 
 target_include_directories (wavesim_obj
     PRIVATE
         "${CMAKE_CURRENT_BINARY_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/extern")
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
+        "${FFTW_INCLUDE_DIRS}")
 
 target_compile_definitions (wavesim_obj
     PRIVATE WAVESIM_BUILDING  # The library is being built
@@ -203,7 +221,7 @@ add_dependencies (wavesim_obj wavesim_generate_build_info)
 # Python bindings
 ###############################################################################
 
-if (${WAVESIM_PYTHON})
+if (WAVESIM_PYTHON)
     find_package (PythonLibs 3 REQUIRED)
     # Headers are required for Visual Studio to list them in the project
     file (GLOB WAVESIM_PYTHON_HEADERS "include/python/*.h")
@@ -215,7 +233,7 @@ if (${WAVESIM_PYTHON})
         "src/python/wavesim_module_MeshIterator.c"
         "src/python/wavesim_module_Vertex.c"
         ${WAVESIM_PYTHON_HEADERS})
-    set_property(TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
+    set_property (TARGET wavesim_python_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_python_obj
         PRIVATE
             "${CMAKE_CURRENT_BINARY_DIR}/include"
@@ -246,13 +264,13 @@ endif ()
 # Unit tests
 ###############################################################################
 
-set (TEST_SOURCES "tests/api_stub.c")
-if (${WAVESIM_TESTS})
-    add_subdirectory ("../googletest" "${CMAKE_CURRENT_BINARY_DIR}/googletest")
+if (WAVESIM_TESTS)
     add_library (wavesim_tests_obj OBJECT
+        "googletest/src/gtest-all.cc"
+        "googlemock/src/gmock-all.cc"
         "tests/environment_util_global.cpp"
         "tests/utils.cpp"
-        "tests/api.cpp"
+        "tests/api_stub.c"
         "tests/test_aabb.cpp"
         "tests/test_attribute.cpp"
         "tests/test_btree.cpp"
@@ -269,7 +287,7 @@ if (${WAVESIM_TESTS})
         "tests/test_vertex.cpp"
         $<$<BOOL:${WAVESIM_PYTHON}>:
             ${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp>)
-    if (${WAVESIM_PYTHON})
+    if (WAVESIM_PYTHON)
         file (GLOB PYTHON_TEST_SOURCE_FILES "tests/python/*.py")
         set (GENERATE_PYTHON_TESTS_CMD ${CMAKE_COMMAND}
             -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
@@ -285,14 +303,16 @@ if (${WAVESIM_TESTS})
             DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/tests/python/test_python_bindings.cpp")
         add_dependencies (wavesim_tests_obj wavesim_generate_unit_tests)
     endif ()
-    set_property(TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
+    set_property (TARGET wavesim_tests_obj PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
     target_include_directories (wavesim_tests_obj
         PRIVATE
             "${CMAKE_CURRENT_BINARY_DIR}/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/include/intern"
             "${CMAKE_CURRENT_SOURCE_DIR}/include/extern"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include/"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include/"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googlemock"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googlemock/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googletest"
+            "${CMAKE_CURRENT_SOURCE_DIR}/googletest/include"
             $<$<BOOL:${WAVESIM_PYTHON}>:${PYTHON_INCLUDE_DIRS}>)
     target_compile_options (wavesim_tests_obj
         PUBLIC $<$<C_COMPILER_ID:MSVC>:
@@ -331,9 +351,9 @@ target_include_directories (wavesim
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
         $<INSTALL_INTERFACE:include>)
+target_link_libraries (wavesim PRIVATE ${FFTW_LIBRARIES})
 
-if (${WAVESIM_TESTS})
-    target_link_libraries (wavesim PRIVATE gmock)
+if (WAVESIM_TESTS)
     add_executable (wavesim_tests "tests/app.c")
     target_link_libraries (wavesim_tests wavesim)
     set_target_properties (wavesim_tests PROPERTIES
@@ -342,7 +362,7 @@ if (${WAVESIM_TESTS})
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif ()
 
-if (${WAVESIM_PYTHON})
+if (WAVESIM_PYTHON)
     target_link_libraries (wavesim PRIVATE ${PYTHON_LIBRARIES})
 endif()
 

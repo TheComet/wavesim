@@ -1,8 +1,8 @@
 #ifndef MESH_BUILDER_H
 #define MESH_BUILDER_H
 
-#include "wavesim/config.h"
 #include "wavesim/aabb.h"
+#include "wavesim/config.h"
 #include "wavesim/vector.h"
 
 C_BEGIN

@@ -1,9 +1,10 @@
 #ifndef PARTITION_H
 #define PARTITION_H
 
-#include "wavesim/config.h"
-#include "wavesim/vector.h"
 #include "wavesim/aabb.h"
+#include "wavesim/config.h"
+#include "wavesim/return_codes.h"
+#include "wavesim/vector.h"
 
 C_BEGIN
 
