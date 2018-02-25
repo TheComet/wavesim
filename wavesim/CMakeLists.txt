@@ -158,6 +158,8 @@ file (GLOB WAVESIM_HEADERS "include/extern/wavesim/*.h" "include/intern/wavesim/
 add_library (wavesim_obj OBJECT
     "src/aabb.c"
     "src/attribute.c"
+    "src/audio_source.c"
+    "src/audio_listener.c"
     "src/btree.c"
     "${CMAKE_CURRENT_BINARY_DIR}/src/build_info.c"
     "src/face.c"

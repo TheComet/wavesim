@@ -1,5 +1,6 @@
-#include "wavesim/simulation.h"
+#include "wavesim/audio_source.h"
 #include "wavesim/memory.h"
+#include "wavesim/simulation.h"
 #include "wavesim/vector.h"
 #include "wavesim/vec3.h"
 #include <math.h>
@@ -19,20 +20,20 @@ typedef struct partition_state_t
 
 typedef struct simulation_state_t
 {
-    vector_t partitions[3]; /* partition_state_t */
+    partition_state_t* partition_states[3];  /* We store the states over 3 time steps */
     int time_step_mode_idx;
     wsreal_t time;
 } simulation_state_t;
 
 /* ------------------------------------------------------------------------- */
 wsret
-simulation_create(simulation_t** simulation, const medium_t* medium)
+simulation_create(simulation_t** simulation)
 {
     *simulation = MALLOC(sizeof **simulation);
     if (*simulation == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
 
-    simulation_construct(*simulation, medium);
+    simulation_construct(*simulation);
     return WS_OK;
 }
 
@@ -46,9 +47,9 @@ simulation_destroy(simulation_t* simulation)
 
 /* ------------------------------------------------------------------------- */
 void
-simulation_construct(simulation_t* simulation, const medium_t* medium)
+simulation_construct(simulation_t* simulation)
 {
-    simulation->medium = medium;
+    (void)simulation;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -59,34 +60,79 @@ simulation_destruct(simulation_t* simulation)
 }
 
 /* ------------------------------------------------------------------------- */
+WAVESIM_PUBLIC_API void
+simulation_set_medium(simulation_t* simulation, medium_t* medium)
+{
+    simulation->medium = medium;
+}
+
+/* ------------------------------------------------------------------------- */
+WAVESIM_PUBLIC_API void
+simulation_set_audio_source(simulation_t* simulation, audio_source_t* as)
+{
+    simulation->audio_source = as;
+}
+
+/* ------------------------------------------------------------------------- */
+WAVESIM_PUBLIC_API void
+simulation_set_listener(simulation_t* simulation, audio_listener_t* al)
+{
+    simulation->audio_listener = al;
+}
+
+/* ------------------------------------------------------------------------- */
 wsret
 simulation_prepare(simulation_t* simulation)
 {
-    size_t i;
-    int t;
-    simulation_state_t* state;
-    size_t partition_count = medium_partition_count(simulation->medium);
+    /*
+     * FFTW results are different than MATLAB's:
+     *   https://www.dsprelated.com/showthread/comp.dsp/93988-1.php
+     */
 
-    assert(simulation->medium != NULL);
+    simulation_state_t* state;
+    /*fftw_iodim dims;*/
+    /*size_t partition_count;*/
+    /*size_t total_cell_count;*/
+
+    if (simulation->medium == NULL)
+        WSRET(WS_ERR_SIM_MEDIUM_NOT_SET);
+    if (simulation->audio_source == NULL)
+        WSRET(WS_ERR_SIM_AUDIO_SOURCE_NOT_SET);
+    if (simulation->audio_listener == NULL)
+        WSRET(WS_ERR_SIM_AUDIO_LISTENER_NOT_SET);
 
     state = simulation->state = MALLOC(sizeof(simulation_state_t));
     if (simulation->state == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
 
     /*
+     * To avoid having to allocate memory millions of times, count the total
+     * amount of cells in the scene, count the total number of partitions in
+     * the scene, and then allocate two buffers and divide the memory up
+     * appropriately.
+     */
+    /*partition_count = medium_partition_count(simulation->medium);*/
+
+    /*total_cell_count = 0;*/
+    VECTOR_FOR_EACH(&simulation->medium->partitions, medium_partition_t, partition)
+    VECTOR_END_EACH
+
+    /*
      * Allocate a 3-dimensional array that can hold all modes (x, y, z) over
      * 3 time steps.
-     */
+     *
     for (t = 0; t != 3; ++t)
     {
-        vector_construct(&state->partitions[t], sizeof(partition_state_t));
-        vector_resize(&state->partitions[t], partition_count);
+        vector_construct(&state->partition_states[t], sizeof(partition_state_t));
+        if (vector_resize(&state->partition_states[t], partition_count) == VECTOR_ERROR)
+            WSRET(WS_ERR_OUT_OF_MEMORY);
+
         for (i = 0; i != partition_count; ++i)
         {
             medium_partition_t* partition = vector_get_element(&simulation->medium->partitions, i);
-            partition_state_t* partition_state = vector_get_element(&state->partitions[t], i);
+            partition_state_t* partition_state = vector_get_element(&state->partition_states[t], i);
 
-            /* calculate the number of cells in each dimension and allocate flat array */
+            * calculate the number of cells in each dimension and allocate flat array *
             fftw_iodim dims[3] = {{0, 1, 1}, {0, 1, 1}, {0, 1, 1}};
             vec3_t cell_count = AABB_DIMS(partition->aabb);
             vec3_div_scalar(cell_count.xyz, simulation->cell_size);
@@ -95,7 +141,7 @@ simulation_prepare(simulation_t* simulation)
             dims[2].n = partition_state->dims[2] = (int)ceil(cell_count.v.z);
             partition_state->modes = fftw_malloc((size_t)(dims[0].n * dims[1].n * dims[2].n));
 
-            /* Create plans */
+            * Create plans *
             {
                 fftw_iodim howmany_dims[1] = {{1, 1, 1}};
                 fftw_r2r_kind dct_kind[1] = {FFTW_RODFT10};
@@ -112,14 +158,14 @@ simulation_prepare(simulation_t* simulation)
                     idct_kind, FFTW_MEASURE);
             }
 
-            /* Initialize all modes to 0 */
+            * Initialize all modes to 0 *
             {
                 int x;
                 for (x = 0; x != dims[0].n * dims[1].n * dims[2].n; ++x)
                     partition_state->modes[x] = 0.0;
             }
         }
-    }
+    }*/
 
     /* Initialize a few other things */
     state->time_step_mode_idx = 0;
@@ -132,6 +178,8 @@ simulation_prepare(simulation_t* simulation)
 void
 simulation_finalize(simulation_t* simulation)
 {
+    (void)simulation;
+    /*
     size_t i;
     int t;
     simulation_state_t* state = simulation->state;
@@ -140,50 +188,45 @@ simulation_finalize(simulation_t* simulation)
 
     for (t = 0; t != 3; ++t)
     {
-        for (i = 0; i != vector_count(&state->partitions[t]); ++i)
+        for (i = 0; i != vector_count(&state->partition_states[t]); ++i)
         {
-            partition_state_t* partition_state = vector_get_element(&state->partitions[t], i);
+            partition_state_t* partition_state = vector_get_element(&state->partition_states[t], i);
             fftw_destroy_plan(partition_state->dct_plan);
             fftw_destroy_plan(partition_state->idct_plan);
             fftw_free(partition_state->modes);
         }
-        vector_clear_free(&state->partitions[t]);
+        vector_clear_free(&state->partition_states[t]);
     }
 
     FREE(state);
-    simulation->state = NULL;
+    simulation->state = NULL;*/
 }
 
 /* ------------------------------------------------------------------------- */
 void
-simulation_advance(simulation_state_t* state, wsreal_t dt)
+simulation_advance(simulation_t* simulation)
 {
+    (void)simulation;
+    /*
     size_t part_idx;
     int idx[3];
     int i;
+    simulation_state_t* state = simulation->state;
 
     idx[0] = (state->time_step_mode_idx - 1) % 3;
     idx[1]= state->time_step_mode_idx;
     idx[2] = (state->time_step_mode_idx + 1) % 3;
     state->time_step_mode_idx = idx[2];
 
-    for (part_idx = 0; part_idx != vector_count(&state->partitions[0]); ++part_idx)
+    for (part_idx = 0; part_idx != vector_count(&state->partition_states[0]); ++part_idx)
     {
-        partition_state_t* prev_state = vector_get_element(&state->partitions[idx[0]], part_idx);
-        partition_state_t* curr_state = vector_get_element(&state->partitions[idx[1]], part_idx);
-        partition_state_t* next_state = vector_get_element(&state->partitions[idx[2]], part_idx);
+        partition_state_t* prev_state = vector_get_element(&state->partition_states[idx[0]], part_idx);
+        partition_state_t* curr_state = vector_get_element(&state->partition_states[idx[1]], part_idx);
+        partition_state_t* next_state = vector_get_element(&state->partition_states[idx[2]], part_idx);
 
         for (i = 0; i != next_state->dims[0]*next_state->dims[1]*next_state->dims[2]; ++i)
         {
-            next_state->modes[i] = 2*curr_state->modes[i]*cos(dt) - prev_state->modes[i] + /*TODO*/(1.0 - cos(dt));
+            next_state->modes[i] = 2*curr_state->modes[i]*cos(simulation->dt) - prev_state->modes[i] + (1.0 - cos(simulation->dt));
         }
-    }
-}
-
-/* ------------------------------------------------------------------------- */
-wsret
-simulation_execute(simulation_t* simulation)
-{
-    simulation_advance(simulation->state, 1e-3);
-    return WS_OK;
+    }*/
 }

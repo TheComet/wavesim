@@ -78,7 +78,7 @@ vector_clear_free(vector_t* vector);
  * size will be decreased.
  * @param[in] vector The vector to resize.
  * @param[in] size The new size of the vector.
- * @return Returns -1 on failure, 0 on success.
+ * @return Returns VECTOR_ERROR on failure, 0 on success.
  */
 WAVESIM_PRIVATE_API size_t
 vector_resize(vector_t* vector, size_t size);
