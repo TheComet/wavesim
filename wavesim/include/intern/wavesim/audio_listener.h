@@ -20,6 +20,12 @@ typedef struct audio_listener_t
 
 } audio_listener_t;
 
+WAVESIM_PRIVATE_API wsret
+audio_listener_create(audio_listener_t** al);
+
+WAVESIM_PRIVATE_API void
+audio_listener_destroy(audio_listener_t* al);
+
 WAVESIM_PRIVATE_API void
 audio_listener_construct(audio_listener_t* al);
 

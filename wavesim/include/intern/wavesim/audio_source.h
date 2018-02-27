@@ -34,6 +34,12 @@ typedef struct audio_source_t
 
 } audio_source_t;
 
+WAVESIM_PRIVATE_API wsret
+audio_source_create(audio_source_t** as);
+
+WAVESIM_PRIVATE_API void
+audio_source_destroy(audio_source_t* as);
+
 WAVESIM_PRIVATE_API void
 audio_source_construct(audio_source_t* as);
 

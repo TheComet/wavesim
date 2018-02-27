@@ -161,7 +161,7 @@ intersect_line_triangle_barycentric(wsreal_t result[3],
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API int
+int
 intersect_line_triangle_cartesian(wsreal_t result[3],
                                   const wsreal_t p0[3], const wsreal_t p1[3],
                                   const wsreal_t v0[3], const wsreal_t v1[3], const wsreal_t v2[3])

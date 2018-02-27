@@ -2,6 +2,25 @@
 #include "wavesim/memory.h"
 
 /* ------------------------------------------------------------------------- */
+wsret
+audio_source_create(audio_source_t** al)
+{
+    *al = MALLOC(sizeof(audio_source_t));
+    if (*al == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    audio_source_construct(*al);
+    return WS_OK;
+}
+
+/* ------------------------------------------------------------------------- */
+void
+audio_source_destroy(audio_source_t* al)
+{
+    audio_source_destruct(al);
+    FREE(al);
+}
+
+/* ------------------------------------------------------------------------- */
 void
 audio_source_construct(audio_source_t* as)
 {

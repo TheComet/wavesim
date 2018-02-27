@@ -1,4 +1,24 @@
 #include "wavesim/audio_listener.h"
+#include "wavesim/memory.h"
+
+/* ------------------------------------------------------------------------- */
+wsret
+audio_listener_create(audio_listener_t** al)
+{
+    *al = MALLOC(sizeof(audio_listener_t));
+    if (*al == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    audio_listener_construct(*al);
+    return WS_OK;
+}
+
+/* ------------------------------------------------------------------------- */
+void
+audio_listener_destroy(audio_listener_t* al)
+{
+    audio_listener_destruct(al);
+    FREE(al);
+}
 
 /* ------------------------------------------------------------------------- */
 void
@@ -17,7 +37,7 @@ audio_listener_destruct(audio_listener_t* al)
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API void
+void
 audio_listener_reset(audio_listener_t* al)
 {
     al->t = 0;

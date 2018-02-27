@@ -40,7 +40,7 @@ WAVESIM_PUBLIC_API void
 simulation_set_audio_source(simulation_t* simulation, audio_source_t* as);
 
 WAVESIM_PUBLIC_API void
-simulation_set_listener(simulation_t* simulation, audio_listener_t* al);
+simulation_set_audio_listener(simulation_t* simulation, audio_listener_t* al);
 
 WAVESIM_PUBLIC_API void
 simulation_set_resolution(simulation_t* simulation, wsreal_t max_frequency, wsreal_t cell_tolerance);
