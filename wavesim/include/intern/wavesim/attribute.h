@@ -16,14 +16,18 @@ typedef struct attribute_t
     wsreal_t transmission;
     wsreal_t absorption;
     /*  */
+    wsreal_t sound_velocity;
     vec3_t   velocity;
 } attribute_t;
 
 WAVESIM_PRIVATE_API attribute_t
-attribute(wsreal_t reflection, wsreal_t transmission, wsreal_t absorption);
+attribute(wsreal_t reflection, wsreal_t transmission, wsreal_t absorption, wsreal_t sound_velocity, vec3_t velocity);
 
 WAVESIM_PRIVATE_API attribute_t
-attribute_default(void);
+attribute_default_solid(void);
+
+WAVESIM_PRIVATE_API attribute_t
+attribute_default_air(void);
 
 WAVESIM_PRIVATE_API void
 attribute_set_default_solid(attribute_t* attribute);

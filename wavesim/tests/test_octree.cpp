@@ -38,14 +38,14 @@ TEST_F(NAME, large_and_small_triangles)
 {
     mesh_builder_t* mb; mesh_builder_create(&mb);
     mesh_builder_add_face(mb, face(
-        vertex(vec3(-1, -1, -1), attribute_default()),
-        vertex(vec3(1, 1, 1), attribute_default()),
-        vertex(vec3(1, 1, -1), attribute_default())
+        vertex(vec3(-1, -1, -1), attribute_default_air()),
+        vertex(vec3(1, 1, 1), attribute_default_air()),
+        vertex(vec3(1, 1, -1), attribute_default_air())
     ));
     mesh_builder_add_face(mb, face(
-        vertex(vec3(-1, -1, -1), attribute_default()),
-        vertex(vec3(-0.9, -0.9, -0.9), attribute_default()),
-        vertex(vec3(-1, -0.9, -0.9), attribute_default())
+        vertex(vec3(-1, -1, -1), attribute_default_air()),
+        vertex(vec3(-0.9, -0.9, -0.9), attribute_default_air()),
+        vertex(vec3(-1, -0.9, -0.9), attribute_default_air())
     ));
     EXPECT_THAT(mesh_builder_build(&m, mb), Eq(WS_OK));
     mesh_builder_destroy(mb);
@@ -76,14 +76,14 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
     mesh_builder_t* mb; mesh_builder_create(&mb);
     mesh_builder_cube(mb, aabb(-1, -1, -1, 1, 1, 1));
     mesh_builder_add_face(mb, face(
-        vertex(vec3(0.01, 0.01, 0.01), attribute_default()),
-        vertex(vec3(0.01, 0.01, 0.02), attribute_default()),
-        vertex(vec3(0.01, 0.02, 0.02), attribute_default())
+        vertex(vec3(0.01, 0.01, 0.01), attribute_default_air()),
+        vertex(vec3(0.01, 0.01, 0.02), attribute_default_air()),
+        vertex(vec3(0.01, 0.02, 0.02), attribute_default_air())
     ));
     mesh_builder_add_face(mb, face(
-        vertex(vec3(0.03, 0.03, 0.03), attribute_default()),
-        vertex(vec3(0.03, 0.04, 0.04), attribute_default()),
-        vertex(vec3(0.03, 0.04, 0.04), attribute_default())
+        vertex(vec3(0.03, 0.03, 0.03), attribute_default_air()),
+        vertex(vec3(0.03, 0.04, 0.04), attribute_default_air()),
+        vertex(vec3(0.03, 0.04, 0.04), attribute_default_air())
     ));
     EXPECT_THAT(mesh_builder_build(&m, mb), Eq(WS_OK));
     mesh_builder_destroy(mb);

@@ -2,6 +2,7 @@
 #define PARTITION_H
 
 #include "wavesim/aabb.h"
+#include "wavesim/attribute.h"
 #include "wavesim/config.h"
 #include "wavesim/return_codes.h"
 #include "wavesim/vector.h"
@@ -23,7 +24,7 @@ typedef struct medium_t
 typedef struct medium_partition_t
 {
     aabb_t aabb;
-    wsreal_t sound_speed; /* This is a property obtained from the mesh attributes */
+    attribute_t attr;
     wsreal_t cell_size;   /* Calculated using simulation->max_frequency */
     wsreal_t time_step;   /* Calculated using simulation->max_frequency */
     wsib_t cell_count[3];  /* Calculated using simulation->max_frequency */
@@ -46,7 +47,7 @@ WAVESIM_PRIVATE_API void
 medium_clear(medium_t* medium);
 
 WAVESIM_PRIVATE_API int
-medium_add_partition(medium_t* medium, const wsreal_t bounding_box[6], wsreal_t sound_speed);
+medium_add_partition(medium_t* medium, const wsreal_t bounding_box[6], attribute_t attr);
 
 WAVESIM_PRIVATE_API void
 medium_set_decomposition_method(medium_t* medium,

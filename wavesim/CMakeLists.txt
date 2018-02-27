@@ -288,6 +288,7 @@ if (WAVESIM_TESTS)
         "tests/test_obj_import.cpp"
         "tests/test_octree.cpp"
         "tests/test_medium.cpp"
+        "tests/test_simulation.cpp"
         "tests/test_string.cpp"
         "tests/test_vec3.cpp"
         "tests/test_vector.cpp"

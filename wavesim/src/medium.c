@@ -213,14 +213,14 @@ medium_clear(medium_t* medium)
 
 /* ------------------------------------------------------------------------- */
 wsret
-medium_add_partition(medium_t* medium, const wsreal_t bb[6], wsreal_t sound_speed)
+medium_add_partition(medium_t* medium, const wsreal_t bb[6], attribute_t attr)
 {
     medium_partition_t* partition = vector_emplace(&medium->partitions);
     if (partition == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
 
     partition->aabb = aabb(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
-    partition->sound_speed = sound_speed;
+    partition->attr = attr;
     vector_construct(&partition->adcacent_partitions, sizeof(int32_t));
 
     return 0;
@@ -385,7 +385,7 @@ decompose_systematic_recursive(medium_t* medium,
      */
     assert(medium_partition_already_occupied(medium, seed.xyzxyz) == 0);
     this_partition_idx = vector_count(&medium->partitions);
-    if (medium_add_partition(medium, seed.xyzxyz, 1) != 0)
+    if (medium_add_partition(medium, seed.xyzxyz, attribute_default_air()) != 0)
         goto ran_out_of_memory;
     ws_log_info(&g_ws_log, "Adding partition #%d (%f,%f,%f,%f,%f,%f)", this_partition_idx, seed.xyzxyz[0], seed.xyzxyz[1], seed.xyzxyz[2], seed.xyzxyz[3], seed.xyzxyz[4], seed.xyzxyz[5]);
 
@@ -552,7 +552,7 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
          *   h < hmax
          * where n1, n2 and n3 are some positive integer.
          */
-        partition->cell_size = partition->sound_speed / max_frequency;
+        partition->cell_size = partition->attr.sound_velocity / max_frequency;
         dims = AABB_DIMS(partition->aabb);
         success = 0;
         while(success == 0) {
@@ -569,10 +569,10 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
         }
 
         /* CFL condition */
-        partition->time_step = partition->cell_size / partition->sound_speed / sqrt_3;
+        partition->time_step = partition->cell_size / partition->attr.sound_velocity / sqrt_3;
 
         /* Some sanity checks */
-        if (partition->cell_size < 0.1*(partition->sound_speed / max_frequency))
+        if (partition->cell_size < 0.1*(partition->attr.sound_velocity / max_frequency))
             cell_sizes_too_small_counter++;
     VECTOR_END_EACH
 
