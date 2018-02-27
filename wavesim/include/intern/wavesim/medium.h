@@ -28,7 +28,7 @@ typedef struct medium_partition_t
     wsreal_t cell_size;   /* Calculated using simulation->max_frequency */
     wsreal_t time_step;   /* Calculated using simulation->max_frequency */
     wsib_t cell_count[3];  /* Calculated using simulation->max_frequency */
-    vector_t adcacent_partitions; /* int32_t (indices into medium->partitions) */
+    vector_t adjacent_partitions; /* int32_t (indices into medium->partitions) */
 } medium_partition_t;
 
 WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
@@ -110,8 +110,14 @@ medium_build_from_mesh(medium_t* medium,
 WAVESIM_PRIVATE_API void
 medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_tolerance);
 
+WAVESIM_PRIVATE_API size_t
+medium_cell_count(medium_t* medium);
+
 #define medium_partition_count(medium) \
         vector_count(&(medium)->partitions)
+
+#define medium_get_partition(medium, partition_idx) \
+        (medium_partition_t*)vector_get_element(&medium->partitions, partition_idx)
 
 C_END
 

@@ -191,6 +191,7 @@ void
 medium_construct(medium_t* medium)
 {
     vector_construct(&medium->partitions, sizeof(medium_partition_t));
+    medium->boundary = aabb_reset();
     medium->decompose = medium_decompose_systematic;
 }
 
@@ -206,7 +207,7 @@ void
 medium_clear(medium_t* medium)
 {
     VECTOR_FOR_EACH(&medium->partitions, medium_partition_t, partition)
-        vector_clear_free(&partition->adcacent_partitions);
+        vector_clear_free(&partition->adjacent_partitions);
     VECTOR_END_EACH
     vector_clear_free(&medium->partitions);
 }
@@ -221,7 +222,10 @@ medium_add_partition(medium_t* medium, const wsreal_t bb[6], attribute_t attr)
 
     partition->aabb = aabb(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
     partition->attr = attr;
-    vector_construct(&partition->adcacent_partitions, sizeof(int32_t));
+    partition->cell_size = INFINITY;
+    partition->time_step = INFINITY;
+    memset(&partition->cell_count, 0, sizeof(partition->cell_count));
+    vector_construct(&partition->adjacent_partitions, sizeof(int32_t));
 
     return 0;
 }
@@ -393,7 +397,7 @@ decompose_systematic_recursive(medium_t* medium,
     if (parent_partition_idx != VECTOR_ERROR)
     {
         medium_partition_t* parent_partition = vector_get_element(&medium->partitions, parent_partition_idx);
-        size_t* adjacent_partition_idx = vector_emplace(&parent_partition->adcacent_partitions);
+        size_t* adjacent_partition_idx = vector_emplace(&parent_partition->adjacent_partitions);
         if (adjacent_partition_idx == NULL)
             goto ran_out_of_memory;
         *adjacent_partition_idx = this_partition_idx;
@@ -578,4 +582,15 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
 
     if (cell_sizes_too_small_counter > 0)
         ws_log_info(&g_ws_log, "[WARNING] Cell sizes in %d partition(s) is/are significantly smaller than optimal. Consider increasing cell_tolerance or your simulation might be unnecessarily slow.", cell_sizes_too_small_counter);
+}
+
+/* ------------------------------------------------------------------------- */
+size_t
+medium_cell_count(medium_t* medium)
+{
+    size_t total_cell_count = 0;
+    VECTOR_FOR_EACH(&medium->partitions, medium_partition_t, partition)
+        total_cell_count += partition->cell_count[0]*partition->cell_count[1]*partition->cell_count[2];
+    VECTOR_END_EACH
+    return total_cell_count;
 }

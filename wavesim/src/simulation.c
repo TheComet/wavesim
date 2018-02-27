@@ -23,6 +23,8 @@ typedef struct simulation_state_t
     partition_state_t* partition_states[3];  /* We store the states over 3 time steps */
     int time_step_mode_idx;
     wsreal_t time;
+    wsreal_t* modes_buffer;
+    partition_state_t* states_buffer;
 } simulation_state_t;
 
 /* ------------------------------------------------------------------------- */
@@ -99,8 +101,12 @@ simulation_prepare(simulation_t* simulation)
 
     simulation_state_t* state;
     /*fftw_iodim dims;*/
+    size_t i, t;
     size_t partition_count;
-    wsib_t total_cell_count;
+    size_t total_cell_count;
+    size_t cell_memory_required;
+    size_t partition_memory_required;
+    wsreal_t* modes_buffer_ptr;
 
     if (simulation->medium == NULL)
         WSRET(WS_ERR_SIM_MEDIUM_NOT_SET);
@@ -129,61 +135,38 @@ simulation_prepare(simulation_t* simulation)
      * each partition individually.
      */
     partition_count = medium_partition_count(simulation->medium);
-    total_cell_count = 0;
-    VECTOR_FOR_EACH(&simulation->medium->partitions, medium_partition_t, partition)
-        total_cell_count += partition->cell_count[0]*partition->cell_count[1]*partition->cell_count[2];
-    VECTOR_END_EACH
-    ws_log_info(&g_ws_log, "[SIM] There are %d partitions, %d cells", partition_count, total_cell_count);
+    total_cell_count = medium_cell_count(simulation->medium);
+    partition_memory_required = partition_count * 3 * sizeof(partition_state_t);
+    cell_memory_required = total_cell_count * 3 * sizeof(wsreal_t);
+    ws_log_info(&g_ws_log, "[SIM] There are %d partitions, %d cells. Total memory requirement is %.2f GiB",
+                partition_count, total_cell_count,
+                (wsreal_t)(partition_memory_required + cell_memory_required) / (1024*1024*1024));
+    state->modes_buffer = fftw_malloc(cell_memory_required);
+    state->states_buffer = MALLOC(partition_memory_required);
 
     /*
      * Allocate a 3-dimensional array that can hold all modes (x, y, z) over
      * 3 time steps.
-     *
+     */
+    modes_buffer_ptr = state->modes_buffer;
     for (t = 0; t != 3; ++t)
     {
-        vector_construct(&state->partition_states[t], sizeof(partition_state_t));
-        if (vector_resize(&state->partition_states[t], partition_count) == VECTOR_ERROR)
-            WSRET(WS_ERR_OUT_OF_MEMORY);
-
         for (i = 0; i != partition_count; ++i)
         {
-            medium_partition_t* partition = vector_get_element(&simulation->medium->partitions, i);
-            partition_state_t* partition_state = vector_get_element(&state->partition_states[t], i);
+            medium_partition_t* partition = medium_get_partition(simulation->medium, i);
+            partition_state_t* partition_state = state->states_buffer + t*partition_count + i;
 
-            * calculate the number of cells in each dimension and allocate flat array *
-            fftw_iodim dims[3] = {{0, 1, 1}, {0, 1, 1}, {0, 1, 1}};
-            vec3_t cell_count = AABB_DIMS(partition->aabb);
-            vec3_div_scalar(cell_count.xyz, simulation->cell_size);
-            dims[0].n = partition_state->dims[0] = (int)ceil(cell_count.v.x);
-            dims[1].n = partition_state->dims[1] = (int)ceil(cell_count.v.y);
-            dims[2].n = partition_state->dims[2] = (int)ceil(cell_count.v.z);
-            partition_state->modes = fftw_malloc((size_t)(dims[0].n * dims[1].n * dims[2].n));
-
-            * Create plans *
-            {
-                fftw_iodim howmany_dims[1] = {{1, 1, 1}};
-                fftw_r2r_kind dct_kind[1] = {FFTW_RODFT10};
-                fftw_r2r_kind idct_kind[1] = {FFTW_RODFT01};
-                partition_state->dct_plan = fftw_plan_guru_r2r(
-                    3, dims,
-                    1, howmany_dims,
-                    partition_state->modes, partition_state->modes,
-                    dct_kind, FFTW_MEASURE);
-                partition_state->idct_plan = fftw_plan_guru_r2r(
-                    3, dims,
-                    1, howmany_dims,
-                    partition_state->modes, partition_state->modes,
-                    idct_kind, FFTW_MEASURE);
-            }
-
-            * Initialize all modes to 0 *
-            {
-                int x;
-                for (x = 0; x != dims[0].n * dims[1].n * dims[2].n; ++x)
-                    partition_state->modes[x] = 0.0;
-            }
+            partition_state->modes = modes_buffer_ptr;
+            modes_buffer_ptr += partition->cell_count[0]*partition->cell_count[1]*partition->cell_count[2];
         }
-    }*/
+    }
+
+    /*
+     * Initialize all modes to 0 *after* having created the fftw plans, because
+     * fftw potentially modifies values in the buffer during plan creation
+     */
+    for (i = 0; i != cell_memory_required; ++i)
+        state->modes_buffer[i] = 0.0;
 
     /* Initialize a few other things */
     state->time_step_mode_idx = 0;

@@ -14,7 +14,7 @@ TEST(NAME, rectangular_medium)
     simulation_t* s;
     audio_listener_t* al;
     audio_source_t* as;
-    aabb_t bb = aabb(0, 0, 0, 10, 10, 10); // 50 meter box
+    aabb_t bb = aabb(0, 0, 0, 2, 2, 2); // 2 meter box
     ASSERT_THAT(medium_create(&m), Eq(WS_OK));
     ASSERT_THAT(simulation_create(&s), Eq(WS_OK));
     ASSERT_THAT(audio_listener_create(&al), Eq(WS_OK));
@@ -27,6 +27,7 @@ TEST(NAME, rectangular_medium)
 
     simulation_set_resolution(s, 15000, 0.1);
     simulation_prepare(s);
+    simulation_finalize(s);
 
     simulation_destroy(s);
     audio_source_destroy(as);
