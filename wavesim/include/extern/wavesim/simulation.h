@@ -17,9 +17,8 @@ typedef struct simulation_t
     audio_source_t* audio_source;
     audio_listener_t* audio_listener;
     simulation_state_t* state;
-
-    wsreal_t cell_size;
-    wsreal_t dt; /* Time step */
+    wsreal_t max_frequency;
+    wsreal_t cell_tolerance;
 } simulation_t;
 
 WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
@@ -44,7 +43,7 @@ WAVESIM_PUBLIC_API void
 simulation_set_listener(simulation_t* simulation, audio_listener_t* al);
 
 WAVESIM_PUBLIC_API void
-simulation_set_max_frequency(simulation_t* simulation, wsreal_t hz);
+simulation_set_resolution(simulation_t* simulation, wsreal_t max_frequency, wsreal_t cell_tolerance);
 
 WAVESIM_PUBLIC_API wsret
 simulation_prepare(simulation_t* simulation);

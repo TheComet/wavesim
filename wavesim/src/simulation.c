@@ -81,6 +81,14 @@ simulation_set_listener(simulation_t* simulation, audio_listener_t* al)
 }
 
 /* ------------------------------------------------------------------------- */
+void
+simulation_set_resolution(simulation_t* simulation, wsreal_t max_frequency, wsreal_t cell_tolerance)
+{
+    simulation->max_frequency = max_frequency;
+    simulation->cell_tolerance = cell_tolerance;
+}
+
+/* ------------------------------------------------------------------------- */
 wsret
 simulation_prepare(simulation_t* simulation)
 {
@@ -91,8 +99,8 @@ simulation_prepare(simulation_t* simulation)
 
     simulation_state_t* state;
     /*fftw_iodim dims;*/
-    /*size_t partition_count;*/
-    /*size_t total_cell_count;*/
+    size_t partition_count;
+    wsib_t total_cell_count;
 
     if (simulation->medium == NULL)
         WSRET(WS_ERR_SIM_MEDIUM_NOT_SET);
@@ -105,17 +113,27 @@ simulation_prepare(simulation_t* simulation)
     if (simulation->state == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
 
+    /* Update components with simulation's resolution settings */
+    medium_set_resolution(simulation->medium, simulation->max_frequency, simulation->cell_tolerance);
+    /* TODO set audio listener/player max frequency here too */
+
     /*
      * To avoid having to allocate memory millions of times, count the total
      * amount of cells in the scene, count the total number of partitions in
      * the scene, and then allocate two buffers and divide the memory up
      * appropriately.
+     *
+     * Note that it's not possible to simply look at the bounding box of the
+     * medium and determine the total cell count from that. The medium is not
+     * guaranteed to be rectangular in shape. We have to count the cells in
+     * each partition individually.
      */
-    /*partition_count = medium_partition_count(simulation->medium);*/
-
-    /*total_cell_count = 0;*/
+    partition_count = medium_partition_count(simulation->medium);
+    total_cell_count = 0;
     VECTOR_FOR_EACH(&simulation->medium->partitions, medium_partition_t, partition)
+        total_cell_count += partition->cell_count[0]*partition->cell_count[1]*partition->cell_count[2];
     VECTOR_END_EACH
+    ws_log_info(&g_ws_log, "[SIM] There are %d partitions, %d cells", partition_count, total_cell_count);
 
     /*
      * Allocate a 3-dimensional array that can hold all modes (x, y, z) over

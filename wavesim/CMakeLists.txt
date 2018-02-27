@@ -32,7 +32,7 @@ option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage 
 option (WAVESIM_PIC "Position independent code when building as a static library" ON)
 set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calculations (float, double or long double)")
 option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
-option (WAVESIM_PYTHON "Build python bindings. The library must be shared." ON)
+option (WAVESIM_PYTHON "Build python bindings. The library must be shared." OFF)
 option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ${DEBUG_FEATURES})
 option (WAVESIM_USE_SYSTEM_FFTW "Forces wavesim to use the system fftw library. If it is not present, an error is thrown." OFF)
 option (WAVESIM_PREFER_SYSTEM_FFTW "If fftw is installed on the host system, wavesim will prefer using it over building fftw internally. If this option is disabled, then the internal fftw library is always built." OFF)
@@ -114,6 +114,7 @@ else ()
     message (WARNING "Git not found. Build will not contain git revision info.")
 endif ()
 
+# We use FFTW for DCTs
 set (FFTW_FOUND "")
 if (WAVESIM_PREFER_SYSTEM_FFTW OR WAVESIM_USE_SYSTEM_FFTW)
     set (WAVESIM_FFTW_REQUIRED "")
@@ -128,6 +129,10 @@ if (NOT FFTW_FOUND)
     set (FFTW_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../fftw-3.3.7/api")
     set_property (TARGET fftw3 PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
 endif ()
+
+# Need pthread for multithreaded simulations
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 set (WAVESIM_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
@@ -359,6 +364,7 @@ target_include_directories (wavesim
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/extern>
         $<INSTALL_INTERFACE:include>)
 target_link_libraries (wavesim PRIVATE ${FFTW_LIBRARIES})
+target_link_libraries(wavesim PRIVATE Threads::Threads)
 
 if (WAVESIM_TESTS)
     add_executable (wavesim_tests "tests/app.c")

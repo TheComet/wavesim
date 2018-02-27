@@ -7,6 +7,9 @@
 #include "wavesim/medium.h"
 #include <string.h>
 #include <assert.h>
+#include <math.h>
+
+static const wsreal_t sqrt_3 = 1.73205080757;
 
 /* ------------------------------------------------------------------------- */
 /*!
@@ -246,7 +249,7 @@ typedef enum direction_e
     DIRECTION_COUNT = 6
 } direction_e;
 static aabb_t
-get_adjacent_slice(const medium_t* medium, const wsreal_t aabb[6], direction_e direction)
+get_adjacent_slice(const wsreal_t aabb[6], const wsreal_t grid_size[3], direction_e direction)
 {
     aabb_t adjacent;
     memcpy(adjacent.xyzxyz, aabb, sizeof(adjacent.xyzxyz));
@@ -254,27 +257,27 @@ get_adjacent_slice(const medium_t* medium, const wsreal_t aabb[6], direction_e d
     {
         case UP :
             AABB_AY(adjacent) = aabb[4];
-            AABB_BY(adjacent) = aabb[4] + medium->grid_size.v.y;
+            AABB_BY(adjacent) = aabb[4] + grid_size[1];
             break;
         case DOWN:
-            AABB_AY(adjacent) = aabb[1] - medium->grid_size.v.y;
+            AABB_AY(adjacent) = aabb[1] - grid_size[1];
             AABB_BY(adjacent) = aabb[1];
             break;
         case LEFT :
-            AABB_AX(adjacent) = aabb[0] - medium->grid_size.v.x;
+            AABB_AX(adjacent) = aabb[0] - grid_size[0];
             AABB_BX(adjacent) = aabb[0];
             break;
         case RIGHT:
             AABB_AX(adjacent) = aabb[3];
-            AABB_BX(adjacent) = aabb[3] + medium->grid_size.v.x;
+            AABB_BX(adjacent) = aabb[3] + grid_size[0];
             break;
         case FRONT :
-            AABB_AZ(adjacent) = aabb[2] - medium->grid_size.v.z;
+            AABB_AZ(adjacent) = aabb[2] - grid_size[2];
             AABB_BZ(adjacent) = aabb[2];
             break;
         case BACK:
             AABB_AZ(adjacent) = aabb[5];
-            AABB_BZ(adjacent) = aabb[5] + medium->grid_size.v.z;
+            AABB_BZ(adjacent) = aabb[5] + grid_size[2];
             break;
         default: break;
     }
@@ -306,6 +309,7 @@ decompose_systematic_recursive(medium_t* medium,
                                size_t parent_partition_idx,
                                const octree_t* octree,
                                const medium_t* mediumdef,
+                               const wsreal_t grid_size[3],
                                aabb_t seed)
 {
     size_t direction;
@@ -338,7 +342,7 @@ decompose_systematic_recursive(medium_t* medium,
 
             /* Calculate a slice adjacent to this seed and make sure it doesn't
              * already exist in the medium. */
-            slice = get_adjacent_slice(medium, seed.xyzxyz, direction);
+            slice = get_adjacent_slice(seed.xyzxyz, grid_size, direction);
             if (medium_partition_already_occupied(medium, slice.xyzxyz))
             {
                 occupied_direction_flags |= direction;
@@ -348,7 +352,7 @@ decompose_systematic_recursive(medium_t* medium,
             /* Iterate through all cells in the slice and confirm that these cells
              * have the same attributes as our seed cell */
             slice_is_same_as_seed = 1;
-            iterate_cells_begin(cell.xyzxyz, slice.xyzxyz, medium->grid_size.xyz);
+            iterate_cells_begin(cell.xyzxyz, slice.xyzxyz, grid_size);
             do
             {
                 attribute_t cell_attribute;
@@ -404,7 +408,7 @@ decompose_systematic_recursive(medium_t* medium,
         wsret result;
         if (medium_partition_already_occupied(medium, new_seed->xyzxyz))
             continue;
-        result = decompose_systematic_recursive(medium, this_partition_idx, octree, mediumdef, *new_seed);
+        result = decompose_systematic_recursive(medium, this_partition_idx, octree, mediumdef, grid_size, *new_seed);
         if (result != WS_OK)
         {
             vector_clear_free(&potential_new_seeds);
@@ -421,42 +425,45 @@ decompose_systematic_recursive(medium_t* medium,
 wsret
 medium_decompose_systematic(medium_t* medium,
                             const octree_t* octree,
-                            const medium_t* mediumdef)
+                            const medium_t* mediumdef,
+                            const wsreal_t grid_size[3])
 {
     /* Start at the bottom, left, front corner */
     aabb_t seed = aabb(
         AABB_AX(medium->boundary),
         AABB_AY(medium->boundary),
         AABB_AZ(medium->boundary),
-        AABB_AX(medium->boundary) + medium->grid_size.v.x,
-        AABB_AY(medium->boundary) + medium->grid_size.v.y,
-        AABB_AZ(medium->boundary) + medium->grid_size.v.z
+        AABB_AX(medium->boundary) + grid_size[0],
+        AABB_AY(medium->boundary) + grid_size[1],
+        AABB_AZ(medium->boundary) + grid_size[2]
     );
-    return decompose_systematic_recursive(medium, VECTOR_ERROR, octree, mediumdef, seed);
+    return decompose_systematic_recursive(medium, VECTOR_ERROR, octree, mediumdef, grid_size, seed);
 }
 
 /* ------------------------------------------------------------------------- */
 wsret
 medium_decompose_greedy_random(medium_t* medium,
                                const octree_t* octree,
-                               const medium_t* mediumdef)
+                               const medium_t* mediumdef,
+                               const wsreal_t grid_size[3])
 {
     (void)medium;
     (void)octree;
     (void)mediumdef;
+    (void)grid_size;
     return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
 static int
-integrity_checks_out(const medium_t* medium, const medium_t* mediumdef)
+integrity_checks_out(const medium_t* medium, const medium_t* mediumdef, const wsreal_t grid_size[3])
 {
     aabb_t cell;
     int integrity = 1;
     (void)mediumdef;
     ws_log_info(&g_ws_log, "Integrity check...");
 
-    iterate_cells_begin(cell.xyzxyz, medium->boundary.xyzxyz, medium->grid_size.xyz);
+    iterate_cells_begin(cell.xyzxyz, medium->boundary.xyzxyz, grid_size);
     do
     {
         if (medium_partition_already_occupied(medium, cell.xyzxyz))
@@ -486,7 +493,6 @@ medium_build_from_mesh(medium_t* medium,
 
     /* Copy arguments into medium structure, medium building relies on
      * them */
-    vec3_copy(&medium->grid_size, grid_size);
     if (mediumdef == NULL)
     {
         ws_log_info(&g_ws_log, "[warning] No medium definition was provided. Falling back to mesh AABB and default parameters.");
@@ -502,15 +508,74 @@ medium_build_from_mesh(medium_t* medium,
     if ((result = octree_build_from_mesh(&octree, mesh, 2)) != WS_OK)
         goto bail;
 
-    if ((result = medium->decompose(medium, &octree, mediumdef)) != WS_OK)
+    if ((result = medium->decompose(medium, &octree, mediumdef, grid_size)) != WS_OK)
         goto bail;
 
 #ifdef DEBUG
-    integrity_checks_out(medium, mediumdef);
+    integrity_checks_out(medium, mediumdef, grid_size);
 #endif
 
     ws_log_info(&g_ws_log, "Decomposed mesh into %d partitions", (int)vector_count(&medium->partitions));
 
     bail : octree_destruct(&octree);
     return result;
+}
+
+/* ------------------------------------------------------------------------- */
+void
+medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_tolerance)
+{
+    int i, success, cell_sizes_too_small_counter;
+    vec3_t dims;
+
+    if (cell_tolerance < 0.001)
+    {
+        ws_log_info(&g_ws_log, "[WARNING] cell_tolerance clamped from %f to 0.001", cell_tolerance);
+        cell_tolerance = 0.001;
+    }
+    if (cell_tolerance > 1.0)
+    {
+        ws_log_info(&g_ws_log, "[WARNING] cell_tolerance clamped from %f to 1.0", cell_tolerance);
+        cell_tolerance = 1.0;
+    }
+
+    cell_sizes_too_small_counter = 0;
+    VECTOR_FOR_EACH(&medium->partitions, medium_partition_t, partition)
+        /*
+         * Shrink cell size until all cell overlaps are within tolerance. This
+         * is a slightly modified version of the GCD (greatest common denominator)
+         * problem. If x, y, z are the partition dimensions and dh the cell
+         * tolerance, then the problem is to find a value for h such that:
+         *   x <= n1*h < x+dh*h
+         *   y <= n2*h < y+dh*h
+         *   z <= n3*h < z*dh*h
+         *   h < hmax
+         * where n1, n2 and n3 are some positive integer.
+         */
+        partition->cell_size = partition->sound_speed / max_frequency;
+        dims = AABB_DIMS(partition->aabb);
+        success = 0;
+        while(success == 0) {
+            success = 1;
+            for (i = 0; i != 3; ++i)
+            {
+                partition->cell_count[i] = (wsib_t)ceil(dims.v.x / partition->cell_size);
+                if (partition->cell_count[i]*partition->cell_size > dims.xyz[i]+cell_tolerance*partition->cell_size)
+                {
+                    partition->cell_size = dims.xyz[i] / (partition->cell_count[i] - cell_tolerance/2.0);
+                    success = 0;
+                }
+            }
+        }
+
+        /* CFL condition */
+        partition->time_step = partition->cell_size / partition->sound_speed / sqrt_3;
+
+        /* Some sanity checks */
+        if (partition->cell_size < 0.1*(partition->sound_speed / max_frequency))
+            cell_sizes_too_small_counter++;
+    VECTOR_END_EACH
+
+    if (cell_sizes_too_small_counter > 0)
+        ws_log_info(&g_ws_log, "[WARNING] Cell sizes in %d partition(s) is/are significantly smaller than optimal. Consider increasing cell_tolerance or your simulation might be unnecessarily slow.", cell_sizes_too_small_counter);
 }
