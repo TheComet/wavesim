@@ -154,7 +154,7 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
     VECTOR_END_EACH
 
     /* Finally, create a mesh and pass buffers to it */
-    if (mesh_create(mesh) != WS_OK)
+    if (mesh_create(mesh, "mesh_builder") != WS_OK)
         goto alloc_mesh_failed;
     if (mesh_copy_from_buffers(*mesh,
                                vb.data, ib.data,

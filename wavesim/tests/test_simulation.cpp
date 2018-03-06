@@ -21,8 +21,6 @@ TEST(NAME, rectangular_medium)
     ASSERT_THAT(audio_source_create(&as), Eq(WS_OK));
 
     medium_add_partition(m, bb.xyzxyz, attribute_default_air());
-    simulation_set_audio_source(s, as);
-    simulation_set_audio_listener(s, al);
 
     simulation_set_resolution(s, 15000, 0.1);
 

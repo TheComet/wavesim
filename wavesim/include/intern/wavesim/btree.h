@@ -9,6 +9,7 @@
 #define BTREE_H
 
 #include "wavesim/config.h"
+#include "wavesim/hash.h"
 #include "wavesim/vector.h"
 
 C_BEGIN
@@ -69,7 +70,7 @@ btree_destroy(btree_t* btree);
  * existed (in which case nothing is inserted). Returns -1 on failure.
  */
 WAVESIM_PRIVATE_API int
-btree_insert(btree_t* btree, uint32_t hash, void* value);
+btree_insert(btree_t* btree, hash_t hash, void* value);
 
 /*!
  * @brief Sets the value to the specified hash in the btree.
@@ -79,7 +80,7 @@ btree_insert(btree_t* btree, uint32_t hash, void* value);
  * @param[in] value The new value to set.
  */
 WAVESIM_PRIVATE_API void
-btree_set(btree_t* btree, uint32_t hash, void* value);
+btree_set(btree_t* btree, hash_t hash, void* value);
 
 /*!
  * @brief Looks for an element in the btree and returns it if found.
@@ -93,7 +94,7 @@ btree_set(btree_t* btree, uint32_t hash, void* value);
  * hash exists, use btree_key_exists() instead.
  */
 WAVESIM_PRIVATE_API void*
-btree_find(const btree_t* btree, uint32_t hash);
+btree_find(const btree_t* btree, hash_t hash);
 
 /*!
  * @brief Looks for an element in the btree and returns a pointer to the element
@@ -105,7 +106,7 @@ btree_find(const btree_t* btree, uint32_t hash);
  * @param[in] hash The has to search for.
  */
 WAVESIM_PRIVATE_API void**
-btree_find_ptr(const btree_t* btree, uint32_t hash);
+btree_find_ptr(const btree_t* btree, hash_t hash);
 
 /*!
  * @brief Finds the specified element in the btree and returns its key.
@@ -115,7 +116,7 @@ btree_find_ptr(const btree_t* btree, uint32_t hash);
  * @return Returns the key if it was successfully found, or MAP_INVALID_KEY if
  * otherwise.
  */
-WAVESIM_PRIVATE_API uint32_t
+WAVESIM_PRIVATE_API hash_t
 btree_find_element(const btree_t* btree, const void* value);
 
 /*!
@@ -135,7 +136,7 @@ btree_get_any_element(const btree_t* btree);
  * @return 0 if the hash was found, -1 if the hash was not found.
  */
 WAVESIM_PRIVATE_API int
-btree_hash_exists(btree_t* btree, uint32_t hash);
+btree_hash_exists(btree_t* btree, hash_t hash);
 
 /*!
  * @brief Returns a hash that does not yet exist in the btree.
@@ -143,7 +144,7 @@ btree_hash_exists(btree_t* btree, uint32_t hash);
  * @param[in] btree The btree to generate a hash from.
  * @return Returns a hash that does not yet exist in the btree.
  */
-WAVESIM_PRIVATE_API uint32_t
+WAVESIM_PRIVATE_API hash_t
 btree_find_unused_hash(btree_t* btree);
 
 /*!
@@ -162,7 +163,7 @@ btree_find_unused_hash(btree_t* btree);
  * btree.
  */
 WAVESIM_PRIVATE_API void*
-btree_erase(btree_t* btree, uint32_t hash);
+btree_erase(btree_t* btree, hash_t hash);
 
 WAVESIM_PRIVATE_API void*
 btree_erase_element(btree_t* btree, void* value);
@@ -195,12 +196,12 @@ btree_clear_free(btree_t* btree);
  * @param[in] var The name to give the variable pointing to the current
  * element.
  */
-#define BTREE_FOR_EACH(btree, var_t, hash_v, var_v) {                                                      \
-    uint32_t i_##var_v;                                                                                  \
-    uint32_t hash_v;                                                                                     \
-    var_t* var_v;                                                                                        \
-    for(i_##var_v = 0;                                                                                   \
-        i_##var_v != btree_count(btree) &&                                                                 \
+#define BTREE_FOR_EACH(btree, var_t, hash_v, var_v) {                                               \
+    hash_t i_##var_v;                                                                               \
+    hash_t hash_v;                                                                                  \
+    var_t* var_v;                                                                                   \
+    for(i_##var_v = 0;                                                                              \
+        i_##var_v != btree_count(btree) &&                                                          \
             ((hash_v = ((btree_hash_value_t*) (btree)->vector.data)[i_##var_v].hash) || 1) &&       \
             ((var_v  = (var_t*)((btree_hash_value_t*)(btree)->vector.data)[i_##var_v].value) || 1); \
         ++i_##var_v) {

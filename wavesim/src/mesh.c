@@ -1,5 +1,7 @@
 #include "wavesim/mesh.h"
 #include "wavesim/memory.h"
+#include "wavesim/btree.h"
+#include "wavesim/hash.h"
 #include <string.h>
 #include <math.h>
 
@@ -9,21 +11,35 @@ static void calculate_aabb(mesh_t* mesh);
 
 /* ------------------------------------------------------------------------- */
 wsret
-mesh_create(mesh_t** mesh)
+mesh_create(mesh_t** mesh, const char* name)
 {
+    wsret result;
+
     *mesh = MALLOC(sizeof **mesh);
     if (*mesh == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
-    mesh_construct(*mesh);
+
+    if ((result = mesh_construct(*mesh, name)) != WS_OK)
+        return result;
+
     return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
-void
-mesh_construct(mesh_t* mesh)
+wsret
+mesh_construct(mesh_t* mesh, const char* name)
 {
+    size_t name_len = strlen(name);
+
     memset(mesh, 0, sizeof *mesh);
     mesh->aabb = aabb_reset();
+
+    mesh->name = MALLOC(sizeof(char) * (name_len + 1));
+    if (mesh->name == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
+    strcpy(mesh->name, name);
+
+    return WS_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -31,6 +47,7 @@ void
 mesh_destruct(mesh_t* mesh)
 {
     mesh_clear_buffers(mesh);
+    FREE(mesh->name);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -121,14 +138,14 @@ mesh_copy_from_buffers(mesh_t* mesh,
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-mesh_get_vertex_position(mesh_t* mesh, wsib_t index)
+mesh_get_vertex_position(const mesh_t* mesh, wsib_t index)
 {
     return mesh_get_vertex_position_from_buffer(mesh->vb, index, mesh->vb_type);
 }
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-mesh_get_vertex_position_from_buffer(void* vb, wsib_t index, mesh_vb_type_e vb_type)
+mesh_get_vertex_position_from_buffer(const void* vb, wsib_t index, mesh_vb_type_e vb_type)
 {
     index *= 3;
 
@@ -151,7 +168,7 @@ mesh_get_vertex_position_from_buffer(void* vb, wsib_t index, mesh_vb_type_e vb_t
 
 /* ------------------------------------------------------------------------- */
 wsib_t
-mesh_get_index_from_buffer(void* ib, wsib_t index, mesh_ib_type_e ib_type)
+mesh_get_index_from_buffer(const void* ib, wsib_t index, mesh_ib_type_e ib_type)
 {
     switch (ib_type)
     {
@@ -179,7 +196,7 @@ mesh_get_face(const mesh_t* mesh, wsib_t face_index)
 
 /* ------------------------------------------------------------------------- */
 face_t
-mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
+mesh_get_face_from_buffers(const void* vb, const void* ib, const attribute_t* attrs,
                            wsib_t face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
@@ -248,4 +265,55 @@ static void calculate_aabb(mesh_t* mesh)
                 mesh->aabb.b.max.xyz[i] = pos.xyz[i];
         }
     }
+}
+
+/* ------------------------------------------------------------------------- */
+int
+mesh_is_manifold(const mesh_t* mesh)
+{
+    /* Condition is V + F - E = 2 */
+    wsib_t V, F, E, idx;
+    btree_t set;
+
+    /* Have to count the number of unique edges in the mesh. */
+    V = mesh_vertex_count(mesh);
+    F = mesh_face_count(mesh);
+    btree_construct(&set);
+    /* Iterate 3 indices at a time (i.e. iterate faces)*/
+    for (idx = 0; idx != mesh_index_count(mesh); idx += 3)
+    {
+        wsib_t e1[2];
+        wsib_t e2[2];
+        wsib_t e3[2];
+        wsib_t indices[3];
+
+        indices[0] = mesh_get_index_from_buffer(mesh->ib, idx + 0, mesh->ib_type);
+        indices[1] = mesh_get_index_from_buffer(mesh->ib, idx + 1, mesh->ib_type);
+        indices[2] = mesh_get_index_from_buffer(mesh->ib, idx + 2, mesh->ib_type);
+
+        /* Need to sort the indices so "flipped" edges resolve to the same hash value */
+        e1[0] = indices[0] < indices[1] ? indices[0] : indices[1];
+        e1[1] = indices[0] > indices[1] ? indices[0] : indices[1];
+        e2[0] = indices[1] < indices[2] ? indices[1] : indices[2];
+        e2[1] = indices[1] > indices[2] ? indices[1] : indices[2];
+        e3[0] = indices[2] < indices[0] ? indices[2] : indices[0];
+        e3[1] = indices[2] > indices[0] ? indices[2] : indices[0];
+
+        if (btree_insert(&set, hash_edge_indices(e1), NULL) < -1)
+            goto ran_out_of_memory;
+        if (btree_insert(&set, hash_edge_indices(e2), NULL) < -1)
+            goto ran_out_of_memory;
+        if (btree_insert(&set, hash_edge_indices(e3), NULL) < -1)
+            goto ran_out_of_memory;
+    }
+
+    E = (wsib_t)btree_count(&set);
+    btree_clear_free(&set);
+
+    if (V + F - E == 2)
+        return 1;
+    return 0;
+
+    ran_out_of_memory : btree_clear_free(&set);
+    return -1;
 }

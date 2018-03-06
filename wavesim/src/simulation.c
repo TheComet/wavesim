@@ -62,20 +62,6 @@ simulation_set_type(simulation_t* simulation, enum simulation_type_e type)
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PUBLIC_API void
-simulation_set_audio_source(simulation_t* simulation, audio_source_t* as)
-{
-    simulation->audio_source = as;
-}
-
-/* ------------------------------------------------------------------------- */
-WAVESIM_PUBLIC_API void
-simulation_set_audio_listener(simulation_t* simulation, audio_listener_t* al)
-{
-    simulation->audio_listener = al;
-}
-
-/* ------------------------------------------------------------------------- */
 void
 simulation_set_resolution(simulation_t* simulation, wsreal_t max_frequency, wsreal_t cell_tolerance)
 {

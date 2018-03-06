@@ -8,6 +8,11 @@
 
 C_BEGIN
 
+/*
+ * Depending on how wavesim was configured, determine the default type that
+ * should be used for the index buffer (MESH_IB_DEFAULT) and for the vertex
+ * buffer (MESH_VB_DEFAULT).
+ */
 #if defined(WAVESIM_64BIT_INDEX_BUFFERS)
 #   define MESH_IB_DEFAULT MESH_IB_UINT64
 #else
@@ -47,9 +52,11 @@ typedef enum mesh_vb_type_e
 
 typedef struct mesh_t
 {
-    attribute_t*     ab;       /* attribute buffer, will be same size as vb */
-    void*            vb;       /* vertex buffer */
-    void*            ib;       /* index buffer */
+    char*            name;      /* Usually the filename. It does not have to be
+                                 * globally unique */
+    attribute_t*     ab;        /* attribute buffer, will be same size as vb */
+    void*            vb;        /* vertex buffer */
+    void*            ib;        /* index buffer */
 
     mesh_vb_type_e   vb_type;
     mesh_ib_type_e   ib_type;
@@ -70,10 +77,10 @@ typedef struct mesh_t
 } mesh_t;
 
 WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
-mesh_create(mesh_t** mesh);
+mesh_create(mesh_t** mesh, const char* name);
 
-WAVESIM_PRIVATE_API void
-mesh_construct(mesh_t* mesh);
+WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+mesh_construct(mesh_t* mesh, const char* name);
 
 WAVESIM_PRIVATE_API void
 mesh_destruct(mesh_t* mesh);
@@ -97,25 +104,28 @@ mesh_copy_from_buffers(mesh_t* mesh,
                        mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
 WAVESIM_PRIVATE_API vec3_t
-mesh_get_vertex_position(mesh_t* mesh, wsib_t index);
-
-WAVESIM_PRIVATE_API vec3_t
-mesh_get_vertex_position_from_buffer(void* vb, wsib_t index, mesh_vb_type_e vb_type);
-
-WAVESIM_PRIVATE_API wsib_t
-mesh_get_index_from_buffer(void* ib, wsib_t index, mesh_ib_type_e ib_type);
+mesh_get_vertex_position(const mesh_t* mesh, wsib_t index);
 
 WAVESIM_PRIVATE_API face_t
 mesh_get_face(const mesh_t* mesh, wsib_t face_index);
 
+WAVESIM_PRIVATE_API vec3_t
+mesh_get_vertex_position_from_buffer(const void* vb, wsib_t index, mesh_vb_type_e vb_type);
+
+WAVESIM_PRIVATE_API wsib_t
+mesh_get_index_from_buffer(const void* ib, wsib_t index, mesh_ib_type_e ib_type);
+
 WAVESIM_PRIVATE_API face_t
-mesh_get_face_from_buffers(void* vb, void* ib, attribute_t* attrs,
+mesh_get_face_from_buffers(const void* vb, const void* ib, const attribute_t* attrs,
                            wsib_t face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
 #define mesh_index_count(mesh) (mesh->ib_count)
 #define mesh_vertex_count(mesh) (mesh->vb_count)
 #define mesh_face_count(mesh) (mesh->ib_count/3)
+
+WAVESIM_PRIVATE_API int
+mesh_is_manifold(const mesh_t* mesh);
 
 C_END
 

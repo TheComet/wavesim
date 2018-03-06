@@ -30,7 +30,7 @@ protected:
 
 TEST_F(NAME, build_from_empty_mesh)
 {
-    mesh_create(&m);
+    mesh_create(&m, "test");
     EXPECT_THAT(octree_build_from_mesh(o, m, 6), Eq(0));
 }
 
@@ -56,7 +56,7 @@ TEST_F(NAME, large_and_small_triangles)
 
 TEST_F(NAME, build_from_cube_mesh)
 {
-    EXPECT_THAT(mesh_create(&m), Eq(WS_OK));
+    EXPECT_THAT(mesh_create(&m, "test"), Eq(WS_OK));
     mesh_cube(m, aabb(-1, -1, -1, 1, 1, 1));
     EXPECT_THAT(octree_build_from_mesh(o, m, 6), Eq(WS_OK));
     EXPECT_THAT(obj_export_octree("octree.build_from_cube_mesh.obj", o), Eq(WS_OK));
@@ -104,7 +104,7 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
 
 TEST_F(NAME, from_cube_obj)
 {
-    mesh_create(&m);
+    mesh_create(&m, "test");
     obj_import_mesh("../wavesim/models/cube.obj", m);
     octree_build_from_mesh(o, m, 5);
     obj_export_octree("octree.from_cube_obj.obj", o);
@@ -112,7 +112,7 @@ TEST_F(NAME, from_cube_obj)
 
 TEST_F(NAME, from_high_ceiling_obj)
 {
-    mesh_create(&m);
+    mesh_create(&m, "test");
     EXPECT_THAT(obj_import_mesh("../wavesim/models/high-ceiling.obj", m), Eq(WS_OK));
     octree_build_from_mesh(o, m, 3);
     obj_export_octree("octree.from_high_ceiling_obj.obj", o);
