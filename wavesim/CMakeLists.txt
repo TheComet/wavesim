@@ -182,6 +182,8 @@ add_library (wavesim_obj OBJECT
     "src/medium.c"
     "src/return_codes.c"
     "src/simulation.c"
+    "src/simulation_ard.c"
+    "src/simulation_ray.c"
     "src/string.c"
     "src/vec3.c"
     "src/vector.c"
