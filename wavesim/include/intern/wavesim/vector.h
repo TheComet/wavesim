@@ -119,7 +119,8 @@ vector_push(vector_t* vector, void* data);
  * could be re-allocated. Use the pointer immediately after calling this
  * function.
  * @param[in] vector The vector to emplace an element into.
- * @return A pointer to the allocated memory for the requested element. See
+ * @return A pointer to the allocated memory for the requested element
+without him knowing what data is there and ment. See
  * warning and use with caution.
  */
 WAVESIM_PRIVATE_API void*
@@ -144,6 +145,15 @@ vector_push_vector(vector_t* vector, const vector_t* source_vector);
  */
 WAVESIM_PRIVATE_API void*
 vector_pop(vector_t* vector);
+
+/*!
+ * @brief Swaps two elements in the vector.
+ * @param[in] vector The vector to modify.
+ * @param[in] index1 Index of the first element.
+ * @param[in] index2 Index of the second element.
+ */
+WAVESIM_PRIVATE_API void
+vector_swap(vector_t* vector, size_t index1, size_t index2);
 
 /*!
  * @brief Returns the very last element of the vector.
@@ -223,7 +233,7 @@ vector_erase_element(vector_t* vector, void* element);
  * returned.
  */
 WAVESIM_PRIVATE_API void*
-vector_get_element(const vector_t* vector, size_t index);
+vector_get(const vector_t* vector, size_t index);
 
 /*!
  * @brief Convenient macro for iterating a vector's elements.
@@ -237,43 +247,43 @@ vector_get_element(const vector_t* vector, size_t index);
  * }
  * ```
  * @param[in] vector A pointer to the vector to iterate.
- * @param[in] var_type Should be the type of data stored in the vector.
+ * @param[in] T Should be the type of data stored in the vector.
  * @param[in] var The name of a temporary variable you'd like to use within the
- * for-loop to reference the current element.
+ * for-loop to reference the current element. It will be of type T*
  */
-#define VECTOR_FOR_EACH(vector, var_type, var) { \
-    var_type* var; \
-    uint8_t* internal_##var_end_of_vector = (vector)->data + (vector)->count * (vector)->element_size; \
-    for(var = (var_type*)(vector)->data; \
-        (uint8_t*)var != internal_##var_end_of_vector; \
-        var = (var_type*)(((uint8_t*)var) + (vector)->element_size)) {
+#define VECTOR_FOR_EACH(vector, T, var) { \
+    T* var; \
+    uint8_t* end_of_vector_##var = (vector)->data + (vector)->count * (vector)->element_size; \
+    for(var = (T*)(vector)->data; \
+        (uint8_t*)var != end_of_vector_##var; \
+        var = (T*)(((uint8_t*)var) + (vector)->element_size)) {
 
 
-#define VECTOR_FOR_EACH_R(vector, var_type, var) { \
-    var_type* var; \
-    uint8_t* internal_##var_start_of_vector = (vector)->data - (vector)->element_size; \
-    for(var = (var_type*)((vector)->data + (vector)->count * (vector)->element_size - (vector)->element_size); \
-        (uint8_t*)var != internal_##var_start_of_vector; \
-        var = (var_type*)(((uint8_t*)var) - (vector)->element_size)) {
+#define VECTOR_FOR_EACH_R(vector, T, var) { \
+    T* var; \
+    uint8_t* start_of_vector_##var = (vector)->data - (vector)->element_size; \
+    for(var = (T*)((vector)->data + (vector)->count * (vector)->element_size - (vector)->element_size); \
+        (uint8_t*)var != start_of_vector_##var; \
+        var = (T*)(((uint8_t*)var) - (vector)->element_size)) {
 
 /*!
  * @brief Convenient macro for iterating a range of a vector's elements.
  * @param[in] vector A pointer to the vector to iterate.
- * @param[in] var_type Should be the type of data stored in the vector. For
+ * @param[in] T Should be the type of data stored in the vector. For
  * example, if your vector is storing ```type_t*``` objects then
- * var_type should equal ```type_t``` (without the pointer).
+ * T should equal ```type_t``` (without the pointer).
  * @param[in] var The name of a temporary variable you'd like to use within the
  * for loop to reference the current element.
  * @param[in] begin_index The index (starting at 0) of the first element to
  * start with.
  * @param[in] end_index The index of the last element to iterate (exclusive).
  */
-#define VECTOR_FOR_EACH_RANGE(vector, var_type, var, begin_index, end_index) { \
-    var_type* var;                                                                     \
-    uint8_t* internal_##var_end_of_vector = (vector)->data + end_index * (vector)->element_size; \
-    for(var = (var_type*)((vector)->data + begin_index * (vector)->element_size);      \
-        (uint8_t*)var != internal_##var_end_of_vector;                       \
-        var = (var_type*)(((uint8_t*)var) + (vector)->element_size)) {
+#define VECTOR_FOR_EACH_RANGE(vector, T, var, begin_index, end_index) { \
+    T* var; \
+    uint8_t* end_of_vector_##var = (vector)->data + end_index * (vector)->element_size; \
+    for(var = (T*)((vector)->data + begin_index * (vector)->element_size); \
+        (uint8_t*)var != end_of_vector_##var; \
+        var = (T*)(((uint8_t*)var) + (vector)->element_size)) {
 
 /*!
  * @brief Closes a for each scope previously opened by VECTOR_FOR_EACH.
@@ -291,13 +301,13 @@ vector_get_element(const vector_t* vector, size_t index);
  * }
  * ```
  * @param[in] vector The vector to erase from.
- * @param[in] var_type Should be the type of data stored in the vector.
+ * @param[in] T Should be the type of data stored in the vector.
  * @param[in] element The element to erase.
  */
-#define VECTOR_ERASE_IN_FOR_LOOP(vector, element_type, element)                \
-    vector_erase_element(vector, element);                                     \
-    element = (element_type*)(((uint8_t*)element) - (vector)->element_size); \
-    internal_##var_end_of_vector = (vector)->data + (vector)->count * (vector)->element_size;
+#define VECTOR_ERASE_IN_FOR_LOOP(vector, T, var) do { \
+    vector_erase_element(vector, var); \
+    var = (T*)(((uint8_t*)var) - (vector)->element_size); \
+    end_of_vector_##var = (vector)->data + (vector)->count * (vector)->element_size; } while(0)
 
 C_END
 

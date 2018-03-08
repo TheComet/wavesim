@@ -299,11 +299,11 @@ mesh_is_manifold(const mesh_t* mesh)
         e3[0] = indices[2] < indices[0] ? indices[2] : indices[0];
         e3[1] = indices[2] > indices[0] ? indices[2] : indices[0];
 
-        if (btree_insert(&set, hash_edge_indices(e1), NULL) < -1)
+        if (btree_insert(&set, hash_edge_indices(e1), (void*)(size_t)indices[0]) < -1)
             goto ran_out_of_memory;
-        if (btree_insert(&set, hash_edge_indices(e2), NULL) < -1)
+        if (btree_insert(&set, hash_edge_indices(e2), (void*)(size_t)indices[1]) < -1)
             goto ran_out_of_memory;
-        if (btree_insert(&set, hash_edge_indices(e3), NULL) < -1)
+        if (btree_insert(&set, hash_edge_indices(e3), (void*)(size_t)indices[2]) < -1)
             goto ran_out_of_memory;
     }
 

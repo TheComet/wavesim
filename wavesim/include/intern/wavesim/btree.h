@@ -192,19 +192,21 @@ btree_clear_free(btree_t* btree);
  * @brief Iterates over the specified btree's elements and opens a FOR_EACH
  * scope.
  * @param[in] btree The btree to iterate.
- * @param[in] var_type The type of data being held in the btree.
- * @param[in] var The name to give the variable pointing to the current
- * element.
+ * @param[in] T The type of data being held in the btree.
+ * @param[in] k The name to give the variable holding the current key. Will
+ * be of type hash_t.
+ * @param[in] v The name to give the variable pointing to the current
+ * element. Will be of type T*.
  */
-#define BTREE_FOR_EACH(btree, var_t, hash_v, var_v) {                                               \
-    hash_t i_##var_v;                                                                               \
-    hash_t hash_v;                                                                                  \
-    var_t* var_v;                                                                                   \
-    for(i_##var_v = 0;                                                                              \
-        i_##var_v != btree_count(btree) &&                                                          \
-            ((hash_v = ((btree_hash_value_t*) (btree)->vector.data)[i_##var_v].hash) || 1) &&       \
-            ((var_v  = (var_t*)((btree_hash_value_t*)(btree)->vector.data)[i_##var_v].value) || 1); \
-        ++i_##var_v) {
+#define BTREE_FOR_EACH(btree, T, k, v) { \
+    hash_t btree_##v; \
+    hash_t k; \
+    T* v; \
+    for(btree_##v = 0; \
+        btree_##v != btree_count(btree) && \
+            ((k = ((btree_hash_value_t*) (btree)->vector.data)[btree_##v].hash) || 1) && \
+            ((v  = (T*)((btree_hash_value_t*)(btree)->vector.data)[btree_##v].value) || 1); \
+        ++btree_##v) {
 
 /*!
  * @brief Closes a for each scope previously opened by BTREE_FOR_EACH.
@@ -218,9 +220,9 @@ btree_clear_free(btree_t* btree);
  * matter).
  * @param[in] btree A pointer to the btree object currently being iterated.
  */
-#define BTREE_ERASE_CURRENT_ITEM_IN_FOR_LOOP(btree, var_v) do { \
-    vector_erase_element(&(btree)->vector, ((btree_hash_value_t*)(btree)->vector.data) + i_##var_v); \
-    --i_##var_v; } while(0)
+#define BTREE_ERASE_CURRENT_ITEM_IN_FOR_LOOP(btree, v) do { \
+    vector_erase_element(&(btree)->vector, ((btree_hash_value_t*)(btree)->vector.data) + btree_##v); \
+    --btree_##v; } while(0)
 
 C_END
 

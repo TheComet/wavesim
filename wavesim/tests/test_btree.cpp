@@ -14,21 +14,21 @@ TEST(NAME, init_sets_correct_values)
     btree.vector.element_size = 283;
 
     btree_construct(&btree);
-    ASSERT_EQ(0u, btree.vector.count);
+    ASSERT_THAT(btree.vector.count, Eq(0u));
 
-    ASSERT_EQ(0u, btree.vector.capacity);
-    ASSERT_EQ(0u, btree.vector.count);
-    ASSERT_EQ(NULL, btree.vector.data);
-    ASSERT_EQ(sizeof(struct btree_hash_value_t ), btree.vector.element_size);
+    ASSERT_THAT(btree.vector.capacity, Eq(0u));
+    ASSERT_THAT(btree.vector.count, Eq(0u));
+    ASSERT_THAT(btree.vector.data, IsNull());
+    ASSERT_THAT(btree.vector.element_size, Eq(sizeof(struct btree_hash_value_t )));
 }
 
 TEST(NAME, create_initialises_btree)
 {
     struct btree_t* btree = btree_create();
-    ASSERT_EQ(0u, btree->vector.capacity);
-    ASSERT_EQ(0u, btree->vector.count);
-    ASSERT_EQ(NULL, btree->vector.data);
-    ASSERT_EQ(sizeof(struct btree_hash_value_t ), btree->vector.element_size);
+    ASSERT_THAT(btree->vector.capacity, Eq(0u));
+    ASSERT_THAT(btree->vector.count, Eq(0u));
+    ASSERT_THAT(btree->vector.data, IsNull());
+    ASSERT_THAT(btree->vector.element_size, Eq(sizeof(struct btree_hash_value_t )));
     btree_destroy(btree);
 }
 
@@ -43,11 +43,11 @@ TEST(NAME, insertion_forwards)
     btree_insert(btree, 3, &d);
     btree_insert(btree, 4, &e);
 
-    ASSERT_EQ(a, *(int*)btree_find(btree, 0));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(c, *(int*)btree_find(btree, 2));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 3));
-    ASSERT_EQ(e, *(int*)btree_find(btree, 4));
+    ASSERT_THAT(*(int*)btree_find(btree, 0), Eq(a));
+    ASSERT_THAT(*(int*)btree_find(btree, 1), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 2), Eq(c));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(d));
+    ASSERT_THAT(*(int*)btree_find(btree, 4), Eq(e));
 
     btree_destroy(btree);
 }
@@ -63,11 +63,11 @@ TEST(NAME, insertion_backwards)
     btree_insert(btree, 1, &d);
     btree_insert(btree, 0, &e);
 
-    ASSERT_EQ(e, *(int*)btree_find(btree, 0));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(c, *(int*)btree_find(btree, 2));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 3));
-    ASSERT_EQ(a, *(int*)btree_find(btree, 4));
+    ASSERT_THAT(*(int*)btree_find(btree, 0), Eq(e));
+    ASSERT_THAT(*(int*)btree_find(btree, 1), Eq(d));
+    ASSERT_THAT(*(int*)btree_find(btree, 2), Eq(c));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 4), Eq(a));
 
     btree_destroy(btree);
 }
@@ -83,11 +83,11 @@ TEST(NAME, insertion_random)
     btree_insert(btree, 41, &d);
     btree_insert(btree, 70, &e);
 
-    ASSERT_EQ(a, *(int*)btree_find(btree, 26));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 41));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 44));
-    ASSERT_EQ(e, *(int*)btree_find(btree, 70));
-    ASSERT_EQ(c, *(int*)btree_find(btree, 82));
+    ASSERT_THAT(*(int*)btree_find(btree, 26), Eq(a));
+    ASSERT_THAT(*(int*)btree_find(btree, 41), Eq(d));
+    ASSERT_THAT(*(int*)btree_find(btree, 44), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 70), Eq(e));
+    ASSERT_THAT(*(int*)btree_find(btree, 82), Eq(c));
 
     btree_destroy(btree);
 }
@@ -104,7 +104,7 @@ TEST(NAME, clear_keeps_underlying_vector)
     // this should delete all entries but keep the underlying vector
     btree_clear(btree);
 
-    ASSERT_EQ(0u, btree->vector.count);
+    ASSERT_THAT(btree->vector.count, Eq(0u));
     EXPECT_THAT(btree->vector.data, NotNull());
 
     btree_destroy(btree);
@@ -122,8 +122,8 @@ TEST(NAME, clear_free_deletes_underlying_vector)
     // this should delete all entries + free the underlying vector
     btree_clear_free(btree);
 
-    ASSERT_EQ(0u, btree->vector.count);
-    ASSERT_EQ(NULL, btree->vector.data);
+    ASSERT_THAT(btree->vector.count, Eq(0u));
+    ASSERT_THAT(btree->vector.data, IsNull());
 
     btree_destroy(btree);
 }
@@ -137,7 +137,7 @@ TEST(NAME, count_returns_correct_number)
     btree_insert(btree, 1, &a);
     btree_insert(btree, 2, &a);
 
-    ASSERT_EQ(3u, btree_count(btree));
+    ASSERT_THAT(btree_count(btree), Eq(3u));
 
     btree_destroy(btree);
 }
@@ -153,35 +153,35 @@ TEST(NAME, erase_elements)
     btree_insert(btree, 3, &d);
     btree_insert(btree, 4, &e);
 
-    ASSERT_EQ(c, *(int*)btree_erase(btree, 2));
+    ASSERT_THAT(*(int*)btree_erase(btree, 2), Eq(c));
 
     // 4
-    ASSERT_EQ(a, *(int*)btree_find(btree, 0));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 3));
-    ASSERT_EQ(e, *(int*)btree_find(btree, 4));
+    ASSERT_THAT(*(int*)btree_find(btree, 0), Eq(a));
+    ASSERT_THAT(*(int*)btree_find(btree, 1), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(d));
+    ASSERT_THAT(*(int*)btree_find(btree, 4), Eq(e));
 
-    ASSERT_EQ(e, *(int*)btree_erase(btree, 4));
+    ASSERT_THAT(*(int*)btree_erase(btree, 4), Eq(e));
 
     // 3
-    ASSERT_EQ(a, *(int*)btree_find(btree, 0));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 3));
+    ASSERT_THAT(*(int*)btree_find(btree, 0), Eq(a));
+    ASSERT_THAT(*(int*)btree_find(btree, 1), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(d));
 
-    ASSERT_EQ(a, *(int*)btree_erase(btree, 0));
+    ASSERT_THAT(*(int*)btree_erase(btree, 0), Eq(a));
 
     // 2
-    ASSERT_EQ(b, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 3));
+    ASSERT_THAT(*(int*)btree_find(btree, 1), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(d));
 
-    ASSERT_EQ(b, *(int*)btree_erase(btree, 1));
+    ASSERT_THAT(*(int*)btree_erase(btree, 1), Eq(b));
 
     // 1
-    ASSERT_EQ(d, *(int*)btree_find(btree, 3));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(d));
 
-    ASSERT_EQ(d, *(int*)btree_erase(btree, 3));
+    ASSERT_THAT(*(int*)btree_erase(btree, 3), Eq(d));
 
-    ASSERT_EQ(NULL, btree_erase(btree, 2));
+    ASSERT_THAT(btree_erase(btree, 2), IsNull());
 
     btree_destroy(btree);
 }
@@ -205,11 +205,11 @@ TEST(NAME, reinsertion_forwards)
     btree_insert(btree, 3, &d);
     btree_insert(btree, 4, &e);
 
-    ASSERT_EQ(a, *(int*)btree_find(btree, 0));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(c, *(int*)btree_find(btree, 2));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 3));
-    ASSERT_EQ(e, *(int*)btree_find(btree, 4));
+    ASSERT_THAT( *(int*)btree_find(btree, 0), Eq(a));
+    ASSERT_THAT( *(int*)btree_find(btree, 1), Eq(b));
+    ASSERT_THAT( *(int*)btree_find(btree, 2), Eq(c));
+    ASSERT_THAT( *(int*)btree_find(btree, 3), Eq(d));
+    ASSERT_THAT( *(int*)btree_find(btree, 4), Eq(e));
 
     btree_destroy(btree);
 }
@@ -233,11 +233,11 @@ TEST(NAME, reinsertion_backwards)
     btree_insert(btree, 1, &d);
     btree_insert(btree, 0, &e);
 
-    ASSERT_EQ(e, *(int*)btree_find(btree, 0));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 1));
-    ASSERT_EQ(c, *(int*)btree_find(btree, 2));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 3));
-    ASSERT_EQ(a, *(int*)btree_find(btree, 4));
+    ASSERT_THAT(*(int*)btree_find(btree, 0), Eq(e));
+    ASSERT_THAT(*(int*)btree_find(btree, 1), Eq(d));
+    ASSERT_THAT(*(int*)btree_find(btree, 2), Eq(c));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 4), Eq(a));
 
     btree_destroy(btree);
 }
@@ -261,11 +261,11 @@ TEST(NAME, reinsertion_random)
     btree_insert(btree, 70, &e);
     btree_insert(btree, 44, &b);
 
-    ASSERT_EQ(a, *(int*)btree_find(btree, 26));
-    ASSERT_EQ(d, *(int*)btree_find(btree, 41));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 44));
-    ASSERT_EQ(e, *(int*)btree_find(btree, 70));
-    ASSERT_EQ(c, *(int*)btree_find(btree, 82));
+    ASSERT_THAT(*(int*)btree_find(btree, 26), Eq(a));
+    ASSERT_THAT(*(int*)btree_find(btree, 41), Eq(d));
+    ASSERT_THAT(*(int*)btree_find(btree, 44), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 70), Eq(e));
+    ASSERT_THAT(*(int*)btree_find(btree, 82), Eq(c));
 
     btree_destroy(btree);
 }
@@ -282,9 +282,9 @@ TEST(NAME, inserting_duplicate_hashes_doesnt_replace_existing_elements)
     btree_insert(btree, 4, &b);
     btree_insert(btree, 3, &c);
 
-    ASSERT_EQ(a, *(int*)btree_find(btree, 3));
-    ASSERT_EQ(b, *(int*)btree_find(btree, 4));
-    ASSERT_EQ(a, *(int*)btree_find(btree, 5));
+    ASSERT_THAT(*(int*)btree_find(btree, 3), Eq(a));
+    ASSERT_THAT(*(int*)btree_find(btree, 4), Eq(b));
+    ASSERT_THAT(*(int*)btree_find(btree, 5), Eq(a));
 
     btree_destroy(btree);
 }
@@ -424,7 +424,7 @@ TEST(NAME, iterate_with_no_items)
         BTREE_FOR_EACH(btree, int, hash, value)
             ++counter;
         BTREE_END_EACH
-        ASSERT_EQ(0, counter);
+        ASSERT_THAT(counter, Eq(0));
     }
     btree_destroy(btree);
 }
@@ -444,16 +444,16 @@ TEST(NAME, iterate_5_random_items)
     BTREE_FOR_EACH(btree, int, hash, value)
         switch(counter)
         {
-            case 0 : ASSERT_EQ(243u, hash); ASSERT_EQ(a, *value); break;
-            case 1 : ASSERT_EQ(256u, hash); ASSERT_EQ(b, *value); break;
-            case 2 : ASSERT_EQ(456u, hash); ASSERT_EQ(c, *value); break;
-            case 3 : ASSERT_EQ(468u, hash); ASSERT_EQ(d, *value); break;
-            case 4 : ASSERT_EQ(969u, hash); ASSERT_EQ(e, *value); break;
-            default: ASSERT_EQ(0, 1); break;
+            case 0 : ASSERT_THAT(hash, Eq(243u)); ASSERT_THAT(a, Eq(*value)); break;
+            case 1 : ASSERT_THAT(hash, Eq(256u)); ASSERT_THAT(b, Eq(*value)); break;
+            case 2 : ASSERT_THAT(hash, Eq(456u)); ASSERT_THAT(c, Eq(*value)); break;
+            case 3 : ASSERT_THAT(hash, Eq(468u)); ASSERT_THAT(d, Eq(*value)); break;
+            case 4 : ASSERT_THAT(hash, Eq(969u)); ASSERT_THAT(e, Eq(*value)); break;
+            default: ASSERT_THAT(1, Eq(0)); break;
         }
         ++counter;
     BTREE_END_EACH
-    ASSERT_EQ(5, counter);
+    ASSERT_THAT(counter, Eq(5));
 
     btree_destroy(btree);
 }
@@ -472,16 +472,16 @@ TEST(NAME, iterate_5_null_items)
     BTREE_FOR_EACH(btree, int, hash, value)
         switch(counter)
         {
-            case 0 : ASSERT_EQ(243u, hash); ASSERT_EQ(NULL, value); break;
-            case 1 : ASSERT_EQ(256u, hash); ASSERT_EQ(NULL, value); break;
-            case 2 : ASSERT_EQ(456u, hash); ASSERT_EQ(NULL, value); break;
-            case 3 : ASSERT_EQ(468u, hash); ASSERT_EQ(NULL, value); break;
-            case 4 : ASSERT_EQ(969u, hash); ASSERT_EQ(NULL, value); break;
-            default: ASSERT_EQ(0, 1); break;
+            case 0 : ASSERT_THAT(hash, Eq(243u)); ASSERT_THAT(value, IsNull()); break;
+            case 1 : ASSERT_THAT(hash, Eq(256u)); ASSERT_THAT(value, IsNull()); break;
+            case 2 : ASSERT_THAT(hash, Eq(456u)); ASSERT_THAT(value, IsNull()); break;
+            case 3 : ASSERT_THAT(hash, Eq(468u)); ASSERT_THAT(value, IsNull()); break;
+            case 4 : ASSERT_THAT(hash, Eq(969u)); ASSERT_THAT(value, IsNull()); break;
+            default: ASSERT_THAT(1, Eq(0)); break;
         }
         ++counter;
     BTREE_END_EACH
-    ASSERT_EQ(5, counter);
+    ASSERT_THAT(counter, Eq(5));
 
     btree_destroy(btree);
 }

@@ -90,6 +90,8 @@ vector_resize(vector_t* vector, size_t size)
 
     assert(vector);
 
+
+    /*  */
     if (vector->count < size)
         result = vector_expand(vector, VECTOR_ERROR, size);
     vector->count = size;
@@ -168,6 +170,29 @@ vector_pop(vector_t* vector)
 }
 
 /* ------------------------------------------------------------------------- */
+void
+vector_swap(vector_t* vector, size_t index1, size_t index2)
+{
+    uint8_t* secret_swap_space;
+    uint8_t* elem1;
+    uint8_t* elem2;
+
+    assert(vector);
+    assert(vector->data);
+    assert(index1 < vector->count);
+    assert(index2 < vector->count);
+
+    /* see vector_expand() -- There is guaranteed to be an extra slot at the
+     * end of the vector */
+    secret_swap_space = vector->data + (vector->count+1) * vector->element_size;
+    elem1 = vector_get(vector, index1);
+    elem2 = vector_get(vector, index2);
+    memcpy(secret_swap_space, elem1, vector->element_size);
+    memcpy(elem1, elem2, vector->element_size);
+    memcpy(elem2, secret_swap_space, vector->element_size);
+}
+
+/* ------------------------------------------------------------------------- */
 void*
 vector_back(const vector_t* vector)
 {
@@ -236,13 +261,13 @@ void
 vector_erase_index(vector_t* vector, size_t index)
 {
     assert(vector);
-
-    if (index >= vector->count)
-        return;
+    assert(index < vector->count);
 
     if (index == vector->count - 1)
+    {
         /* last element doesn't require memory shifting, just pop it */
         vector_pop(vector);
+    }
     else
     {
         /* shift memory right after the specified element down by one element */
@@ -278,12 +303,11 @@ vector_erase_element(vector_t* vector, void* element)
 
 /* ------------------------------------------------------------------------- */
 void*
-vector_get_element(const vector_t* vector, size_t index)
+vector_get(const vector_t* vector, size_t index)
 {
     assert(vector);
+    assert(index < vector->count);
 
-    if (index >= vector->count)
-        return NULL;
     return vector->data + (vector->element_size * index);
 }
 
@@ -292,8 +316,8 @@ vector_get_element(const vector_t* vector, size_t index)
  * ------------------------------------------------------------------------- */
 static size_t
 vector_expand(vector_t *vector,
-                      size_t insertion_index,
-                      size_t target_count)
+              size_t insertion_index,
+              size_t target_count)
 {
     size_t new_count;
     uint8_t* old_data;
@@ -319,13 +343,18 @@ vector_expand(vector_t *vector,
         return 0;
     }
 
-    /* prepare for reallocating data */
+    /*
+     * Prepare for reallocating data.
+     *
+     * WARNING: vector_swap() relies on there being element_size number of
+     * bytes reserved at the end.
+     */
     old_data = vector->data;
-    new_data = (uint8_t*)MALLOC(new_count * vector->element_size);
+    new_data = (uint8_t*)MALLOC((new_count+1) * vector->element_size);
     if (!new_data)
         return VECTOR_ERROR;
 
-    /* if (no insertion index is required, copy all data to new memory */
+    /* if no insertion index is required, copy all data to new memory */
     if (insertion_index == VECTOR_ERROR || insertion_index >= new_count)
         memcpy(new_data, old_data, vector->count * vector->element_size);
 

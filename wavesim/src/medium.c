@@ -396,7 +396,7 @@ decompose_systematic_recursive(medium_t* medium,
     /* Add ourselves to the parent partition's adjacent list, if possible */
     if (parent_partition_idx != VECTOR_ERROR)
     {
-        medium_partition_t* parent_partition = vector_get_element(&medium->partitions, parent_partition_idx);
+        medium_partition_t* parent_partition = vector_get(&medium->partitions, parent_partition_idx);
         size_t* adjacent_partition_idx = vector_emplace(&parent_partition->adjacent_partitions);
         if (adjacent_partition_idx == NULL)
             goto ran_out_of_memory;

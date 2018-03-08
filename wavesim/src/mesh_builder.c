@@ -99,12 +99,12 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
             int f;
 
             /* points to the attribute of this vertex triplet */
-            attribute_t* attr = vector_get_element(&ab, v/3);
+            attribute_t* attr = vector_get(&ab, v/3);
             /* Construct a vertex object to make comparison easier */
             vertex_t vb_vertex = vertex(vec3(
-                *(wsreal_t*)vector_get_element(&vb, v+0),
-                *(wsreal_t*)vector_get_element(&vb, v+1),
-                *(wsreal_t*)vector_get_element(&vb, v+2)),
+                *(wsreal_t*)vector_get(&vb, v+0),
+                *(wsreal_t*)vector_get(&vb, v+1),
+                *(wsreal_t*)vector_get(&vb, v+2)),
                 *attr
             );
 
