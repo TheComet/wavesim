@@ -2,6 +2,23 @@
 
 /* ------------------------------------------------------------------------- */
 hash_t
+hash_jenkins_oaat(const void* key, size_t len)
+{
+    hash_t hash, i;
+    for(hash = i = 0; i != len; ++i)
+    {
+        hash += *((uint8_t*)key + i);
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 1);
+    hash += (hash << 15);
+    return hash;
+}
+
+/* ------------------------------------------------------------------------- */
+hash_t
 hash_combine(hash_t lhs, hash_t rhs)
 {
     lhs^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);

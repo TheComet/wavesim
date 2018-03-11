@@ -6,6 +6,10 @@
 C_BEGIN
 
 typedef uint32_t hash_t;
+typedef hash_t (*hash_func)(const void*, size_t);
+
+WAVESIM_PRIVATE_API hash_t
+hash_jenkins_oaat(const void* key, size_t len);
 
 /*!
  * @brief Taken from boost::hash_combine. Combines two hash values into a

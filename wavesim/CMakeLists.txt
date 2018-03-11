@@ -186,6 +186,7 @@ add_library (wavesim_obj OBJECT
     "src/octree.c"
     "src/medium.c"
     "src/return_codes.c"
+    "src/hash_set.c"
     "src/simulation.c"
     "src/simulation_ard.c"
     "src/simulation_ray.c"
