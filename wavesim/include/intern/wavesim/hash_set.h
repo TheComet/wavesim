@@ -9,6 +9,9 @@ C_BEGIN
 #define HASH_SET_OUT_OF_MEMORY (hash_t)-1
 #define HASH_SET_ERROR (hash_t)-2
 
+#define SLOT_UNUSED (hash_t)0
+#define SLOT_TOMBSTONE (hash_t)1
+
 typedef enum hash_set_flags_e
 {
     HM_INSERTION_HEAVY = 0x01,
@@ -18,13 +21,25 @@ typedef enum hash_set_flags_e
     HM_INTEGERS        = 0x08
 } hash_set_flags_e;
 
+typedef struct key_store_t
+{
+    void** (*alloc)(hash_t);
+    void (*free)(void**,hash_t);
+    hash_t (*add)(hash_t,hash_t*,void**,hash_t,const void*,size_t);
+    void (*remove)(hash_t,hash_t*,void**);
+    hash_t (*find)(hash_t,hash_t*,void**,hash_t,const void*,size_t);
+} key_store_t;
+
+extern key_store_t generic_key_store;
+
 typedef struct hash_set_t
 {
     hash_t* table;
-    void** key_store;
+    void** keys;
     hash_t table_size;
     hash_t slots_used;
     hash_func hash;
+    key_store_t key_store;
 } hash_set_t;
 
 WAVESIM_PRIVATE_API wsret

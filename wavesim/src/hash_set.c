@@ -3,82 +3,24 @@
 #include <string.h>
 #include <assert.h>
 
-#define SLOT_UNUSED (hash_t)0
-
-static void** malloc_key_store(hash_t table_size)
+/* ------------------------------------------------------------------------- */
+/*
+ * Need to account for the possibility that our has function will produce
+ * reserved values. In this case, return a value that is not reserved, but
+ * predictable.
+ */
+static hash_t
+hash_wrapper(const hash_set_t* hs, const void* data, size_t len)
 {
-    void** key_store = MALLOC(sizeof(void*) * table_size);
-    if (key_store == NULL)
-        return NULL;
-    memset(key_store, 0, sizeof(void*) * table_size);
-    return key_store;
+    hash_t hash = hs->hash(data, len);
+    if (hash == SLOT_UNUSED || hash == SLOT_TOMBSTONE)
+        return 2;
+    return hash;
 }
-static void free_key_store(void** key_store, hash_t table_size)
-{
-    hash_t i;
-    for (i = 0; i != table_size; ++i)
-        if (key_store[i] != NULL)
-            FREE(key_store[i]);
-    FREE(key_store);
-}
-static hash_t insert_key(hash_t key,
-                         hash_t* table, void** key_store, hash_t table_size,
-                         const void* data, size_t len)
-{
-    hash_t i;
-    hash_t home = key % table_size;
-    for (i = 1; i != table_size + 1; ++i)
-    {
-        if (table[home] == SLOT_UNUSED)
-            break;
-        if (table[home] == key)
-        {
-            size_t cmp_len;
-            memcpy(&cmp_len, key_store[home], sizeof(size_t));
-            if (len == cmp_len &&
-                    memcmp((uint8_t*)key_store[home] + sizeof(size_t), data, len) == 0)
-                return HASH_SET_ERROR;
-        }
-        home += i;
-        home = home % table_size;
-    }
-    assert(i != table_size+1);
 
-    /* Copy data into key storage. Make sure to save the data length as well */
-    key_store[home] = MALLOC(sizeof(size_t) + len);
-    if (key_store[home] == NULL)
-        return HASH_SET_OUT_OF_MEMORY;
-    memcpy(key_store[home], &len, sizeof(size_t));
-    memcpy((uint8_t*)key_store[home] + sizeof(size_t), data, len);
-
-    /* Store key in table */
-    table[home] = key;
-
-    return home;
-}
-static hash_t search_key(hash_t key,
-                         hash_t* table, void** key_store, hash_t table_size,
-                         const void* data, size_t len)
-{
-    hash_t i;
-    hash_t home = key % table_size;
-    for (i = 1; i != table_size+1; ++i)
-    {
-        if (table[home] == key)
-        {
-            size_t cmp_len;
-            memcpy(&cmp_len, key_store[home], sizeof(size_t));
-            if (cmp_len == len &&
-                    memcmp((uint8_t*)key_store[home] + sizeof(size_t), data, len) == 0)
-                return home;
-        }
-        home += i;
-        home = home % table_size;
-    }
-
-    return HASH_SET_ERROR;
-}
-static int resize_rehash(hash_set_t* hs, hash_t new_size)
+/* ------------------------------------------------------------------------- */
+static int
+resize_rehash(hash_set_t* hs, hash_t new_size)
 {
     hash_t i, key;
     void** new_key_store;
@@ -89,7 +31,7 @@ static int resize_rehash(hash_set_t* hs, hash_t new_size)
         goto table_alloc_failed;
     memset(new_table, 0, sizeof(hash_t) * new_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
 
-    new_key_store = malloc_key_store(new_size);
+    new_key_store = hs->key_store.alloc(new_size);
     if (new_key_store == NULL)
         goto keys_alloc_failed;
 
@@ -100,7 +42,7 @@ static int resize_rehash(hash_set_t* hs, hash_t new_size)
 
         /* Key is stored in the table */
         key = hs->table[i];
-        if (key == SLOT_UNUSED)
+        if (key == SLOT_UNUSED || key == SLOT_TOMBSTONE)
             continue;
 
         /*
@@ -108,25 +50,25 @@ static int resize_rehash(hash_set_t* hs, hash_t new_size)
          * first few bytes store the length of the data proceeding. Load the
          * length and pointer to the data.
          */
-        memcpy(&len, hs->key_store[i], sizeof(size_t));
-        data = (uint8_t*)hs->key_store[i] + sizeof(size_t);
-
+        memcpy(&len, hs->keys[i], sizeof(size_t));
+        data = (uint8_t*)hs->keys[i] + sizeof(size_t);
 
         /* Insert into new table and keys array */
-        if (insert_key(key, new_table, new_key_store, new_size, data, len) == HASH_SET_OUT_OF_MEMORY)
+        if (hs->key_store.add(key, new_table, new_key_store, new_size, data, len) == HASH_SET_OUT_OF_MEMORY)
             goto insert_key_failed;
     }
 
     /* Swap pointers to new arrays and clean up old ones */
     FREE(hs->table);
-    free_key_store(hs->key_store, hs->table_size);
+    hs->key_store.free(hs->keys, hs->table_size);
     hs->table = new_table;
-    hs->key_store = new_key_store;
+    hs->keys = new_key_store;
     hs->table_size = new_size;
 
     return 0;
 
-    insert_key_failed  : free_key_store(new_key_store, new_size);
+    insert_key_failed  :
+    hs->key_store.free(new_key_store, new_size);
     keys_alloc_failed  : FREE(new_table);
     table_alloc_failed : return -1;
 }
@@ -166,15 +108,23 @@ hash_set_construct(hash_set_t* hs, uint8_t flags)
         goto table_alloc_failed;
     memset(hs->table, 0, sizeof(hash_t) * hs->table_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
 
-    hs->key_store = malloc_key_store(hs->table_size);
-    if (hs->key_store == NULL)
+    if (flags & HM_INSERTION_HEAVY)
+    {
+        hs->key_store = generic_key_store;
+    }
+    else
+    {
+        hs->key_store = generic_key_store;
+    }
+
+    hs->keys = hs->key_store.alloc(hs->table_size);
+    if (hs->keys == NULL)
         goto keys_alloc_failed;
 
     return WS_OK;
 
     keys_alloc_failed  : FREE(hs->table);
     table_alloc_failed : WSRET(WS_ERR_OUT_OF_MEMORY);
-    (void)flags;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -183,11 +133,11 @@ hash_set_destruct(hash_set_t* hs)
 {
     hash_t i;
     for (i = 0; i != hs->table_size; ++i)
-        if (hs->key_store[i])
-            FREE(hs->key_store[i]);
+        if (hs->keys[i])
+            FREE(hs->keys[i]);
 
     FREE(hs->table);
-    FREE(hs->key_store);
+    FREE(hs->keys);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -203,8 +153,8 @@ hash_set_add(hash_set_t* hs, const void* data, size_t len)
     if ((100*hs->slots_used) / hs->table_size > 80)
         resize_rehash(hs, hs->table_size * 2);
 
-    key = hs->hash(data, len);
-    key = insert_key(key, hs->table, hs->key_store, hs->table_size, data, len);
+    key = hash_wrapper(hs, data, len);
+    key = hs->key_store.add(key, hs->table, hs->keys, hs->table_size, data, len);
     if (key != HASH_SET_OUT_OF_MEMORY && key != HASH_SET_ERROR)
         hs->slots_used++;
     return key;
@@ -216,18 +166,21 @@ hash_set_find(const hash_set_t* hs, const void* data, size_t len)
 {
     hash_t key;
 
-    key = hs->hash(data, len);
-    return search_key(key, hs->table, hs->key_store, hs->table_size, data, len);
+    key = hash_wrapper(hs, data, len);
+    return hs->key_store.find(key, hs->table, hs->keys, hs->table_size, data, len);
 }
 
 /* ------------------------------------------------------------------------- */
 WAVESIM_PRIVATE_API hash_t
 hash_set_remove(hash_set_t* hs, const void* data, size_t len)
 {
-    (void)hs;
-    (void)data;
-    (void)len;
-    return HASH_SET_ERROR;
+    hash_t key = hash_wrapper(hs, data, len);
+    hash_t home = hs->key_store.find(key, hs->table, hs->keys, hs->table_size, data, len);
+    if (home == HASH_SET_ERROR)
+        return HASH_SET_ERROR;
+
+    hs->key_store.remove(home, hs->table, hs->keys);
+    return home;
 }
 
 /* ------------------------------------------------------------------------- */
