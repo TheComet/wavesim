@@ -290,6 +290,7 @@ if (WAVESIM_TESTS)
         "tests/test_attribute.cpp"
         "tests/test_btree.cpp"
         "tests/test_face.cpp"
+        "tests/test_hash_set.cpp"
         "tests/test_intersections.cpp"
         "tests/test_mesh.cpp"
         "tests/test_mesh_builder.cpp"

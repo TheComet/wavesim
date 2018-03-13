@@ -7,5 +7,5 @@ valgrind --num-callers=50 \
 	--leak-check=full \
 	--track-origins=yes \
 	--time-stamp=yes \
-	./test_wavesim 2>&1 | tee ../../test_wavesim.grind
+	./wavesim_tests $1 2>&1 | tee ../../wavesim_tests.grind
 cd .. && cd ..

@@ -6,8 +6,8 @@
 
 C_BEGIN
 
-#define HASH_SET_OUT_OF_MEMORY (size_t)-1
-#define HASH_SET_ERROR (size_t)-2
+#define HASH_SET_OUT_OF_MEMORY (hash_t)-1
+#define HASH_SET_ERROR (hash_t)-2
 
 typedef enum hash_set_flags_e
 {
@@ -18,25 +18,13 @@ typedef enum hash_set_flags_e
     HM_INTEGERS        = 0x08
 } hash_set_flags_e;
 
-typedef struct hash_set_key_store_t
-{
-    uint8_t* buffer;
-    size_t len;
-    void (*construct)(struct hash_set_key_store_t*);
-    void (*destruct)(struct hash_set_key_store_t*);
-    int (*bucket_resized)(struct hash_set_key_store_t*,hash_t);
-    int (*set)(struct hash_set_key_store_t*,hash_t,const void*,size_t);
-    int (*compare)(struct hash_set_key_store_t*,hash_t,const void*,size_t);
-    void (*remove)(struct hash_set_key_store_t*,hash_t);
-} hash_set_key_store_t;
-
 typedef struct hash_set_t
 {
     hash_t* table;
+    void** key_store;
     hash_t table_size;
     hash_t slots_used;
     hash_func hash;
-    hash_set_key_store_t key_store;
 } hash_set_t;
 
 WAVESIM_PRIVATE_API wsret
@@ -45,7 +33,7 @@ hash_set_create(hash_set_t** hs, uint8_t flags);
 WAVESIM_PRIVATE_API void
 hash_set_destroy(hash_set_t* hs);
 
-WAVESIM_PRIVATE_API void
+WAVESIM_PRIVATE_API wsret
 hash_set_construct(hash_set_t* hs, uint8_t flags);
 
 WAVESIM_PRIVATE_API void
@@ -113,13 +101,15 @@ hash_set_find_str(const hash_set_t* hs, const char* str);
  * @brief String version of hash_set_remove(). Behaves exactly the same.
  */
 WAVESIM_PRIVATE_API hash_t
-hash_set_remove_str(hash_set_t* hs, const char* data);
+hash_set_remove_str(hash_set_t* hs, const char* str);
 
 /*!
  * @brief Clears the set of all data.
  */
 WAVESIM_PRIVATE_API void
 hash_set_clear(hash_set_t* hs);
+
+#define hash_set_count(hs) (hs->slots_used)
 
 C_END
 
