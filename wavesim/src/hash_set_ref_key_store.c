@@ -4,21 +4,25 @@
 #include <assert.h>
 
 /*
- * The generic key store implementation is an array of arrays. The outer array
- * has a fixed size (namely the bucket size) so it's easy to look up the
- * original keys. If an index in this array is unused, then it is NULL. For
- * each key that is stored, memory is allocated and a pointer to this memory is
- * assigned to a slot in the outer array.
+ * The "ref" key store implementation is an array of pointers that point to
+ * the original, unhashed keys (without allocating and copying the data). The
+ * length is stored along with it.
  */
+
+typedef struct entry_t
+{
+    size_t len;
+    void* data;
+} entry_t;
 
 /* ------------------------------------------------------------------------- */
 static void**
 ksalloc(hash_t table_size)
 {
-    void** key_store = MALLOC(sizeof(void*) * table_size);
+    void** key_store = MALLOC(sizeof(entry_t) * table_size);
     if (key_store == NULL)
         return NULL;
-    memset(key_store, 0, sizeof(void*) * table_size);
+    memset(key_store, 0, sizeof(entry_t) * table_size);
     return key_store;
 }
 
@@ -26,10 +30,7 @@ ksalloc(hash_t table_size)
 static void
 ksfree(void** key_store, hash_t table_size)
 {
-    hash_t i;
-    for (i = 0; i != table_size; ++i)
-        if (key_store[i] != NULL)
-            FREE(key_store[i]);
+    (void)table_size;
     FREE(key_store);
 }
 
@@ -37,25 +38,22 @@ ksfree(void** key_store, hash_t table_size)
 static void
 load(hash_t home, void** key_store, void** data, size_t* len)
 {
-    memcpy(len, key_store[home], sizeof(size_t));
-    *data = (void*)((uint8_t*)key_store[home] + sizeof(size_t));
+    entry_t* entry = (entry_t*)key_store + home;
+    *data = entry->data;
+    *len = entry->len;
 
-    assert(*data != NULL); /* Make sure set isn't accidentally reading an invalid slot */
+    assert(*data != NULL);
 }
 
 /* ------------------------------------------------------------------------- */
 static int
 store(hash_t home, void** key_store, const void* data, size_t len)
 {
+    entry_t* entry = (entry_t*)key_store + home;
+    entry->len = len;
+    entry->data = (void*)data;
+
     assert(data != NULL);
-
-    /* Copy data into key storage. Make sure to save the data length as well */
-    key_store[home] = MALLOC(sizeof(size_t) + len);
-    if (key_store[home] == NULL)
-        return -1;
-
-    memcpy(key_store[home], &len, sizeof(size_t));
-    memcpy((uint8_t*)key_store[home] + sizeof(size_t), data, len);
 
     return 0;
 }
@@ -64,15 +62,14 @@ store(hash_t home, void** key_store, const void* data, size_t len)
 static void
 erase(hash_t home, void** key_store)
 {
-    FREE(key_store[home]);
-    key_store[home] = NULL;
+    memset((entry_t*)key_store + home, 0, sizeof(entry_t));
 }
 
 /* ------------------------------------------------------------------------- */
 static hash_t
 find_existing(hash_t key,
-              const hash_t* table, void** key_store, hash_t table_size,
-              const void* data, size_t len)
+        const hash_t* table, void** key_store, hash_t table_size,
+        const void* data, size_t len)
 {
     hash_t i;
     hash_t home = key % table_size;
@@ -82,13 +79,9 @@ find_existing(hash_t key,
             break;
         if (table[home] == key)
         {
-            size_t cmp_len;
-            memcpy(&cmp_len, key_store[home], sizeof(size_t));
-            if (cmp_len == len &&
-                    memcmp((uint8_t*)key_store[home] + sizeof(size_t), data, len) == 0)
-            {
+            entry_t* entry = (entry_t*)key_store + home;
+            if (len == entry->len && memcmp(entry->data, data, len) == 0)
                 return home;
-            }
         }
         home += i;
         home = home % table_size;
@@ -100,8 +93,8 @@ find_existing(hash_t key,
 /* ------------------------------------------------------------------------- */
 static hash_t
 find_new(hash_t key,
-         const hash_t* table, void** key_store, hash_t table_size,
-         const void* data, size_t len)
+        const hash_t* table, void** key_store, hash_t table_size,
+        const void* data, size_t len)
 {
     hash_t i;
     hash_t home = key % table_size;
@@ -114,13 +107,9 @@ find_new(hash_t key,
             tombstone = home;
         if (table[home] == key)
         {
-            size_t cmp_len;
-            memcpy(&cmp_len, key_store[home], sizeof(size_t));
-            if (len == cmp_len &&
-                    memcmp((uint8_t*)key_store[home] + sizeof(size_t), data, len) == 0)
-            {
+            entry_t* entry = (entry_t*)key_store + home;
+            if (len == entry->len && memcmp(entry->data, data, len) == 0)
                 return HASH_SET_ERROR;
-            }
         }
         home += i;
         home = home % table_size;
@@ -134,7 +123,7 @@ find_new(hash_t key,
 }
 
 /* ------------------------------------------------------------------------- */
-key_store_t generic_key_store = {
+key_store_t ref_key_store = {
     ksalloc,
     ksfree,
     load,

@@ -22,40 +22,44 @@ hash_wrapper(const hash_set_t* hs, const void* data, size_t len)
 static int
 resize_rehash(hash_set_t* hs, hash_t new_size)
 {
-    hash_t i, key;
+    hash_t home;
     void** new_key_store;
     hash_t* new_table;
 
+    /* Allocate and initialize new table with new size */
     new_table = MALLOC(sizeof(hash_t) * new_size);
     if (new_table == NULL)
         goto table_alloc_failed;
     memset(new_table, 0, sizeof(hash_t) * new_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
 
+    /* Allocate an initialize the corresponding unhashed key store */
     new_key_store = hs->key_store.alloc(new_size);
     if (new_key_store == NULL)
         goto keys_alloc_failed;
 
-    for (i = 0; i != hs->table_size; ++i)
+    /*
+     * Go through every valid key in the old table, compute the "home" position
+     * of this key in the new table and transfer the unhashed keys to the new
+     * key store.
+     */
+    for (home = 0; home != hs->table_size; ++home)
     {
+        hash_t key, new_home;
         void* data;
         size_t len;
 
-        /* Key is stored in the table */
-        key = hs->table[i];
-        if (key == SLOT_UNUSED || key == SLOT_TOMBSTONE)
+        key = hs->table[home];
+        if (key == SLOT_TOMBSTONE || key == SLOT_UNUSED)
             continue;
 
-        /*
-         * The un-hashed key (data) is stored in they "keys" array, where the
-         * first few bytes store the length of the data proceeding. Load the
-         * length and pointer to the data.
-         */
-        memcpy(&len, hs->keys[i], sizeof(size_t));
-        data = (uint8_t*)hs->keys[i] + sizeof(size_t);
+        /* Load data from old table and find slot in new table to insert unhashed key into */
+        hs->key_store.load(home, hs->keys, &data, &len);
+        new_home = hs->key_store.find_new(key, new_table, new_key_store, new_size, data, len);
+        assert(new_home != HASH_SET_ERROR); /* The new table should ALWAYS have an available slot while we're transferring keys */
 
-        /* Insert into new table and keys array */
-        if (hs->key_store.add(key, new_table, new_key_store, new_size, data, len) == HASH_SET_OUT_OF_MEMORY)
+        if (hs->key_store.store(new_home, new_key_store, data, len) != 0)
             goto insert_key_failed;
+        new_table[new_home] = key;
     }
 
     /* Swap pointers to new arrays and clean up old ones */
@@ -108,13 +112,14 @@ hash_set_construct(hash_set_t* hs, uint8_t flags)
         goto table_alloc_failed;
     memset(hs->table, 0, sizeof(hash_t) * hs->table_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
 
-    if (flags & HM_INSERTION_HEAVY)
-    {
-        hs->key_store = generic_key_store;
-    }
+    if (flags & HM_REFERENCE_KEYS)
+        hs->key_store = ref_key_store;
     else
     {
-        hs->key_store = generic_key_store;
+        if (flags & HM_INSERTION_HEAVY)
+            hs->key_store = contiguous_key_store;
+        else
+            hs->key_store = generic_key_store;
     }
 
     hs->keys = hs->key_store.alloc(hs->table_size);
@@ -131,20 +136,15 @@ hash_set_construct(hash_set_t* hs, uint8_t flags)
 void
 hash_set_destruct(hash_set_t* hs)
 {
-    hash_t i;
-    for (i = 0; i != hs->table_size; ++i)
-        if (hs->keys[i])
-            FREE(hs->keys[i]);
-
+    hs->key_store.free(hs->keys, hs->table_size);
     FREE(hs->table);
-    FREE(hs->keys);
 }
 
 /* ------------------------------------------------------------------------- */
 WAVESIM_PRIVATE_API hash_t
 hash_set_add(hash_set_t* hs, const void* data, size_t len)
 {
-    hash_t key;
+    hash_t key, home;
 
     /*
      * If we reach a load factor of 80% or more, resize the table and rehash
@@ -154,10 +154,15 @@ hash_set_add(hash_set_t* hs, const void* data, size_t len)
         resize_rehash(hs, hs->table_size * 2);
 
     key = hash_wrapper(hs, data, len);
-    key = hs->key_store.add(key, hs->table, hs->keys, hs->table_size, data, len);
-    if (key != HASH_SET_OUT_OF_MEMORY && key != HASH_SET_ERROR)
-        hs->slots_used++;
-    return key;
+    if ((home = hs->key_store.find_new(key, hs->table, hs->keys, hs->table_size, data, len)) == HASH_SET_ERROR)
+        return HASH_SET_ERROR;
+    if (hs->key_store.store(home, hs->keys, data, len) != 0)
+        return HASH_SET_OUT_OF_MEMORY;
+
+    hs->table[home] = key;
+    hs->slots_used++;
+
+    return home;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -167,19 +172,21 @@ hash_set_find(const hash_set_t* hs, const void* data, size_t len)
     hash_t key;
 
     key = hash_wrapper(hs, data, len);
-    return hs->key_store.find(key, hs->table, hs->keys, hs->table_size, data, len);
+    return hs->key_store.find_existing(key, hs->table, hs->keys, hs->table_size, data, len);
 }
 
 /* ------------------------------------------------------------------------- */
 WAVESIM_PRIVATE_API hash_t
 hash_set_remove(hash_set_t* hs, const void* data, size_t len)
 {
-    hash_t key = hash_wrapper(hs, data, len);
-    hash_t home = hs->key_store.find(key, hs->table, hs->keys, hs->table_size, data, len);
-    if (home == HASH_SET_ERROR)
+    hash_t home;
+    if ((home = hash_set_find(hs, data, len)) == HASH_SET_ERROR)
         return HASH_SET_ERROR;
 
-    hs->key_store.remove(home, hs->table, hs->keys);
+    hs->key_store.erase(home, hs->keys);
+    hs->table[home] = SLOT_TOMBSTONE;
+    hs->slots_used--;
+
     return home;
 }
 

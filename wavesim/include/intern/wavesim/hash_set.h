@@ -23,14 +23,35 @@ typedef enum hash_set_flags_e
 
 typedef struct key_store_t
 {
-    void** (*alloc)(hash_t);
-    void (*free)(void**,hash_t);
-    hash_t (*add)(hash_t,hash_t*,void**,hash_t,const void*,size_t);
-    void (*remove)(hash_t,hash_t*,void**);
-    hash_t (*find)(hash_t,hash_t*,void**,hash_t,const void*,size_t);
+    /*! Allocates the array in which unhashed keys can be stored
+     * @param[in] table_size The table size of the set. Implementations should
+     * size the key store to match this size.
+     * @return Returns a pointer to the allocated array. Depending on how this
+     * gets implemented, it may be an array of arrays, or it may just be a flat
+     * contiguous chunk of memory. */
+    void** (*alloc)(hash_t table_size);
+
+    /*! Frees the array in which unhashed keys are stored.
+     * @param[in] keys The pointer to the array that was returned by alloc()
+     * @param[in] table_size The table size of the set. */
+    void (*free)(void** keys, hash_t table_size);
+
+    void (*load)(hash_t home, void** keys, void** data, size_t* len);
+    /*! Stores some data into the key store. */
+    int (*store)(hash_t home, void** keys, const void* data, size_t len);
+    void (*erase)(hash_t home, void** keys);
+
+    hash_t (*find_existing)(hash_t key,
+                       const hash_t* table, void** keys, hash_t table_size,
+                       const void* data, size_t len);
+    hash_t (*find_new)(hash_t key,
+                       const hash_t* table, void** keys, hash_t table_size,
+                       const void* data, size_t len);
 } key_store_t;
 
 extern key_store_t generic_key_store;
+extern key_store_t ref_key_store;
+extern key_store_t contiguous_key_store;
 
 typedef struct hash_set_t
 {
