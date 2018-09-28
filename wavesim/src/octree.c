@@ -64,9 +64,7 @@ octree_destroy(octree_t* octree)
 void
 node_destroy_children(octree_node_t* node)
 {
-    /* The root node doesn't own the index buffer like all of the other nodes */
-    if (node->parent != NULL)
-        vector_clear_free(&node->index_buffer);
+    vector_clear_free(&node->index_buffer);
 
     if (node->children != NULL)
     {
@@ -118,20 +116,11 @@ node_create_children(octree_node_t** children, octree_node_t* parent, const mesh
 void
 octree_clear(octree_t* octree)
 {
-
     /* destroy all children and reset the root node */
-    if (octree->root.children != NULL)
-    {
-        int i;
-        for (i = 0; i != 8; ++i)
-            node_destroy_children(&octree->root.children[i]);
-        FREE(octree->root.children);
-    }
+    node_destroy_children(&octree->root);
 
     /* release reference to mesh object */
     octree->mesh = NULL;
-    octree->root.index_buffer.data = NULL;
-    octree->root.index_buffer.count = 0;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -173,115 +162,125 @@ determine_smallest_subdivision(wsreal_t smallest_subdivision[3], const mesh_t* m
 }
 #endif
 
-/* ------------------------------------------------------------------------- */
-static wsret WS_WARN_UNUSED
-determine_child_index_buffers(const octree_t* octree, octree_node_t* node)
+static int
+determine_split(octree_node_t* node, const wsreal_t bb[6])
 {
-    wsib_t i;
-    int c;
-    for (i = 0; i != (wsib_t)vector_count(&node->index_buffer); i += 3)
-    {
-        /*
-         * Here we use the index buffer of the *node* (instead of the mesh) to
-         * look up 3 vertices in the mesh to form a face. This is dangerous and
-         * only works if the octree node's index buffer was initialized with the
-         * same datatype as the mesh's index buffer (which, if nothing broke,
-         * should always be the case).
-         */
-        wsib_t indices[3];
-        vec3_t face[3];
-        indices[0] = mesh_get_index_from_buffer(node->index_buffer.data, i + 0, octree->mesh->ib_type);
-        indices[1] = mesh_get_index_from_buffer(node->index_buffer.data, i + 1, octree->mesh->ib_type);
-        indices[2] = mesh_get_index_from_buffer(node->index_buffer.data, i + 2, octree->mesh->ib_type);
-        face[0] = mesh_get_vertex_position_from_buffer(octree->mesh->vb, indices[0], octree->mesh->vb_type);
-        face[1] = mesh_get_vertex_position_from_buffer(octree->mesh->vb, indices[1], octree->mesh->vb_type);
-        face[2] = mesh_get_vertex_position_from_buffer(octree->mesh->vb, indices[2], octree->mesh->vb_type);
+    int x, y, z;
 
-        /*
-         * Test the bounding box of the face we extracted with each child node
-         * bounding box. If it intersects, then add the face to the child node.
-         */
-        aabb_t face_bb = aabb_from_3_points(face[0].xyz, face[1].xyz, face[2].xyz);
-        for (c = 0; c != 8; ++c)
-        {
-            octree_node_t* child = &node->children[c];
-            if (intersect_aabb_aabb_test(child->aabb.xyzxyz, face_bb.xyzxyz))
-            {
-                if (vector_push(&child->index_buffer, &indices[0]) == VECTOR_ERROR) WSRET(WS_ERR_OUT_OF_MEMORY);
-                if (vector_push(&child->index_buffer, &indices[1]) == VECTOR_ERROR) WSRET(WS_ERR_OUT_OF_MEMORY);
-                if (vector_push(&child->index_buffer, &indices[2]) == VECTOR_ERROR) WSRET(WS_ERR_OUT_OF_MEMORY);
-            }
-        }
+    /* Calculate the split plane locations */
+    vec3_t split_location = AABB_DIMS(node->aabb);
+    vec3_mul_scalar(split_location.xyz, 0.5);
+    vec3_add_vec3(split_location.xyz, node->aabb.b.min.xyz);
+
+    /*
+     * For there to be a successful split, the bounding box must fall
+     * definitively into one of the eight octants. If it intersects any of the
+     * split planes, a split cannot be performed.
+     *
+     * Furthermore: For the split to be unambiguous, the checks must be
+     *     min >= split
+     *     max <  split  <-- no equals
+     */
+    if (bb[3] < split_location.v.x) x = 0;
+    else if (bb[0] >= split_location.v.x) x = 1;
+    else return -1;
+
+    if (bb[4] < split_location.v.y) y = 0;
+    else if (bb[1] >= split_location.v.y) y = 1;
+    else return -1;
+
+    if (bb[5] < split_location.v.z) z = 0;
+    else if (bb[2] >= split_location.v.z) z = 1;
+    else return -1;
+
+    return IDX(x, y, z);
+}
+
+static wsret
+add_face_to_octree_recursive(octree_t* octree,
+                             octree_node_t* node,
+                             const wsreal_t face_bb[6],
+                             const wsib_t face_indices[3],
+                             int max_depth)
+{
+    wsret result;
+    int split_idx;
+    void* ib_dest;
+
+    if (max_depth != 0 && (split_idx = determine_split(node, face_bb)) != -1)
+    {
+        /* Check if node needs subdividing */
+        if (node->children == NULL)
+            if ((result = octree_subdivide(octree, node)) != WS_OK)
+                return result;
+
+        return add_face_to_octree_recursive(octree,
+                                            &node->children[split_idx],
+                                            face_bb,
+                                            face_indices,
+                                            max_depth - 1);
     }
+
+    /*
+     * We don't know the integer types that get written to the octree node
+     * index buffer (they may not be a wsib_t type). All we can do is reserve
+     * space for 3 additional indices in the node's vector and get an offset to
+     * the first element to write the indices using the proper mesh_* routine.
+     */
+    if (vector_emplace(&node->index_buffer) == NULL) WSRET(WS_ERR_OUT_OF_MEMORY);
+    if (vector_emplace(&node->index_buffer) == NULL) WSRET(WS_ERR_OUT_OF_MEMORY);
+    if (vector_emplace(&node->index_buffer) == NULL) WSRET(WS_ERR_OUT_OF_MEMORY);
+    ib_dest = vector_get(&node->index_buffer, vector_count(&node->index_buffer) - 3);
+    mesh_write_index_to_buffer(ib_dest, 0, face_indices[0], octree->mesh->ib_type);
+    mesh_write_index_to_buffer(ib_dest, 1, face_indices[1], octree->mesh->ib_type);
+    mesh_write_index_to_buffer(ib_dest, 2, face_indices[2], octree->mesh->ib_type);
 
     return WS_OK;
 }
-static wsret WS_WARN_UNUSED
-octree_build_from_mesh_recursive(octree_t* octree, octree_node_t* node, int max_depth)
+static wsret
+add_face_to_octree(octree_t* octree, const wsreal_t face_bb[6], const wsib_t face_indices[3], int max_depth)
 {
-    wsret result;
-    unsigned int i;
-
-    /* Stop subdividing when we reach one face */
-    if (vector_count(&node->index_buffer) <= 3)
-        return WS_OK;
-
-    /* Abort if max depth has been reached */
-    if (max_depth == 0)
-        return WS_OK;
-
-    /* Subdivide and do AABB intersection tests to fill child index buffers */
-    if ((result = octree_subdivide(octree, node)) != WS_OK)
-        return result;
-    if ((result = determine_child_index_buffers(octree, node)) != WS_OK)
-        return result;
-
-    /*
-     * If it turns out that all 8 children have the exact same index buffers,
-     * then there is no point in doing further subdivisions.
-     */
-    for (i = 0; i != 8; ++i)
-        if (vector_count(&node->index_buffer) != vector_count(&node->children[i].index_buffer))
-        {
-            for (i = 0; i != 8; ++i)
-                if ((result = octree_build_from_mesh_recursive(octree, &node->children[i], max_depth - 1)) != WS_OK)
-                    return result;
-            return WS_OK;
-        }
-    /* If we end up here it means the 8 children have identical index buffers.
-     * Delete the children, they don't accomplish anything */
-    node_destroy_children(node);
-
-    return WS_OK;
+    return add_face_to_octree_recursive(octree, &octree->root, face_bb, face_indices, max_depth);
 }
 wsret
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth)
 {
+    size_t face_idx;
+    wsret result;
+
     /* Clear old octree if it exists */
     octree_clear(octree);
 
-    /*
-     * Create root
-     * WARNING: This is a pretty terrible hack; we manually set up the index
-     * buffer vector to point to the mesh's index buffer, instead of allocating
-     * and copying all of the indices. The root node's IB is identical to the
-     * mesh's IB and we save memory by avoiding a copy. Just be extra careful
-     * not to delete this vector at any point.
-     */
+    /* Initialize root child, which is in-place in the octree structure */
     octree->mesh = mesh;
     octree->root.aabb = mesh->aabb;
-    octree->root.index_buffer.capacity = 0;
-    octree->root.index_buffer.count = mesh->ib_count;
-    octree->root.index_buffer.element_size = mesh->ib_size;
-    octree->root.index_buffer.data = mesh->ib;
+    vector_construct(&octree->root.index_buffer, mesh->ib_size);
 
-    /* Handle empty meshes */
-    if (mesh_face_count(octree->mesh) == 0)
-        return 0;
+    for (face_idx = 0; face_idx != mesh_index_count(mesh); face_idx += 3)
+    {
+        size_t i;
 
-    if (octree_build_from_mesh_recursive(octree, &octree->root, max_depth) < 0)
-        return -1;
-    return 0;
+        /* Look up indices and vertices for the current face */
+        wsib_t indices[3];
+        vec3_t vertices[3];
+        for (i = 0; i != 3; ++i)
+        {
+            indices[i] = mesh_get_index_from_buffer(mesh->ib, face_idx+i, mesh->ib_type);
+            vertices[i] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[i], mesh->vb_type);
+        }
+
+        /* Calculate face AABB */
+        aabb_t face_bb = aabb_from_3_points(vertices[0].xyz, vertices[1].xyz, vertices[2].xyz);
+
+        /* Add this face to the octree */
+        if ((result = add_face_to_octree(octree, face_bb.xyzxyz, indices, max_depth)) != WS_OK)
+            goto adding_face_to_octree_failed;
+    }
+
+    return WS_OK;
+
+    adding_face_to_octree_failed : octree_clear(octree);
+    return result;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -380,7 +379,7 @@ octree_query_potential_faces(const octree_t* octree, vector_t* result, const wsr
 int
 octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mesh_t* mesh, const wsreal_t p[3], btree_t* tested_indices)
 {
-    wsib_t i;
+    size_t i;
     int intersect_count = 0;
     vec3_t p1, p2;
 
@@ -413,7 +412,7 @@ octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mes
     vec3_copy(&p2, p);
     p1.v.z = AABB_AZ(mesh->aabb) - 1; /* From -Z... */
     p2.v.z = AABB_BZ(mesh->aabb) + 1; /* ...to +Z */
-    for (i = 0; i != (wsib_t)vector_count(&node->index_buffer); i += 3)
+    for (i = 0; i != vector_count(&node->index_buffer); i += 3)
     {
         wsret result;
         wsib_t indices[3];

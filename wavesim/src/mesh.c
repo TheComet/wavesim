@@ -6,7 +6,7 @@
 #include <math.h>
 
 static void set_vb_ib_types_and_sizes(mesh_t* mesh, mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
-static void init_attribute_buffer(mesh_t* mesh, wsib_t vertex_count);
+static void init_attribute_buffer(mesh_t* mesh, size_t vertex_count);
 static void calculate_aabb(mesh_t* mesh);
 
 /* ------------------------------------------------------------------------- */
@@ -82,7 +82,7 @@ mesh_clear_buffers(mesh_t* mesh)
 wsret
 mesh_assign_buffers(mesh_t* mesh,
                     void* vertex_buffer, void* index_buffer,
-                    wsib_t vertex_count, wsib_t index_count,
+                    size_t vertex_count, size_t index_count,
                     mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     mesh_clear_buffers(mesh);
@@ -106,7 +106,7 @@ mesh_assign_buffers(mesh_t* mesh,
 wsret
 mesh_copy_from_buffers(mesh_t* mesh,
                        const void* vertex_buffer, const void* index_buffer,
-                       wsib_t vertex_count, wsib_t index_count,
+                       size_t vertex_count, size_t index_count,
                        mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     mesh_clear_buffers(mesh);
@@ -129,11 +129,11 @@ mesh_copy_from_buffers(mesh_t* mesh,
     init_attribute_buffer(mesh, vertex_count);
     calculate_aabb(mesh);
 
-    return WS_OK;
+    WSRET(WS_OK);
 
     ib_alloc_failed: FREE(mesh->vb);
     vb_alloc_failed: FREE(mesh->ab);
-    ab_alloc_failed: return WS_ERR_OUT_OF_MEMORY;
+    ab_alloc_failed: WSRET(WS_ERR_OUT_OF_MEMORY);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -168,7 +168,7 @@ mesh_get_vertex_position_from_buffer(const void* vb, wsib_t index, mesh_vb_type_
 
 /* ------------------------------------------------------------------------- */
 wsib_t
-mesh_get_index_from_buffer(const void* ib, wsib_t index, mesh_ib_type_e ib_type)
+mesh_get_index_from_buffer(const void* ib, size_t index, mesh_ib_type_e ib_type)
 {
     switch (ib_type)
     {
@@ -188,16 +188,15 @@ mesh_get_index_from_buffer(const void* ib, wsib_t index, mesh_ib_type_e ib_type)
 
 /* ------------------------------------------------------------------------- */
 face_t
-mesh_get_face(const mesh_t* mesh, wsib_t face_index)
+mesh_get_face(const mesh_t* mesh, size_t face_index)
 {
     return mesh_get_face_from_buffers(mesh->vb, mesh->ib, mesh->ab, face_index, mesh->vb_type, mesh->ib_type);
 }
 
-
 /* ------------------------------------------------------------------------- */
 face_t
 mesh_get_face_from_buffers(const void* vb, const void* ib, const attribute_t* attrs,
-                           wsib_t face_index,
+                           size_t face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     wsib_t indices[3];
@@ -217,6 +216,26 @@ mesh_get_face_from_buffers(const void* vb, const void* ib, const attribute_t* at
         vertex(vertices[2], attrs[indices[2]])
     );
 }
+
+/* ------------------------------------------------------------------------- */
+void
+mesh_write_index_to_buffer(void* ib, size_t offset, wsib_t index, mesh_ib_type_e ib_type)
+{
+    switch (ib_type)
+    {
+        case MESH_IB_INT8   : *((int8_t*)ib + offset)   = (int8_t)index;   break;
+        case MESH_IB_UINT8  : *((uint8_t*)ib + offset)  = (uint8_t)index;  break;
+        case MESH_IB_INT16  : *((int16_t*)ib + offset)  = (int16_t)index;  break;
+        case MESH_IB_UINT16 : *((uint16_t*)ib + offset) = (uint16_t)index; break;
+        case MESH_IB_INT32  : *((int32_t*)ib + offset)  = (int32_t)index;  break;
+        case MESH_IB_UINT32 : *((uint32_t*)ib + offset) = (uint32_t)index; break;
+#ifdef WAVESIM_64BIT_INDEX_BUFFERS
+        case MESH_IB_INT64  : *((int64_t*)ib + offset)  = (int64_t)index;  break;
+        case MESH_IB_UINT64 : *((uint64_t*)ib + offset) = (uint64_t)index; break;
+#endif
+    }
+}
+
 
 /* ------------------------------------------------------------------------- */
 /* STATIC FUNCTIONS */
@@ -241,9 +260,9 @@ static void set_vb_ib_types_and_sizes(mesh_t* mesh, mesh_vb_type_e vb_type, mesh
 }
 
 /* ------------------------------------------------------------------------- */
-static void init_attribute_buffer(mesh_t* mesh, wsib_t vertex_count)
+static void init_attribute_buffer(mesh_t* mesh, size_t vertex_count)
 {
-    wsib_t i;
+    size_t i;
     for (i = 0; i != vertex_count; ++i)
         attribute_set_default_solid(&mesh->ab[i]);
 }
@@ -251,12 +270,12 @@ static void init_attribute_buffer(mesh_t* mesh, wsib_t vertex_count)
 /* ------------------------------------------------------------------------- */
 static void calculate_aabb(mesh_t* mesh)
 {
-    wsib_t v, i;
+    size_t v, i;
     mesh->aabb = aabb_reset();
 
     for (v = 0; v != mesh->vb_count; ++v)
     {
-        vec3_t pos = mesh_get_vertex_position(mesh, v);
+        vec3_t pos = mesh_get_vertex_position(mesh, (wsib_t)v);
         for (i = 0; i != 3; ++i)
         {
             if (pos.xyz[i] < mesh->aabb.b.min.xyz[i])
@@ -272,7 +291,7 @@ int
 mesh_is_manifold(const mesh_t* mesh)
 {
     /* Condition is V + F - E = 2 */
-    wsib_t V, F, E, idx;
+    size_t V, F, E, idx;
     btree_t set;
 
     /* Have to count the number of unique edges in the mesh. */
@@ -307,7 +326,7 @@ mesh_is_manifold(const mesh_t* mesh)
             goto ran_out_of_memory;
     }
 
-    E = (wsib_t)btree_count(&set);
+    E = btree_count(&set);
     btree_clear_free(&set);
 
     if (V + F - E == 2)

@@ -88,13 +88,13 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
 
     /* Copy face vertices into buffers, avoiding duplicates */
     VECTOR_FOR_EACH(&mb->faces, face_t, face)
-        wsib_t v;
+        size_t v;
 
         /*
          * If a duplicate vertex is found, its index is written to this array.
          */
-        wsib_t duplicate_index[3] = {(wsib_t)-1, (wsib_t)-1, (wsib_t)-1};
-        for (v = 0; v != (wsib_t)vector_count(&vb); v += 3)
+        size_t duplicate_index[3] = {(size_t)-1, (size_t)-1, (size_t)-1};
+        for (v = 0; v != vector_count(&vb); v += 3)
         {
             int f;
 
@@ -123,7 +123,7 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
         /* Copy face into buffers */
         for (v = 0; v != 3; ++v)
         {
-            if (duplicate_index[v] == (wsib_t)-1)
+            if (duplicate_index[v] == (size_t)-1)
             {
                 /* Push vertex x,y,z coordinates and grab the index to the
                  * first coordinate, which we will use for the index buffer */
@@ -158,7 +158,7 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
         goto alloc_mesh_failed;
     if (mesh_copy_from_buffers(*mesh,
                                vb.data, ib.data,
-                               (wsib_t)vector_count(&vb) / 3, (wsib_t)vector_count(&ib),
+                               vector_count(&vb) / 3, vector_count(&ib),
                                MESH_VB_DEFAULT, ib_type) != WS_OK)
         goto copy_buffers_failed;
 

@@ -49,11 +49,16 @@
 #   endif
 #   include "wavesim/return_codes.h"
 
-    /* Index buffer type depends on whether 64-bit IBs are enabled */
+    /*
+     * Index buffer type depends on whether 64-bit IBs are enabled.
+     * Note that wsib_t needs to be a signed type, because it is the most
+     * "generic" integer possible (i.e. you can pass the most types of integers
+     * using a wsib_t type).
+     */
 #   ifdef WAVESIM_64BIT_INDEX_BUFFERS
-typedef uint64_t wsib_t;
+typedef int64_t wsib_t;
 #   else
-typedef uint32_t wsib_t;
+typedef int32_t wsib_t;
 #   endif
 
     /* The "real" datatype to be used throughout the library */

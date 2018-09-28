@@ -57,7 +57,9 @@ obj_export_octree(const char* filename, const octree_t* octree)
     if ((result = write_indices(&exporter, &octree->root)) != WS_OK)
         goto bail;
 
-    bail: obj_exporter_close(&exporter);
+    obj_exporter_close(&exporter);
+    WSRET(WS_OK);
 
-    return WS_OK;
+    bail : obj_exporter_close(&exporter);
+    WSRET(result);
 }

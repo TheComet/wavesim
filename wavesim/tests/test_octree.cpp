@@ -114,7 +114,14 @@ TEST_F(NAME, from_high_ceiling_obj)
 {
     mesh_create(&m, "test");
     EXPECT_THAT(obj_import_mesh("../wavesim/models/high-ceiling.obj", m), Eq(WS_OK));
-    octree_build_from_mesh(o, m, 3);
+    octree_build_from_mesh(o, m, 8);
     obj_export_octree("octree.from_high_ceiling_obj.obj", o);
 }
 
+TEST_F(NAME, from_sphere_obj)
+{
+    mesh_create(&m, "test");
+    EXPECT_THAT(obj_import_mesh("../wavesim/models/sphere.obj", m), Eq(WS_OK));
+    octree_build_from_mesh(o, m, 8);
+    obj_export_octree("octree.from_sphere_obj.obj", o);
+}

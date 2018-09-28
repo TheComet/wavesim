@@ -82,7 +82,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
                          const octree_t* octree,
                          const wsreal_t cell_aabb[6])
 {
-    wsib_t i;
+    size_t i;
     wsreal_t weights_sum;
     vector_t query_result;
     vec3_t cell_center;
@@ -103,7 +103,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
      */
     attribute_set_zero(cell_attribute);
     weights_sum = 0.0;
-    for (i = 0; i != (wsib_t)vector_count(&query_result) / 3; ++i)
+    for (i = 0; i != vector_count(&query_result) / 3; ++i)
     {
         int v;
 
@@ -459,6 +459,7 @@ medium_decompose_greedy_random(medium_t* medium,
 }
 
 /* ------------------------------------------------------------------------- */
+#ifdef DEBUG
 static int
 integrity_checks_out(const medium_t* medium, const medium_t* mediumdef, const wsreal_t grid_size[3])
 {
@@ -481,6 +482,7 @@ integrity_checks_out(const medium_t* medium, const medium_t* mediumdef, const ws
         ws_log_info(&g_ws_log, "Integrity check successful");
     return integrity;
 }
+#endif
 
 /* ------------------------------------------------------------------------- */
 wsret
@@ -563,10 +565,10 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
             success = 1;
             for (i = 0; i != 3; ++i)
             {
-                partition->cell_count[i] = (wsib_t)ceil(dims.v.x / partition->cell_size);
-                if (partition->cell_count[i]*partition->cell_size > dims.xyz[i]+cell_tolerance*partition->cell_size)
+                partition->cell_count[i] = (size_t)ceil(dims.v.x / partition->cell_size);
+                if ((wsreal_t)partition->cell_count[i]*partition->cell_size > dims.xyz[i]+cell_tolerance*partition->cell_size)
                 {
-                    partition->cell_size = dims.xyz[i] / (partition->cell_count[i] - cell_tolerance/2.0);
+                    partition->cell_size = dims.xyz[i] / ((wsreal_t)partition->cell_count[i] - cell_tolerance/2.0);
                     success = 0;
                 }
             }

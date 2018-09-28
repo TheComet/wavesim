@@ -54,14 +54,14 @@ process_face_elements(vector_t* index_buffer, char** line_save_ptr)
         index_str = ws_strtok(NULL, " ", line_save_ptr);
         if (index_str == NULL)
         {
-            return WS_ERR_TOO_FEW_INDICES;
+            WSRET(WS_ERR_TOO_FEW_INDICES);
         }
 
         /* split index/texcoord/normal -- we're only interested in the index */
         index_str = ws_strtok(index_str, "/", &token_save_ptr);
         if (index_str == NULL)
         {
-            return WS_ERR_TOO_FEW_INDICES;
+            WSRET(WS_ERR_TOO_FEW_INDICES);
         }
 
         int32_t* index = vector_emplace(index_buffer);
@@ -73,10 +73,10 @@ process_face_elements(vector_t* index_buffer, char** line_save_ptr)
     /* Make sure what we parsed was actually a tri and not a quad/ngon */
     if (ws_strtok(NULL, " ", line_save_ptr) != NULL)
     {
-        return WS_ERR_INDICES_ARENT_A_TRI;
+        WSRET(WS_ERR_INDICES_ARENT_A_TRI);
     }
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -149,7 +149,7 @@ obj_import_mesh(const char* filename, mesh_t* mesh)
     /* Note: This call clears the mesh's existing buffers for us */
     if ((retval = mesh_copy_from_buffers(mesh,
             vertex_buffer.data, index_buffer.data,
-            (wsib_t)vector_count(&vertex_buffer) / 3, (wsib_t)vector_count(&index_buffer),
+            vector_count(&vertex_buffer) / 3, vector_count(&index_buffer),
             MESH_VB_DOUBLE, MESH_IB_INT32)) != WS_OK)
     {
         goto mesh_copy_buffers_failed;
