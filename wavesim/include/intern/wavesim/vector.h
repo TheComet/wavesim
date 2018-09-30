@@ -13,6 +13,8 @@
 
 #include "wavesim/config.h"
 
+#define VECTOR_DEFAULT_MINIMUM_SIZE 32
+
 C_BEGIN
 
 #define VECTOR_ERROR (size_t)-1

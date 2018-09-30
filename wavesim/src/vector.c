@@ -102,7 +102,17 @@ vector_resize(vector_t* vector, size_t size)
 void*
 vector_emplace(vector_t* vector)
 {
-    return vector_emplace_multi(vector, 1);
+    void* data;
+
+    assert(vector);
+
+    if (vector->capacity < vector->count + 1)
+        if (vector_expand(vector, VECTOR_ERROR, 0) == VECTOR_ERROR)
+            return NULL;
+
+    data = vector->data + (vector->count * vector->element_size);
+    vector->count++;
+    return data;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -332,7 +342,7 @@ vector_expand(vector_t *vector,
 
     /* expand by factor 2, or round target count to next power of 2 if it was
      * specified */
-    if (target_count)
+    if (target_count >= VECTOR_DEFAULT_MINIMUM_SIZE)
     {
         size_t mask = 1;
         new_count = target_count;
@@ -344,9 +354,7 @@ vector_expand(vector_t *vector,
             return 0;
     }
     else
-        new_count = vector->capacity << 1;
-
-    printf("vector_expand %lu\n", new_count);
+        new_count = vector->capacity ? vector->capacity << 1 : VECTOR_DEFAULT_MINIMUM_SIZE;
 
     /*
      * If vector hasn't allocated anything yet, just allocated the requested
@@ -354,7 +362,6 @@ vector_expand(vector_t *vector,
      */
     if (!vector->data)
     {
-        new_count = (new_count == 0 ? 2 : new_count);
         vector->data = MALLOC(new_count * vector->element_size);
         if (!vector->data)
             return VECTOR_ERROR;
