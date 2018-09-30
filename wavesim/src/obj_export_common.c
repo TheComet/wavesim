@@ -11,7 +11,7 @@ obj_exporter_open(obj_exporter_t* exporter, const char* filename)
     if (exporter->fp == NULL)
         return WS_ERR_FOPEN_FAILED;
 
-    btree_construct(&exporter->vi_map);
+    hashmap_construct(&exporter->vi_map, sizeof(wsreal_t)*3, sizeof(void*));
     exporter->index_counter = 1; /* Obj indices start at 1 */
 
     return WS_OK;
@@ -21,7 +21,7 @@ obj_exporter_open(obj_exporter_t* exporter, const char* filename)
 void
 obj_exporter_close(obj_exporter_t* exporter)
 {
-    btree_clear_free(&exporter->vi_map);
+    hashmap_destruct(&exporter->vi_map);
     fclose(exporter->fp);
 }
 
@@ -29,14 +29,15 @@ obj_exporter_close(obj_exporter_t* exporter)
 wsret
 obj_write_vertex(obj_exporter_t* exporter, const wsreal_t vert[3])
 {
-    int result = btree_insert(&exporter->vi_map, hash32_vec3(vert), (void*)(intptr_t)exporter->index_counter);
-    if (result == 0) /* Key didn't exist yet */
+    wsret result = hashmap_insert(&exporter->vi_map, vert, &exporter->index_counter);
+    if (wsret_is_error(result))
+        return result;
+
+    if (result == WS_OK) /* vert doesn't exist yet */
     {
         fprintf(exporter->fp, "v %.6g %.6g %.6g\n", vert[0], vert[1], vert[2]);
         ++exporter->index_counter;
     }
-    if (result == -1)
-        return WS_ERR_OUT_OF_MEMORY;
 
     return WS_OK;
 }
@@ -95,11 +96,11 @@ obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6])
 
     for (i = 0; i != 12; ++i)
     {
-        void* index1_ptr = btree_find(&exporter->vi_map, hash32_vec3(edges[i].a.xyz));
-        void* index2_ptr = btree_find(&exporter->vi_map, hash32_vec3(edges[i].b.xyz));
+        wsib_t* index1_ptr = hashmap_find(&exporter->vi_map, edges[i].a.xyz);
+        wsib_t* index2_ptr = hashmap_find(&exporter->vi_map, edges[i].b.xyz);
         if (index1_ptr == NULL || index2_ptr == NULL)
             return WS_ERR_VERTEX_INDEX_NOT_FOUND;
-        fprintf(exporter->fp, "f %d %d\n", (int)(intptr_t)index1_ptr, (int)(intptr_t)index2_ptr);
+        fprintf(exporter->fp, "f %d %d\n", *index1_ptr, *index2_ptr);
     }
 
     return WS_OK;

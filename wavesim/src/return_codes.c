@@ -18,6 +18,13 @@ static const char* codemap[] = {
 };
 
 /* ------------------------------------------------------------------------- */
+int
+wsret_is_error(wsret code)
+{
+    return (code < 0);
+}
+
+/* ------------------------------------------------------------------------- */
 const char*
 wsret_to_string(wsret code)
 {

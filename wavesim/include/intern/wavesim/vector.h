@@ -74,8 +74,7 @@ vector_clear_free(vector_t* vector);
 /*!
  * @brief Sets the size of the vector to exactly the size specified. If the
  * vector was smaller then memory will be reallocated. If the vector was larger
- * then no reallocation will occur. The capacity will remain the same and the
- * size will be decreased.
+ * then no reallocation will occur.
  * @param[in] vector The vector to resize.
  * @param[in] size The new size of the vector.
  * @return Returns VECTOR_ERROR on failure, 0 on success.
@@ -119,12 +118,26 @@ vector_push(vector_t* vector, void* data);
  * could be re-allocated. Use the pointer immediately after calling this
  * function.
  * @param[in] vector The vector to emplace an element into.
- * @return A pointer to the allocated memory for the requested element
-without him knowing what data is there and ment. See
+ * @return A pointer to the allocated memory for the requested element. See
  * warning and use with caution.
  */
 WAVESIM_PRIVATE_API void*
 vector_emplace(vector_t* vector);
+
+/*!
+ * @brief Increases the vector's size by the number of entries specified. May
+ * cause a reallocation if the new size exceeds the vector's current capacity.
+ * @warning The returned pointer could be invalidated if any other
+ * vector related function is called, as the underlying memory of the vector
+ * could be re-allocated. Use the pointer immediately after calling this
+ * function.
+ * @param[in] vector The vector to resize.
+ * @param[in] size The number of entries to add to the end.
+ * @return Returns NULL on failure. Otherwise returns a pointer to the first
+ * element that was added at the end of the vector.
+ */
+WAVESIM_PRIVATE_API void*
+vector_emplace_multi(vector_t* vector, size_t size);
 
 /*!
  * @brief Copies the contents of another vector and pushes it into the vector.

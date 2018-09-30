@@ -135,33 +135,6 @@ octree_subdivide(octree_t* octree, octree_node_t* node)
 }
 
 /* ------------------------------------------------------------------------- */
-#if 0
-static void
-determine_smallest_subdivision(wsreal_t smallest_subdivision[3], const mesh_t* mesh)
-{
-    wsib_t f;
-    int i;
-
-    /* The smallest face bounding box makes the most sense */
-    smallest_subdivision[0] = INFINITY;
-    smallest_subdivision[1] = INFINITY;
-    smallest_subdivision[2] = INFINITY;
-    for (f = 0; f != mesh_face_count(mesh); ++f)
-    {
-        face_t face = mesh_get_face(mesh, f);
-        vec3_t dims = AABB_DIMS(aabb_from_face(&face));
-        for (i = 0; i != 3; ++i)
-            if (smallest_subdivision[i] > dims.xyz[i] && dims.xyz[i] > WS_EPSILON)
-                smallest_subdivision[i] = dims.xyz[i];
-    }
-
-    /* If any of the axes are 0 in length, just set it to another axis */
-    for (i = 0; i != 3; ++i)
-        if (smallest_subdivision[i] <= WS_EPSILON || smallest_subdivision[i] == INFINITY)
-            smallest_subdivision[i] = fmax(fmax(smallest_subdivision[0], smallest_subdivision[1]), smallest_subdivision[2]);
-}
-#endif
-
 static int
 determine_split(octree_node_t* node, const wsreal_t bb[6])
 {
@@ -196,6 +169,7 @@ determine_split(octree_node_t* node, const wsreal_t bb[6])
     return IDX(x, y, z);
 }
 
+/* ------------------------------------------------------------------------- */
 static wsret
 add_face_to_octree_recursive(octree_t* octree,
                              octree_node_t* node,
@@ -227,10 +201,8 @@ add_face_to_octree_recursive(octree_t* octree,
      * space for 3 additional indices in the node's vector and get an offset to
      * the first element to write the indices using the proper mesh_* routine.
      */
-    if (vector_emplace(&node->index_buffer) == NULL) WSRET(WS_ERR_OUT_OF_MEMORY);
-    if (vector_emplace(&node->index_buffer) == NULL) WSRET(WS_ERR_OUT_OF_MEMORY);
-    if (vector_emplace(&node->index_buffer) == NULL) WSRET(WS_ERR_OUT_OF_MEMORY);
-    ib_dest = vector_get(&node->index_buffer, vector_count(&node->index_buffer) - 3);
+    if ((ib_dest = vector_emplace_multi(&node->index_buffer, 3)) == NULL)
+        WSRET(WS_ERR_OUT_OF_MEMORY);
     mesh_write_index_to_buffer(ib_dest, 0, face_indices[0], octree->mesh->ib_type);
     mesh_write_index_to_buffer(ib_dest, 1, face_indices[1], octree->mesh->ib_type);
     mesh_write_index_to_buffer(ib_dest, 2, face_indices[2], octree->mesh->ib_type);

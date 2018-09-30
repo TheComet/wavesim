@@ -1,8 +1,8 @@
 #ifndef WAVESIM_OBJ_H
 #define WAVESIM_OBJ_H
 
-#include "wavesim/btree.h"
 #include "wavesim/config.h"
+#include "wavesim/hashmap.h"
 #include "wavesim/return_codes.h"
 #include <stdio.h>
 
@@ -14,9 +14,9 @@ typedef struct octree_t octree_t;
 
 typedef struct obj_exporter_t
 {
-    FILE*    fp;
-    uint32_t index_counter;
-    btree_t  vi_map;
+    FILE*     fp;
+    wsib_t    index_counter;
+    hashmap_t vi_map;
 } obj_exporter_t;
 
 /* --- Import --- */

@@ -6,7 +6,6 @@
 #define SLOT(hm, pos)  (*(hash32_t*)((uint8_t*)hm->storage + (sizeof(hash32_t) + hm->key_size) * pos))
 #define KEY(hm, pos)   ((void*)((uint8_t*)hm->storage + (sizeof(hash32_t) + hm->key_size) * pos + sizeof(hash32_t)))
 #define VALUE(hm, pos) ((void*)((uint8_t*)hm->storage + (sizeof(hash32_t) + hm->key_size) * hm->table_count + hm->value_size * pos))
-#define SCRATCH(hm)    ((void*)((uint8_t*)hm->storage + (sizeof(hash32_t) + hm->key_size + hm->value_size) * hm->table_count))
 
 /* ------------------------------------------------------------------------- */
 /*
@@ -28,7 +27,7 @@ static void*
 malloc_and_init_storage(hash32_t key_size, hash32_t value_size, hash32_t table_count)
 {
     /* Store the hashes, keys and values in one contiguous chunk of memory */
-    void* storage = MALLOC((sizeof(hash32_t) + key_size + value_size) * table_count + value_size);
+    void* storage = MALLOC((sizeof(hash32_t) + key_size + value_size) * table_count);
     if (storage == NULL)
         return NULL;
 
@@ -137,7 +136,7 @@ hashmap_insert(hashmap_t* hm, const void* key, const void* value)
         if (SLOT(hm, pos) == hash)
         {
             if (memcmp(KEY(hm, pos), key, hm->key_size) == 0)
-                return WS_ERR_KEY_EXISTS;
+                return WS_KEY_EXISTS;
         }
         else
             if (SLOT(hm, pos) == HM_SLOT_TOMBSTONE)

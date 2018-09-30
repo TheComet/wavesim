@@ -104,24 +104,35 @@ TEST_F(NAME, cube_mesh_with_small_triangles)
 
 TEST_F(NAME, from_cube_obj)
 {
-    mesh_create(&m, "test");
-    obj_import_mesh("../wavesim/models/cube.obj", m);
-    octree_build_from_mesh(o, m, 5);
-    obj_export_octree("octree.from_cube_obj.obj", o);
+    ASSERT_THAT(mesh_create(&m, "test"), Eq(WS_OK));
+    ASSERT_THAT(obj_import_mesh("../wavesim/models/cube.obj", m), Eq(WS_OK));
+    ASSERT_THAT(octree_build_from_mesh(o, m, 5), Eq(WS_OK));
+    ASSERT_THAT(obj_export_octree("octree.from_cube_obj.obj", o), Eq(WS_OK));
 }
 
 TEST_F(NAME, from_high_ceiling_obj)
 {
-    mesh_create(&m, "test");
+    ASSERT_THAT(mesh_create(&m, "test"), Eq(WS_OK));
     EXPECT_THAT(obj_import_mesh("../wavesim/models/high-ceiling.obj", m), Eq(WS_OK));
-    octree_build_from_mesh(o, m, 8);
-    obj_export_octree("octree.from_high_ceiling_obj.obj", o);
+    ASSERT_THAT(octree_build_from_mesh(o, m, 8), Eq(WS_OK));
+    ASSERT_THAT(obj_export_octree("octree.from_high_ceiling_obj.obj", o), Eq(WS_OK));
 }
 
 TEST_F(NAME, from_sphere_obj)
 {
-    mesh_create(&m, "test");
-    EXPECT_THAT(obj_import_mesh("../wavesim/models/sphere.obj", m), Eq(WS_OK));
-    octree_build_from_mesh(o, m, 8);
-    obj_export_octree("octree.from_sphere_obj.obj", o);
+    ASSERT_THAT(mesh_create(&m, "test"), Eq(WS_OK));
+    ASSERT_THAT(obj_import_mesh("../wavesim/models/sphere.obj", m), Eq(WS_OK));
+    ASSERT_THAT(octree_build_from_mesh(o, m, 8), Eq(WS_OK));
+    ASSERT_THAT(obj_export_octree("octree.from_sphere_obj.obj", o), Eq(WS_OK));
 }
+
+/* Generating backtraces takes way too long */
+#ifndef WAVESIM_MEMORY_BACKTRACE
+TEST_F(NAME, from_sphere_extreme_obj)
+{
+    ASSERT_THAT(mesh_create(&m, "test"), Eq(WS_OK));
+    ASSERT_THAT(obj_import_mesh("../wavesim/models/sphere_extreme.obj", m), Eq(WS_OK));
+    ASSERT_THAT(octree_build_from_mesh(o, m, 8), Eq(WS_OK));
+    ASSERT_THAT(obj_export_octree("octree.from_sphere_extreme_obj.obj", o), Eq(WS_OK));
+}
+#endif

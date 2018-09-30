@@ -4,6 +4,8 @@
 #include "wavesim/vector.h"
 #include "wavesim/memory.h"
 
+#include <stdio.h>
+
 /* ----------------------------------------------------------------------------
  * Static functions
  * ------------------------------------------------------------------------- */
@@ -86,32 +88,37 @@ vector_clear_free(vector_t* vector)
 size_t
 vector_resize(vector_t* vector, size_t size)
 {
-    size_t result = 0;
-
     assert(vector);
 
-
-    /*  */
-    if (vector->count < size)
-        result = vector_expand(vector, VECTOR_ERROR, size);
+    if (vector->capacity < size)
+        if (vector_expand(vector, VECTOR_ERROR, size) == VECTOR_ERROR)
+            return VECTOR_ERROR;
     vector->count = size;
 
-    return result;
+    return 0;
 }
 
 /* ------------------------------------------------------------------------- */
 void*
 vector_emplace(vector_t* vector)
 {
+    return vector_emplace_multi(vector, 1);
+}
+
+/* ------------------------------------------------------------------------- */
+void*
+vector_emplace_multi(vector_t* vector, size_t size)
+{
     void* data;
 
     assert(vector);
 
-    if (vector->count == vector->capacity)
-        if (vector_expand(vector, VECTOR_ERROR, 0) == VECTOR_ERROR)
+    if (vector->capacity < vector->count + size)
+        if (vector_expand(vector, VECTOR_ERROR, vector->count + size) == VECTOR_ERROR)
             return NULL;
-    data = vector->data + (vector->element_size * vector->count);
-    ++(vector->count);
+
+    data = vector->data + (vector->count * vector->element_size);
+    vector->count += size;
     return data;
 }
 
@@ -323,11 +330,23 @@ vector_expand(vector_t *vector,
     uint8_t* old_data;
     uint8_t* new_data;
 
-    /* expand by factor 2, or adopt target count if (it is not 0 */
+    /* expand by factor 2, or round target count to next power of 2 if it was
+     * specified */
     if (target_count)
+    {
+        size_t mask = 1;
         new_count = target_count;
+        while (new_count >>= 1)
+            mask <<= 1;
+        new_count = (target_count & mask) << 1;
+
+        if (new_count < vector->capacity)
+            return 0;
+    }
     else
         new_count = vector->capacity << 1;
+
+    printf("vector_expand %lu\n", new_count);
 
     /*
      * If vector hasn't allocated anything yet, just allocated the requested
