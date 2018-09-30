@@ -31,7 +31,7 @@ typedef struct meta_t
 
 /* ------------------------------------------------------------------------- */
 static void**
-ksalloc(hash_t table_size)
+ksalloc(hash32_t table_size)
 {
     void** pkeys;
     size_t size =
@@ -61,7 +61,7 @@ ksalloc(hash_t table_size)
 
 /* ------------------------------------------------------------------------- */
 static void
-ksfree(void** pkeys, hash_t table_size)
+ksfree(void** pkeys, hash32_t table_size)
 {
     (void)table_size;
     FREE(*pkeys);
@@ -70,7 +70,7 @@ ksfree(void** pkeys, hash_t table_size)
 
 /* ------------------------------------------------------------------------- */
 static void
-load(hash_t home, void** pkeys, void** data, size_t* len)
+load(hash32_t home, void** pkeys, void** data, size_t* len)
 {
     meta_t* meta;
 
@@ -81,7 +81,7 @@ load(hash_t home, void** pkeys, void** data, size_t* len)
 
 /* ------------------------------------------------------------------------- */
 static int
-store(hash_t home, void** pkeys, const void* data, size_t len)
+store(hash32_t home, void** pkeys, const void* data, size_t len)
 {
     meta_t* meta;
     void* keys = *pkeys;
@@ -113,23 +113,23 @@ store(hash_t home, void** pkeys, const void* data, size_t len)
 
 /* ------------------------------------------------------------------------- */
 static void
-erase(hash_t home, void** pkeys)
+erase(hash32_t home, void** pkeys)
 {
     JUMP_TABLE(*pkeys)[home] = NULL;
     /* TODO move data down */
 }
 
 /* ------------------------------------------------------------------------- */
-static hash_t
-find_existing(hash_t key,
-              const hash_t* table, void** pkeys, hash_t table_size,
+static hash32_t
+find_existing(hash32_t key,
+              const hash32_t* table, void** pkeys, hash32_t table_size,
               const void* data, size_t len)
 {
-    hash_t i;
-    hash_t home = key % table_size;
+    hash32_t i;
+    hash32_t home = key % table_size;
     for (i = 1; i != table_size+1; ++i)
     {
-        if (table[home] == SLOT_UNUSED)
+        if (table[home] == HS_SLOT_UNUSED)
             break;
         if (table[home] == key)
         {
@@ -145,19 +145,19 @@ find_existing(hash_t key,
 }
 
 /* ------------------------------------------------------------------------- */
-static hash_t
-find_new(hash_t key,
-         const hash_t* table, void** pkeys, hash_t table_size,
+static hash32_t
+find_new(hash32_t key,
+         const hash32_t* table, void** pkeys, hash32_t table_size,
          const void* data, size_t len)
 {
-    hash_t i;
-    hash_t home = key % table_size;
-    hash_t tombstone = (hash_t)-1;
+    hash32_t i;
+    hash32_t home = key % table_size;
+    hash32_t tombstone = (hash32_t)-1;
     for (i = 1; i != table_size + 1; ++i)
     {
-        if (table[home] == SLOT_UNUSED)
+        if (table[home] == HS_SLOT_UNUSED)
             break;
-        if (table[home] == SLOT_TOMBSTONE)
+        if (table[home] == HS_SLOT_TOMBSTONE)
             tombstone = home;
         if (table[home] == key)
         {
@@ -170,7 +170,7 @@ find_new(hash_t key,
     }
     assert(i != table_size+1);
 
-    if (tombstone != (hash_t)-1)
+    if (tombstone != (hash32_t)-1)
         home = tombstone;
 
     return home;

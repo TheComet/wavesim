@@ -5,7 +5,7 @@
 
 using namespace ::testing;
 
-static hash_t shitty_hash(const void* data, size_t len)
+static hash32_t shitty_hash(const void* data, size_t len)
 {
     return 42;
 }
@@ -36,7 +36,7 @@ TEST_F(NAME, adding_data_changes_size)
 
 TEST_F(NAME, removing_data_changes_size)
 {
-    hash_t home;
+    hash32_t home;
     EXPECT_THAT((home = hash_set_add_str(hs, "test")), Ne(HASH_SET_ERROR));
     EXPECT_THAT(hash_set_remove_str(hs, "test"), Eq(home));
     EXPECT_THAT(hash_set_count(hs), Eq(0u));

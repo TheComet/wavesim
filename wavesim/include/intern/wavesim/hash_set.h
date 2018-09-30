@@ -6,11 +6,11 @@
 
 C_BEGIN
 
-#define HASH_SET_OUT_OF_MEMORY (hash_t)-1
-#define HASH_SET_ERROR (hash_t)-2
+#define HASH_SET_OUT_OF_MEMORY (hash32_t)-1
+#define HASH_SET_ERROR (hash32_t)-2
 
-#define SLOT_UNUSED (hash_t)0
-#define SLOT_TOMBSTONE (hash_t)1
+#define HS_SLOT_UNUSED (hash32_t)0
+#define HS_SLOT_TOMBSTONE (hash32_t)1
 
 typedef enum hash_set_flags_e
 {
@@ -29,23 +29,23 @@ typedef struct key_store_t
      * @return Returns a pointer to the allocated array. Depending on how this
      * gets implemented, it may be an array of arrays, or it may just be a flat
      * contiguous chunk of memory. */
-    void** (*alloc)(hash_t table_size);
+    void** (*alloc)(hash32_t table_size);
 
     /*! Frees the array in which unhashed keys are stored.
      * @param[in] keys The pointer to the array that was returned by alloc()
      * @param[in] table_size The table size of the set. */
-    void (*free)(void** keys, hash_t table_size);
+    void (*free)(void** keys, hash32_t table_size);
 
-    void (*load)(hash_t home, void** keys, void** data, size_t* len);
+    void (*load)(hash32_t home, void** keys, void** data, size_t* len);
     /*! Stores some data into the key store. */
-    int (*store)(hash_t home, void** keys, const void* data, size_t len);
-    void (*erase)(hash_t home, void** keys);
+    int (*store)(hash32_t home, void** keys, const void* data, size_t len);
+    void (*erase)(hash32_t home, void** keys);
 
-    hash_t (*find_existing)(hash_t key,
-                       const hash_t* table, void** keys, hash_t table_size,
+    hash32_t (*find_existing)(hash32_t key,
+                       const hash32_t* table, void** keys, hash32_t table_size,
                        const void* data, size_t len);
-    hash_t (*find_new)(hash_t key,
-                       const hash_t* table, void** keys, hash_t table_size,
+    hash32_t (*find_new)(hash32_t key,
+                       const hash32_t* table, void** keys, hash32_t table_size,
                        const void* data, size_t len);
 } key_store_t;
 
@@ -55,11 +55,11 @@ extern key_store_t contiguous_key_store;
 
 typedef struct hash_set_t
 {
-    hash_t* table;
+    hash32_t* table;
     void** keys;
-    hash_t table_size;
-    hash_t slots_used;
-    hash_func hash;
+    hash32_t table_size;
+    hash32_t slots_used;
+    hash32_func hash;
     key_store_t key_store;
 } hash_set_t;
 
@@ -89,7 +89,7 @@ hash_set_destruct(hash_set_t* hs);
  * in the set, nothing is changed and HASH_SET_ERROR is returned.  If memory
  * fails to be allocated, HASH_SET_OUT_OF_MEMORY is returned.
  */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_add(hash_set_t* hs, const void* data, size_t len);
 
 /*!
@@ -103,7 +103,7 @@ hash_set_add(hash_set_t* hs, const void* data, size_t len);
  * returned (a value between 0 and bucket_size-1). If the data already exists
  * in the set, nothing is changed and HASH_SET_ERROR is returned
  */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_find(const hash_set_t* hs, const void* data, size_t len);
 
 /*!
@@ -118,25 +118,25 @@ hash_set_find(const hash_set_t* hs, const void* data, size_t len);
  * the set. If the data was not found, then HASH_SET_ERROR is returned and the
  * set is not modified.
  */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_remove(hash_set_t* hs, const void* data, size_t len);
 
 /*!
  * @brief String version of hash_set_add(). Behaves exactly the same.
  */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_add_str(hash_set_t* hs, const char* str);
 
 /*!
  * @brief String version of hash_set_find(). Behaves exactly the same.
  */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_find_str(const hash_set_t* hs, const char* str);
 
 /*!
  * @brief String version of hash_set_remove(). Behaves exactly the same.
  */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_remove_str(hash_set_t* hs, const char* str);
 
 /*!

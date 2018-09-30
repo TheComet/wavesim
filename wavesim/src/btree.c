@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <string.h>
 
-const hash_t BTREE_VECTOR_INVALID_HASH = (hash_t)-1;
+const hash32_t BTREE_VECTOR_INVALID_HASH = (hash32_t)-1;
 
 /* ------------------------------------------------------------------------- */
 btree_t*
@@ -37,7 +37,7 @@ btree_destroy(btree_t* btree)
 /* algorithm taken from GNU GCC stdlibc++'s lower_bound function, line 2121 in stl_algo.h */
 /* https://gcc.gnu.org/onlinedocs/libstdc++/libstdc++-html-USERS-4.3/a02014.html */
 static btree_hash_value_t*
-btree_find_lower_bound(const btree_t* btree, hash_t hash)
+btree_find_lower_bound(const btree_t* btree, hash32_t hash)
 {
     size_t half;
     btree_hash_value_t* middle;
@@ -76,7 +76,7 @@ btree_find_lower_bound(const btree_t* btree, hash_t hash)
 
 /* ------------------------------------------------------------------------- */
 int
-btree_insert(btree_t* btree, hash_t hash, void* value)
+btree_insert(btree_t* btree, hash32_t hash, void* value)
 {
     btree_hash_value_t* emplaced_data;
     btree_hash_value_t* lower_bound;
@@ -112,7 +112,7 @@ btree_insert(btree_t* btree, hash_t hash, void* value)
 
 /* ------------------------------------------------------------------------- */
 void
-btree_set(btree_t* btree, hash_t hash, void* value)
+btree_set(btree_t* btree, hash32_t hash, void* value)
 {
     btree_hash_value_t* data;
 
@@ -125,7 +125,7 @@ btree_set(btree_t* btree, hash_t hash, void* value)
 
 /* ------------------------------------------------------------------------- */
 void*
-btree_find(const btree_t* btree, hash_t hash)
+btree_find(const btree_t* btree, hash32_t hash)
 {
     void** result = btree_find_ptr(btree, hash);
     return result == NULL ? NULL : *result;
@@ -133,7 +133,7 @@ btree_find(const btree_t* btree, hash_t hash)
 
 /* ------------------------------------------------------------------------- */
 void**
-btree_find_ptr(const btree_t* btree, hash_t hash)
+btree_find_ptr(const btree_t* btree, hash32_t hash)
 {
     btree_hash_value_t* data;
 
@@ -146,7 +146,7 @@ btree_find_ptr(const btree_t* btree, hash_t hash)
 }
 
 /* ------------------------------------------------------------------------- */
-hash_t
+hash32_t
 btree_find_element(const btree_t* btree, const void* value)
 {
     assert(btree);
@@ -172,7 +172,7 @@ btree_get_any_element(const btree_t* btree)
 
 /* ------------------------------------------------------------------------- */
 int
-btree_hash_exists(btree_t* btree, hash_t hash)
+btree_hash_exists(btree_t* btree, hash32_t hash)
 {
     btree_hash_value_t* data;
 
@@ -185,10 +185,10 @@ btree_hash_exists(btree_t* btree, hash_t hash)
 }
 
 /* ------------------------------------------------------------------------- */
-hash_t
+hash32_t
 btree_find_unused_hash(btree_t* btree)
 {
-    hash_t i = 0;
+    hash32_t i = 0;
 
     assert(btree);
 
@@ -202,7 +202,7 @@ btree_find_unused_hash(btree_t* btree)
 
 /* ------------------------------------------------------------------------- */
 void*
-btree_erase(btree_t* btree, hash_t hash)
+btree_erase(btree_t* btree, hash32_t hash)
 {
     void* value;
     btree_hash_value_t* data;
@@ -223,7 +223,7 @@ void*
 btree_erase_element(btree_t* btree, void* value)
 {
     void* data;
-    hash_t hash;
+    hash32_t hash;
 
     assert(btree);
 

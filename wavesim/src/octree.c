@@ -422,7 +422,7 @@ octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mes
         indices[2] = mesh_get_index_from_buffer(node->index_buffer.data, i + 2, mesh->ib_type);
 
         /* Make sure we don't test duplicates */
-        result = btree_insert(tested_indices, hash_face_indices(indices), (void*)1);
+        result = btree_insert(tested_indices, hash32_face_indices(indices), (void*)1);
         if (result == 1)
             continue; /* face was already tested */
         if (result == -1)

@@ -9,28 +9,28 @@
  * reserved values. In this case, return a value that is not reserved, but
  * predictable.
  */
-static hash_t
+static hash32_t
 hash_wrapper(const hash_set_t* hs, const void* data, size_t len)
 {
-    hash_t hash = hs->hash(data, len);
-    if (hash == SLOT_UNUSED || hash == SLOT_TOMBSTONE)
+    hash32_t hash = hs->hash(data, len);
+    if (hash == HS_SLOT_UNUSED || hash == HS_SLOT_TOMBSTONE)
         return 2;
     return hash;
 }
 
 /* ------------------------------------------------------------------------- */
 static int
-resize_rehash(hash_set_t* hs, hash_t new_size)
+resize_rehash(hash_set_t* hs, hash32_t new_size)
 {
-    hash_t home;
+    hash32_t home;
     void** new_key_store;
-    hash_t* new_table;
+    hash32_t* new_table;
 
     /* Allocate and initialize new table with new size */
-    new_table = MALLOC(sizeof(hash_t) * new_size);
+    new_table = MALLOC(sizeof(hash32_t) * new_size);
     if (new_table == NULL)
         goto table_alloc_failed;
-    memset(new_table, 0, sizeof(hash_t) * new_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
+    memset(new_table, 0, sizeof(hash32_t) * new_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
 
     /* Allocate an initialize the corresponding unhashed key store */
     new_key_store = hs->key_store.alloc(new_size);
@@ -44,12 +44,12 @@ resize_rehash(hash_set_t* hs, hash_t new_size)
      */
     for (home = 0; home != hs->table_size; ++home)
     {
-        hash_t key, new_home;
+        hash32_t key, new_home;
         void* data;
         size_t len;
 
         key = hs->table[home];
-        if (key == SLOT_TOMBSTONE || key == SLOT_UNUSED)
+        if (key == HS_SLOT_TOMBSTONE || key == HS_SLOT_UNUSED)
             continue;
 
         /* Load data from old table and find slot in new table to insert unhashed key into */
@@ -104,13 +104,13 @@ hash_set_destroy(hash_set_t* hs)
 wsret
 hash_set_construct(hash_set_t* hs, uint8_t flags)
 {
-    hs->hash = hash_jenkins_oaat;
+    hs->hash = hash32_jenkins_oaat;
     hs->table_size = 8;
     hs->slots_used = 0;
-    hs->table = MALLOC(sizeof(hash_t) * hs->table_size);
+    hs->table = MALLOC(sizeof(hash32_t) * hs->table_size);
     if (hs->table == NULL)
         goto table_alloc_failed;
-    memset(hs->table, 0, sizeof(hash_t) * hs->table_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
+    memset(hs->table, 0, sizeof(hash32_t) * hs->table_size); /* NOTE: Only works if SLOT_UNUSED is 0 */
 
     if (flags & HM_REFERENCE_KEYS)
         hs->key_store = ref_key_store;
@@ -141,10 +141,10 @@ hash_set_destruct(hash_set_t* hs)
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_add(hash_set_t* hs, const void* data, size_t len)
 {
-    hash_t key, home;
+    hash32_t key, home;
 
     /*
      * If we reach a load factor of 80% or more, resize the table and rehash
@@ -166,46 +166,46 @@ hash_set_add(hash_set_t* hs, const void* data, size_t len)
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_find(const hash_set_t* hs, const void* data, size_t len)
 {
-    hash_t key;
+    hash32_t key;
 
     key = hash_wrapper(hs, data, len);
     return hs->key_store.find_existing(key, hs->table, hs->keys, hs->table_size, data, len);
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_remove(hash_set_t* hs, const void* data, size_t len)
 {
-    hash_t home;
+    hash32_t home;
     if ((home = hash_set_find(hs, data, len)) == HASH_SET_ERROR)
         return HASH_SET_ERROR;
 
     hs->key_store.erase(home, hs->keys);
-    hs->table[home] = SLOT_TOMBSTONE;
+    hs->table[home] = HS_SLOT_TOMBSTONE;
     hs->slots_used--;
 
     return home;
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_add_str(hash_set_t* hs, const char* str)
 {
     return hash_set_add(hs, str, strlen(str) + 1);
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_find_str(const hash_set_t* hs, const char* str)
 {
     return hash_set_find(hs, str, strlen(str) + 1);
 }
 
 /* ------------------------------------------------------------------------- */
-WAVESIM_PRIVATE_API hash_t
+WAVESIM_PRIVATE_API hash32_t
 hash_set_remove_str(hash_set_t* hs, const char* str)
 {
     return hash_set_remove(hs, str, strlen(str) + 1);

@@ -29,7 +29,7 @@ obj_exporter_close(obj_exporter_t* exporter)
 wsret
 obj_write_vertex(obj_exporter_t* exporter, const wsreal_t vert[3])
 {
-    int result = btree_insert(&exporter->vi_map, hash_vec3(vert), (void*)(intptr_t)exporter->index_counter);
+    int result = btree_insert(&exporter->vi_map, hash32_vec3(vert), (void*)(intptr_t)exporter->index_counter);
     if (result == 0) /* Key didn't exist yet */
     {
         fprintf(exporter->fp, "v %.6g %.6g %.6g\n", vert[0], vert[1], vert[2]);
@@ -79,7 +79,7 @@ obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6])
     /* These are the 12 edges of the bounding box */
     struct {
         vec3_t a, b;
-    } edges[12]; 
+    } edges[12];
     edges[0].a  = aaa; edges[0].b  = aab;
     edges[1].a  = aaa; edges[1].b  = aba;
     edges[2].a  = aaa; edges[2].b  = baa;
@@ -95,8 +95,8 @@ obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6])
 
     for (i = 0; i != 12; ++i)
     {
-        void* index1_ptr = btree_find(&exporter->vi_map, hash_vec3(edges[i].a.xyz));
-        void* index2_ptr = btree_find(&exporter->vi_map, hash_vec3(edges[i].b.xyz));
+        void* index1_ptr = btree_find(&exporter->vi_map, hash32_vec3(edges[i].a.xyz));
+        void* index2_ptr = btree_find(&exporter->vi_map, hash32_vec3(edges[i].b.xyz));
         if (index1_ptr == NULL || index2_ptr == NULL)
             return WS_ERR_VERTEX_INDEX_NOT_FOUND;
         fprintf(exporter->fp, "f %d %d\n", (int)(intptr_t)index1_ptr, (int)(intptr_t)index2_ptr);
