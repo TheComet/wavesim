@@ -82,7 +82,7 @@ determine_cell_attribute(attribute_t* cell_attribute,
                          const octree_t* octree,
                          const wsreal_t cell_aabb[6])
 {
-    size_t i;
+    uintptr_t i;
     wsreal_t weights_sum;
     vector_t query_result;
     vec3_t cell_center;
@@ -311,16 +311,16 @@ medium_partition_already_occupied(const medium_t* medium, const wsreal_t aabb[6]
 }
 static wsret
 decompose_systematic_recursive(medium_t* medium,
-                               size_t parent_partition_idx,
+                               uintptr_t parent_partition_idx,
                                const octree_t* octree,
                                const medium_t* mediumdef,
                                const wsreal_t grid_size[3],
                                aabb_t seed)
 {
-    size_t direction;
-    size_t occupied_direction_flags;
+    uintptr_t direction;
+    uintptr_t occupied_direction_flags;
     vector_t potential_new_seeds;
-    size_t this_partition_idx;
+    uintptr_t this_partition_idx;
 
     /* Determine the cell type of our seed */
     attribute_t seed_attr;
@@ -398,7 +398,7 @@ decompose_systematic_recursive(medium_t* medium,
     if (parent_partition_idx != VECTOR_ERROR)
     {
         medium_partition_t* parent_partition = vector_get(&medium->partitions, parent_partition_idx);
-        size_t* adjacent_partition_idx = vector_emplace(&parent_partition->adjacent_partitions);
+        uintptr_t* adjacent_partition_idx = vector_emplace(&parent_partition->adjacent_partitions);
         if (adjacent_partition_idx == NULL)
             goto ran_out_of_memory;
         *adjacent_partition_idx = this_partition_idx;
@@ -566,7 +566,7 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
             success = 1;
             for (i = 0; i != 3; ++i)
             {
-                partition->cell_count[i] = (size_t)ceil(dims.v.x / partition->cell_size);
+                partition->cell_count[i] = (uintptr_t)ceil(dims.v.x / partition->cell_size);
                 if ((wsreal_t)partition->cell_count[i]*partition->cell_size > dims.xyz[i]+cell_tolerance*partition->cell_size)
                 {
                     partition->cell_size = dims.xyz[i] / ((wsreal_t)partition->cell_count[i] - cell_tolerance/2.0);
@@ -588,10 +588,10 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
 }
 
 /* ------------------------------------------------------------------------- */
-size_t
+uintptr_t
 medium_cell_count(medium_t* medium)
 {
-    size_t total_cell_count = 0;
+    uintptr_t total_cell_count = 0;
     VECTOR_FOR_EACH(&medium->partitions, medium_partition_t, partition)
         total_cell_count += partition->cell_count[0]*partition->cell_count[1]*partition->cell_count[2];
     VECTOR_END_EACH

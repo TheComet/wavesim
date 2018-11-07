@@ -295,11 +295,11 @@ octree_query_potential_faces_recursive(const octree_node_t* node, vector_t* resu
      * matter.
      */
     {
-        size_t node_chunk_idx;
+        uintptr_t node_chunk_idx;
         const vector_t* vn = &node->index_buffer;
-        size_t chunk_size = vn->element_size * 3;
-        size_t node_chunk_count = vector_count(vn) / 3;
-        size_t result_chunk_count = vector_count(result) / 3;
+        uintptr_t chunk_size = vn->element_size * 3;
+        uintptr_t node_chunk_count = vector_count(vn) / 3;
+        uintptr_t result_chunk_count = vector_count(result) / 3;
 
         assert(vector_count(vn) % 3 == 0);
         assert(vector_count(result) % 3 == 0);
@@ -308,7 +308,7 @@ octree_query_potential_faces_recursive(const octree_node_t* node, vector_t* resu
         for (node_chunk_idx = 0; node_chunk_idx != node_chunk_count; node_chunk_idx++)
         {
             /* Try to find the current triplet in the result index buffer */
-            size_t result_chunk_idx = 0;
+            uintptr_t result_chunk_idx = 0;
             for (result_chunk_idx = 0; result_chunk_idx != result_chunk_count; result_chunk_idx++)
             {
                 if (memcmp(&vn->data[node_chunk_idx*chunk_size],

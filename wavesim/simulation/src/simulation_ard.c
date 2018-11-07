@@ -34,11 +34,11 @@ simulation_ard_prepare(simulation_t* simulation)
 
     simulation_state_t* state;
     fftw_iodim dims;
-    size_t i, t;
-    size_t partition_count;
-    size_t total_cell_count;
-    size_t cell_memory_required;
-    size_t partition_memory_required;
+    uintptr_t i, t;
+    uintptr_t partition_count;
+    uintptr_t total_cell_count;
+    uintptr_t cell_memory_required;
+    uintptr_t partition_memory_required;
     wsreal_t* modes_buffer_ptr;
 
     if (simulation->medium == NULL)
@@ -114,7 +114,7 @@ simulation_ard_finalize(simulation_t* simulation)
 {
     (void)simulation;
     /*
-    size_t i;
+    uintptr_t i;
     int t;
     simulation_state_t* state = simulation->state;
 
@@ -143,7 +143,7 @@ simulation_ard_advance(simulation_t* simulation, wsreal_t dt)
     (void)simulation;
     (void)dt;
     /*
-    size_t part_idx;
+    uintptr_t part_idx;
     int idx[3];
     int i;
     simulation_state_t* state = simulation->state;

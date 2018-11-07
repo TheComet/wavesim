@@ -5,7 +5,7 @@
 #include <math.h>
 
 static void set_vb_ib_types_and_sizes(mesh_t* mesh, mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
-static void init_attribute_buffer(mesh_t* mesh, size_t vertex_count);
+static void init_attribute_buffer(mesh_t* mesh, uintptr_t vertex_count);
 static void calculate_aabb(mesh_t* mesh);
 
 /* ------------------------------------------------------------------------- */
@@ -28,7 +28,7 @@ mesh_create(mesh_t** mesh, const char* name)
 wsret
 mesh_construct(mesh_t* mesh, const char* name)
 {
-    size_t name_len = strlen(name);
+    uintptr_t name_len = strlen(name);
 
     memset(mesh, 0, sizeof *mesh);
     mesh->aabb = aabb_reset();
@@ -81,7 +81,7 @@ mesh_clear_buffers(mesh_t* mesh)
 wsret
 mesh_assign_buffers(mesh_t* mesh,
                     void* vertex_buffer, void* index_buffer,
-                    size_t vertex_count, size_t index_count,
+                    uintptr_t vertex_count, uintptr_t index_count,
                     mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     mesh_clear_buffers(mesh);
@@ -105,7 +105,7 @@ mesh_assign_buffers(mesh_t* mesh,
 wsret
 mesh_copy_from_buffers(mesh_t* mesh,
                        const void* vertex_buffer, const void* index_buffer,
-                       size_t vertex_count, size_t index_count,
+                       uintptr_t vertex_count, uintptr_t index_count,
                        mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     mesh_clear_buffers(mesh);
@@ -151,7 +151,7 @@ mesh_get_face_indices(wsib_t dst[3], const mesh_t* mesh, uintptr_t face_index)
 
 /* ------------------------------------------------------------------------- */
 void
-mesh_get_face(face_t* dst, const mesh_t* mesh, size_t face_index)
+mesh_get_face(face_t* dst, const mesh_t* mesh, uintptr_t face_index)
 {
     mesh_get_face_from_buffers(dst, mesh->vb, mesh->ib, mesh->ab, face_index, mesh->vb_type, mesh->ib_type);
 }
@@ -217,7 +217,7 @@ mesh_get_face_indices_from_buffer(wsib_t dst[3], const void* ib, uintptr_t face_
 void
 mesh_get_face_from_buffers(face_t* dst,
                            const void* vb, const void* ib, const attribute_t* attrs,
-                           size_t face_index,
+                           uintptr_t face_index,
                            mesh_vb_type_e vb_type, mesh_ib_type_e ib_type)
 {
     wsib_t indices[3];
@@ -286,9 +286,9 @@ static void set_vb_ib_types_and_sizes(mesh_t* mesh, mesh_vb_type_e vb_type, mesh
 }
 
 /* ------------------------------------------------------------------------- */
-static void init_attribute_buffer(mesh_t* mesh, size_t vertex_count)
+static void init_attribute_buffer(mesh_t* mesh, uintptr_t vertex_count)
 {
-    size_t i;
+    uintptr_t i;
     for (i = 0; i != vertex_count; ++i)
         attribute_set_default_solid(&mesh->ab[i]);
 }
@@ -325,7 +325,7 @@ int
 mesh_is_manifold(const mesh_t* mesh)
 {
     /* Condition is V + F - E = 2 */
-    size_t V, F, E, face_idx;
+    uintptr_t V, F, E, face_idx;
     hashmap_t hm;
 
     /* Have to count the number of unique edges in the mesh. */

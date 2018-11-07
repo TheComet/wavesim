@@ -53,7 +53,7 @@ wsret
 mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
 {
     mesh_ib_type_e ib_type;
-    size_t ib_size;
+    uintptr_t ib_size;
     vector_t vb, ib, ab;
 
     /* Determine what datatype to use for the index buffer; there will be
@@ -88,12 +88,12 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
 
     /* Copy face vertices into buffers, avoiding duplicates */
     VECTOR_FOR_EACH(&mb->faces, face_t, face)
-        size_t v;
+        uintptr_t v;
 
         /*
          * If a duplicate vertex is found, its index is written to this array.
          */
-        size_t duplicate_index[3] = {(size_t)-1, (size_t)-1, (size_t)-1};
+        uintptr_t duplicate_index[3] = {(uintptr_t)-1, (uintptr_t)-1, (uintptr_t)-1};
         for (v = 0; v != vector_count(&vb); v += 3)
         {
             int f;
@@ -123,11 +123,11 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
         /* Copy face into buffers */
         for (v = 0; v != 3; ++v)
         {
-            if (duplicate_index[v] == (size_t)-1)
+            if (duplicate_index[v] == (uintptr_t)-1)
             {
                 /* Push vertex x,y,z coordinates and grab the index to the
                  * first coordinate, which we will use for the index buffer */
-                size_t index;
+                uintptr_t index;
                 if ((index = vector_push(&vb, &face->vertices[v].position.v.x)) == VECTOR_ERROR)
                     goto buffer_push_failed;
                 if (vector_push(&vb, &face->vertices[v].position.v.y) == VECTOR_ERROR)

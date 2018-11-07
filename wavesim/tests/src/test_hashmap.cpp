@@ -11,15 +11,15 @@ static const char KEY3[16] = "KEY3";
 static const char KEY4[16] = "KEY4";
 static const char KEY5[16] = "KEY5";
 
-static hash32_t shitty_hash(const void* data, size_t len)
+static hash32_t shitty_hash(const void* data, uintptr_t len)
 {
     return 42;
 }
-static hash32_t collide_with_shitty_hash(const void* data, size_t len)
+static hash32_t collide_with_shitty_hash(const void* data, uintptr_t len)
 {
     return HM_DEFAULT_TABLE_COUNT + 42;
 }
-static hash32_t collide_with_shitty_hash_second_probe(const void* data, size_t len)
+static hash32_t collide_with_shitty_hash_second_probe(const void* data, uintptr_t len)
 {
     return HM_DEFAULT_TABLE_COUNT + 45; // sequence would be 42, 43, 45, 48, ...
 }

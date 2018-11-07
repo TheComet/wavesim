@@ -13,7 +13,7 @@ static wsret
 process_vertices(vector_t* vertex_buffer, char** save_ptr)
 {
     char* coord;
-    size_t i;
+    uintptr_t i;
     vec3_t vertex;
 
     /* Mandatory xyz components */

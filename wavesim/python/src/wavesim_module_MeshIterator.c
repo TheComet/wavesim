@@ -3,7 +3,7 @@
 #include "wavesim/mesh/mesh.h"
 
 /* ------------------------------------------------------------------------- */
-static Py_ssize_t
+static Py_suintptr_t
 MeshIterator_len(wavesim_MeshIterator* self)
 {
     switch (self->kind)
