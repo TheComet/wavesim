@@ -10,13 +10,6 @@
 
 C_BEGIN
 
-typedef enum hashmapret
-{
-    HM_KEY_EXISTS    = 1,
-    HM_OK            = 0,
-    HM_OUT_OF_MEMORY = -1
-} hashmapret;
-
 typedef struct hashmap_t
 {
     hash32_t     table_count;
@@ -27,10 +20,10 @@ typedef struct hashmap_t
     void*        storage;
 } hashmap_t;
 
-WAVESIM_PRIVATE_API hashmapret
+WAVESIM_PRIVATE_API wsret
 hashmap_create(hashmap_t** hm, hash32_t key_size, hash32_t value_size);
 
-WAVESIM_PRIVATE_API hashmapret
+WAVESIM_PRIVATE_API wsret
 hashmap_construct(hashmap_t* hm, hash32_t key_size, hash32_t value_size);
 
 WAVESIM_PRIVATE_API void
@@ -39,10 +32,10 @@ hashmap_destruct(hashmap_t* hm);
 WAVESIM_PRIVATE_API void
 hashmap_destroy(hashmap_t* hm);
 
-WAVESIM_PRIVATE_API hashmapret
+WAVESIM_PRIVATE_API wsret
 hashmap_insert(hashmap_t* hm, const void* key, const void* value);
 
-WAVESIM_PRIVATE_API hashmapret
+WAVESIM_PRIVATE_API wsret
 hashmap_insert_str(hashmap_t* hm, const char* key, const void* value);
 
 WAVESIM_PRIVATE_API void*
@@ -57,7 +50,7 @@ hashmap_find(const hashmap_t* hm, const void* key);
 WAVESIM_PRIVATE_API void*
 hashmap_find_str(hashmap_t* hm, const char* key);
 
-#define hashmap_count(hm) (hm->slots_used)
+#define hashmap_count(hm) ((hm)->slots_used)
 
 C_END
 
