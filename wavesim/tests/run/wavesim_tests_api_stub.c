@@ -17,7 +17,7 @@ wavesim_run_tests(int* argc, char** argv)
     if (wavesim_is_initialized() == 0)
     {
         fprintf(stderr, "Error: %s\n", wsret_to_string(WS_ERR_BUILT_WITHOUT_TESTS));
-        return WS_ERR_BUILT_WITHOUT_TESTS;
+        WSRET(WS_ERR_BUILT_WITHOUT_TESTS);
     }
     WSRET(WS_ERR_BUILT_WITHOUT_TESTS);
 }

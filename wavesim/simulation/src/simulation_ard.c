@@ -105,7 +105,7 @@ simulation_ard_prepare(simulation_t* simulation)
     state->time_step_mode_idx = 0;
     state->time = 0.0;
 */
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

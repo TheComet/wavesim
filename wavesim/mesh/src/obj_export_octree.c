@@ -20,7 +20,7 @@ write_vertices(obj_exporter_t* exporter, const octree_node_t* node)
             if ((result = write_vertices(exporter, &node->children[i])) != WS_OK)
                 return result;
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -39,7 +39,7 @@ write_indices(obj_exporter_t* exporter, const octree_node_t* node)
             if ((result = write_indices(exporter, &node->children[i])) != WS_OK)
                 return result;
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

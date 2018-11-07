@@ -9,7 +9,7 @@ audio_listener_create(audio_listener_t** al)
     if (*al == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     audio_listener_construct(*al);
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -61,5 +61,5 @@ audio_listener_add_sample(audio_listener_t* al, wsreal_t dt, wsreal_t sample)
         *s = sample;
     }
 
-    return WS_OK;
+    WSRET(WS_OK);
 }

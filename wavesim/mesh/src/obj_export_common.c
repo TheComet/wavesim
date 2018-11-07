@@ -9,12 +9,12 @@ obj_exporter_open(obj_exporter_t* exporter, const char* filename)
 {
     exporter->fp = fopen(filename, "w");
     if (exporter->fp == NULL)
-        return WS_ERR_FOPEN_FAILED;
+        WSRET(WS_ERR_FOPEN_FAILED);
 
     hashmap_construct(&exporter->vi_map, sizeof(wsreal_t)*3, sizeof(void*));
     exporter->index_counter = 1; /* Obj indices start at 1 */
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -39,7 +39,7 @@ obj_write_vertex(obj_exporter_t* exporter, const wsreal_t vert[3])
         ++exporter->index_counter;
     }
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -58,7 +58,7 @@ obj_write_aabb_vertices(obj_exporter_t* exporter, const wsreal_t aabb[6])
     if ((result = obj_write_vertex(exporter, vec3(aabb[3], aabb[4], aabb[2]).xyz)) != WS_OK) return result;
     if ((result = obj_write_vertex(exporter, vec3(aabb[3], aabb[4], aabb[5]).xyz)) != WS_OK) return result;
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -99,9 +99,9 @@ obj_write_aabb_indices(obj_exporter_t* exporter, const wsreal_t aabb[6])
         wsib_t* index1_ptr = hashmap_find(&exporter->vi_map, edges[i].a.xyz);
         wsib_t* index2_ptr = hashmap_find(&exporter->vi_map, edges[i].b.xyz);
         if (index1_ptr == NULL || index2_ptr == NULL)
-            return WS_ERR_VERTEX_INDEX_NOT_FOUND;
+            WSRET(WS_ERR_VERTEX_INDEX_NOT_FOUND);
         fprintf(exporter->fp, "f %d %d\n", *index1_ptr, *index2_ptr);
     }
 
-    return WS_OK;
+    WSRET(WS_OK);
 }

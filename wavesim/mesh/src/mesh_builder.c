@@ -13,7 +13,7 @@ mesh_builder_create(mesh_builder_t** mb)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     vector_construct(&(*mb)->faces, sizeof(face_t));
     (*mb)->aabb = aabb_reset();
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -169,12 +169,12 @@ mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb)
     vector_clear_free(&ib);
     vector_clear_free(&vb);
 
-    return WS_OK;
+    WSRET(WS_OK);
 
     copy_buffers_failed : mesh_destroy(*mesh);
     alloc_mesh_failed   : *mesh = NULL;
     buffer_push_failed  : vector_clear_free(&ab);
                           vector_clear_free(&ib);
                           vector_clear_free(&vb);
-    return WS_ERR_OUT_OF_MEMORY;
+    WSRET(WS_ERR_OUT_OF_MEMORY);
 }

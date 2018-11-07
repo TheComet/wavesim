@@ -37,7 +37,7 @@ process_vertices(vector_t* vertex_buffer, char** save_ptr)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     memcpy(vector_get(vertex_buffer, i), vertex.xyz, sizeof(vertex.xyz));
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -158,7 +158,7 @@ obj_import_mesh(const char* filename, mesh_t* mesh)
     vector_clear_free(&vertex_buffer);
     vector_clear_free(&index_buffer);
 
-    return WS_OK;
+    WSRET(WS_OK);
 
     mesh_copy_buffers_failed   :
     ferror_occurred            :

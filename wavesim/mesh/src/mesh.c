@@ -21,7 +21,7 @@ mesh_create(mesh_t** mesh, const char* name)
     if ((result = mesh_construct(*mesh, name)) != WS_OK)
         return result;
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -38,7 +38,7 @@ mesh_construct(mesh_t* mesh, const char* name)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     strcpy(mesh->name, name);
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -98,7 +98,7 @@ mesh_assign_buffers(mesh_t* mesh,
     init_attribute_buffer(mesh, vertex_count);
     calculate_aabb(mesh);
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

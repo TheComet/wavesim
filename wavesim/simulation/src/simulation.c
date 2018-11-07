@@ -16,7 +16,7 @@ simulation_create(simulation_t** simulation, simulation_type_e type)
         WSRET(WS_ERR_OUT_OF_MEMORY);
 
     simulation_construct(*simulation, type);
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

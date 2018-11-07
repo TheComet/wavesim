@@ -5,7 +5,7 @@ wsret
 simulation_ray_prepare(simulation_t* simulation)
 {
     (void)simulation;
-    return WS_ERR_NOT_IMPLEMENTED; /* return WS_OK */
+    WSRET(WS_ERR_NOT_IMPLEMENTED); /* WSRET(WS_OK) */
 }
 
 /* ------------------------------------------------------------------------- */

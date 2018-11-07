@@ -9,7 +9,7 @@ audio_source_create(audio_source_t** al)
     if (*al == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     audio_source_construct(*al);
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -54,7 +54,7 @@ audio_source_set_dirac(audio_source_t* as)
     as->buffer[0] = 1.0;  /* and that sample is 1 */
     as->N = 1;
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

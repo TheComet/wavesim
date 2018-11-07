@@ -176,7 +176,7 @@ medium_create(medium_t** medium)
     if (*medium == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     medium_construct(*medium);
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -423,7 +423,7 @@ decompose_systematic_recursive(medium_t* medium,
 
     vector_clear_free(&potential_new_seeds);
     (void)mediumdef;
-    return WS_OK;
+    WSRET(WS_OK);
 
     ran_out_of_memory: WSRET(WS_ERR_OUT_OF_MEMORY);
 }
@@ -456,7 +456,7 @@ medium_decompose_greedy_random(medium_t* medium,
     (void)octree;
     (void)mediumdef;
     (void)grid_size;
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

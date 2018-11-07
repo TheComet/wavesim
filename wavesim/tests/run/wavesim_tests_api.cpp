@@ -9,10 +9,16 @@ wavesim_run_tests(int* argc, char** argv)
     // also responsible for initializing Google Test.  Therefore there's
     // no need for calling testing::InitGoogleTest() separately.
     testing::InitGoogleMock(argc, argv);
+
+    wsret result;
+    if ((result = wavesim_init()) != WS_OK)
+        return result;
+
+    result = WS_OK;
     if (RUN_ALL_TESTS() != 0)
-    {
-        fprintf(stderr, "Error: %s\n", wsret_to_string(WS_ERR_UNIT_TESTS_FAILED));
-        return WS_ERR_UNIT_TESTS_FAILED;
-    }
-    return WS_OK;
+        result = WS_ERR_UNIT_TESTS_FAILED;
+
+    wavesim_deinit();
+    fprintf(stderr, "%s\n", wsret_to_string(result));
+    return result;
 }

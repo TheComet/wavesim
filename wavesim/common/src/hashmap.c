@@ -76,7 +76,7 @@ hashmap_create(hashmap_t** hm, hash32_t key_size, hash32_t value_size)
 {
     *hm = MALLOC(sizeof(**hm));
     if (*hm == NULL)
-        return WS_ERR_OUT_OF_MEMORY;
+        WSRET(WS_ERR_OUT_OF_MEMORY);
 
     return hashmap_construct(*hm, key_size, value_size);
 }
@@ -92,9 +92,9 @@ hashmap_construct(hashmap_t* hm, hash32_t key_size, hash32_t value_size)
     hm->table_count = HM_DEFAULT_TABLE_COUNT;
     hm->storage = malloc_and_init_storage(hm->key_size, hm->value_size, hm->table_count);
     if (hm->storage == NULL)
-        return WS_ERR_OUT_OF_MEMORY;
+        WSRET(WS_ERR_OUT_OF_MEMORY);
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -121,7 +121,7 @@ hashmap_insert(hashmap_t* hm, const void* key, const void* value)
     /* NOTE: Rehashing may change table count, make sure to compute hash after this */
     if (hm->slots_used * 10 / hm->table_count >= 7)
         if (resize_rehash(hm, hm->table_count*2) != 0)
-            return WS_ERR_OUT_OF_MEMORY;
+            WSRET(WS_ERR_OUT_OF_MEMORY);
 
     /* Init values */
     hash = hash_wrapper(hm, key, hm->key_size);
@@ -137,7 +137,7 @@ hashmap_insert(hashmap_t* hm, const void* key, const void* value)
         if (SLOT(hm, pos) == hash)
         {
             if (memcmp(KEY(hm, pos), key, hm->key_size) == 0)
-                return WS_KEY_EXISTS;
+                WSRET(WS_KEY_EXISTS);
         }
         else
             if (SLOT(hm, pos) == HM_SLOT_TOMBSTONE)
@@ -161,7 +161,7 @@ hashmap_insert(hashmap_t* hm, const void* key, const void* value)
 
     hm->slots_used++;
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

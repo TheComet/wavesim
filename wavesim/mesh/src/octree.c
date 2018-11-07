@@ -30,7 +30,7 @@ octree_create(octree_t** octree)
     if (*octree == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
     octree_construct(*octree);
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -109,7 +109,7 @@ node_create_children(octree_node_t** children, octree_node_t* parent, const mesh
         AABB_BZ((*children)[i].aabb) = AABB_AZ(bb_parent) + (CZ(i) + 1) * bb_dims.v.z * 0.5;
     }
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -129,7 +129,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node)
 {
     /* Subdivide is only valid for leaf nodes */
     if (node->children != NULL)
-        return WS_ERR_SUBDIVIDED_NON_LEAF_NODE;
+        WSRET(WS_ERR_SUBDIVIDED_NON_LEAF_NODE);
 
     return node_create_children(&node->children, node, octree->mesh);
 }
@@ -205,7 +205,7 @@ add_face_to_octree_recursive(octree_t* octree,
         WSRET(WS_ERR_OUT_OF_MEMORY);
     mesh_write_face_indices_to_buffer(ib_dest, 0, face_indices, octree->mesh->ib_type);
 
-    return WS_OK;
+    WSRET(WS_OK);
 }
 static wsret
 add_face_to_octree(octree_t* octree, const wsreal_t face_bb[6], const wsib_t face_indices[3], int max_depth)
@@ -242,7 +242,7 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth)
             goto adding_face_to_octree_failed;
     }
 
-    return WS_OK;
+    WSRET(WS_OK);
 
     adding_face_to_octree_failed : octree_clear(octree);
     return result;
