@@ -1,4 +1,4 @@
-#include "wavesim/btree.h"
+#include "wavesim/hashmap.h"
 #include "wavesim/hash.h"
 #include "wavesim/log.h"
 #include "wavesim/memory.h"
@@ -203,9 +203,7 @@ add_face_to_octree_recursive(octree_t* octree,
      */
     if ((ib_dest = vector_emplace_multi(&node->index_buffer, 3)) == NULL)
         WSRET(WS_ERR_OUT_OF_MEMORY);
-    mesh_write_index_to_buffer(ib_dest, 0, face_indices[0], octree->mesh->ib_type);
-    mesh_write_index_to_buffer(ib_dest, 1, face_indices[1], octree->mesh->ib_type);
-    mesh_write_index_to_buffer(ib_dest, 2, face_indices[2], octree->mesh->ib_type);
+    mesh_write_face_indices_to_buffer(ib_dest, 0, face_indices, octree->mesh->ib_type);
 
     return WS_OK;
 }
@@ -217,7 +215,7 @@ add_face_to_octree(octree_t* octree, const wsreal_t face_bb[6], const wsib_t fac
 wsret
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth)
 {
-    size_t face_idx;
+    uintptr_t face_idx;
     wsret result;
 
     /* Clear old octree if it exists */
@@ -228,21 +226,16 @@ octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth)
     octree->root.aabb = mesh->aabb;
     vector_construct(&octree->root.index_buffer, mesh->ib_size);
 
-    for (face_idx = 0; face_idx != mesh_index_count(mesh); face_idx += 3)
+    for (face_idx = 0; face_idx != mesh_face_count(mesh); ++face_idx)
     {
-        size_t i;
-
         /* Look up indices and vertices for the current face */
         wsib_t indices[3];
-        vec3_t vertices[3];
-        for (i = 0; i != 3; ++i)
-        {
-            indices[i] = mesh_get_index_from_buffer(mesh->ib, face_idx+i, mesh->ib_type);
-            vertices[i] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[i], mesh->vb_type);
-        }
+        wsreal_t vertices[9];
+        mesh_get_face_indices(indices, mesh, face_idx);
+        mesh_get_face_vertices(vertices, mesh, indices);
 
         /* Calculate face AABB */
-        aabb_t face_bb = aabb_from_3_points(vertices[0].xyz, vertices[1].xyz, vertices[2].xyz);
+        aabb_t face_bb = aabb_from_3_points(vertices+0, vertices+3, vertices+6);
 
         /* Add this face to the octree */
         if ((result = add_face_to_octree(octree, face_bb.xyzxyz, indices, max_depth)) != WS_OK)
@@ -349,9 +342,9 @@ octree_query_potential_faces(const octree_t* octree, vector_t* result, const wsr
 
 /* ------------------------------------------------------------------------- */
 int
-octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mesh_t* mesh, const wsreal_t p[3], btree_t* tested_indices)
+octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mesh_t* mesh, const wsreal_t p[3], hashmap_t* tested_indices)
 {
-    size_t i;
+    uintptr_t face_idx;
     int intersect_count = 0;
     vec3_t p1, p2;
 
@@ -371,6 +364,7 @@ octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mes
     /* Only select partitions that are leaf nodes */
     if (node->children != NULL)
     {
+        int i;
         for (i = 0; i != 8; ++i)
             intersect_count += octree_query_point_is_inside_mesh_recursive(&node->children[i], mesh, p, tested_indices);
         return intersect_count;
@@ -384,27 +378,23 @@ octree_query_point_is_inside_mesh_recursive(const octree_node_t* node, const mes
     vec3_copy(&p2, p);
     p1.v.z = AABB_AZ(mesh->aabb) - 1; /* From -Z... */
     p2.v.z = AABB_BZ(mesh->aabb) + 1; /* ...to +Z */
-    for (i = 0; i != vector_count(&node->index_buffer); i += 3)
+    for (face_idx = 0; face_idx != vector_count(&node->index_buffer)/3; ++face_idx)
     {
         wsret result;
         wsib_t indices[3];
-        vec3_t vertices[3];
-        indices[0] = mesh_get_index_from_buffer(node->index_buffer.data, i + 0, mesh->ib_type);
-        indices[1] = mesh_get_index_from_buffer(node->index_buffer.data, i + 1, mesh->ib_type);
-        indices[2] = mesh_get_index_from_buffer(node->index_buffer.data, i + 2, mesh->ib_type);
+        wsreal_t vertices[9];
+        mesh_get_face_indices_from_buffer(indices, node->index_buffer.data, face_idx, mesh->ib_type);
 
         /* Make sure we don't test duplicates */
-        result = btree_insert(tested_indices, hash32_face_indices(indices), (void*)1);
-        if (result == 1)
+        result = hashmap_insert(tested_indices, indices, NULL);
+        if (result == WS_KEY_EXISTS)
             continue; /* face was already tested */
-        if (result == -1)
+        if (result == WS_ERR_OUT_OF_MEMORY)
             return -1;
 
         /* Get face vertices and do intersection test */
-        vertices[0] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[0], mesh->vb_type);
-        vertices[1] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[1], mesh->vb_type);
-        vertices[2] = mesh_get_vertex_position_from_buffer(mesh->vb, indices[2], mesh->vb_type);
-        intersect_count += intersect_line_triangle_test(p1.xyz, p2.xyz, vertices[0].xyz, vertices[1].xyz, vertices[2].xyz);
+        mesh_get_face_vertices(vertices, mesh, indices);
+        intersect_count += intersect_line_triangle_test(p1.xyz, p2.xyz, vertices+0, vertices+3, vertices+6);
     }
 
     return intersect_count;
@@ -414,9 +404,9 @@ int
 octree_query_point_is_inside_mesh(const octree_t* octree, const wsreal_t p[3])
 {
     int result;
-    btree_t tested_indices;
-    btree_construct(&tested_indices);
+    hashmap_t tested_indices;
+    hashmap_construct(&tested_indices, sizeof(wsib_t) * 3, 0);
     result = octree_query_point_is_inside_mesh_recursive(&octree->root, octree->mesh, p, &tested_indices);
-    btree_clear_free(&tested_indices);
+    hashmap_destruct(&tested_indices);
     return result;
 }

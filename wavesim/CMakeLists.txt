@@ -169,10 +169,10 @@ target_compile_options (wavesim_obj
         /EHa /MTd /W4 /WX /wd4706 /D_CRT_SECURE_NO_DEPRECATE
     >
     PUBLIC $<$<C_COMPILER_ID:GNU>:
-        -Wall -Wextra -Werror -pedantic -pedantic-errors -Wshadow -Wconversion
+        -W -Wall -Wextra -Werror -pedantic -pedantic-errors -Wshadow -Wconversion
     >
     PUBLIC $<$<C_COMPILER_ID:Clang>:
-        -Wall -Wextra -Werror -pedantic -pedantic-errors -Wshadow -Wconversion
+        -W -Wall -Wextra -Werror -pedantic -pedantic-errors -Wshadow -Wconversion
     >
 )
 set_property (

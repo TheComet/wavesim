@@ -45,7 +45,7 @@ octree_subdivide(octree_t* octree, octree_node_t* node);
     *(face_t**)vector_get_element(&octree->faces, idx)
 
 #define octree_face_count(octree) \
-    octree->mesh->ib_count / 3
+    mesh_face_count(octree->mesh)
 
 WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
 octree_build_from_mesh(octree_t* octree, const mesh_t* mesh, int max_depth);

@@ -108,9 +108,10 @@ determine_cell_attribute(attribute_t* cell_attribute,
         int v;
 
         /* Do intersection test of face with our cell */
+        face_t face;
         const mesh_t* m = octree->mesh;
-        face_t face = mesh_get_face_from_buffers(m->vb, query_result.data, m->ab,
-                                                i, m->vb_type, m->ib_type);
+        mesh_get_face_from_buffers(&face, m->vb, query_result.data, m->ab,
+                                   i, m->vb_type, m->ib_type);
         if (intersect_triangle_aabb_test(
                 face.vertices[0].position.xyz,
                 face.vertices[1].position.xyz,
