@@ -34,10 +34,10 @@ WAVESIM_PUBLIC_API void
 log_set_callbacks(log_t* log, log_info_func info, log_data_func data);
 
 WAVESIM_PUBLIC_API void
-ws_log_info(log_t* log, const char* fmt, ...);
+log_info(log_t* log, const char* fmt, ...);
 
 WAVESIM_PUBLIC_API void
-ws_log_data(log_t* log, const char* fmt, ...);
+log_data(log_t* log, const char* fmt, ...);
 
 WAVESIM_PUBLIC_API void
 default_info_func(const char* msg);
@@ -48,4 +48,3 @@ default_data_func(const char* msg);
 C_END
 
 #endif /* WAVESIM_LOG_H */
-

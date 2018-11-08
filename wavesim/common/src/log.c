@@ -52,7 +52,7 @@ log_set_callbacks(log_t* log, log_info_func info, log_data_func data)
 
 /* ------------------------------------------------------------------------- */
 static void
-ws_vlog(log_t* log, const char* fmt, va_list ap, int type)
+vlog(log_t* log, const char* fmt, va_list ap, int type)
 {
     int len;
 
@@ -90,7 +90,7 @@ ws_vlog(log_t* log, const char* fmt, va_list ap, int type)
 
 /* ------------------------------------------------------------------------- */
 void
-ws_log_info(log_t* log, const char* fmt, ...)
+log_info(log_t* log, const char* fmt, ...)
 {
     va_list ap;
 
@@ -98,20 +98,20 @@ ws_log_info(log_t* log, const char* fmt, ...)
         return;
 
     va_start(ap, fmt);
-    ws_vlog(log, fmt, ap, 0);
+    vlog(log, fmt, ap, 0);
     va_end(ap);
 }
 
 /* ------------------------------------------------------------------------- */
 void
-ws_log_data(log_t* log, const char* fmt, ...)
+log_data(log_t* log, const char* fmt, ...)
 {    va_list ap;
 
     if (log->data == NULL)
         return;
 
     va_start(ap, fmt);
-    ws_vlog(log, fmt, ap, 1);
+    vlog(log, fmt, ap, 1);
     va_end(ap);
 }
 

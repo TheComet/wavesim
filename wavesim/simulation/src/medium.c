@@ -392,7 +392,7 @@ decompose_systematic_recursive(medium_t* medium,
     this_partition_idx = vector_count(&medium->partitions);
     if (medium_add_partition(medium, seed.xyzxyz, attribute_default_air()) != 0)
         goto ran_out_of_memory;
-    ws_log_info(&g_ws_log, "Adding partition #%d (%f,%f,%f,%f,%f,%f)", this_partition_idx, seed.xyzxyz[0], seed.xyzxyz[1], seed.xyzxyz[2], seed.xyzxyz[3], seed.xyzxyz[4], seed.xyzxyz[5]);
+    log_info(&g_ws_log, "Adding partition #%d (%f,%f,%f,%f,%f,%f)", this_partition_idx, seed.xyzxyz[0], seed.xyzxyz[1], seed.xyzxyz[2], seed.xyzxyz[3], seed.xyzxyz[4], seed.xyzxyz[5]);
 
     /* Add ourselves to the parent partition's adjacent list, if possible */
     if (parent_partition_idx != VECTOR_ERROR)
@@ -502,7 +502,7 @@ medium_build_from_mesh(medium_t* medium,
      * them */
     if (mediumdef == NULL)
     {
-        ws_log_info(&g_ws_log, "[warning] No medium definition was provided. Falling back to mesh AABB and default parameters.");
+        log_info(&g_ws_log, "[warning] No medium definition was provided. Falling back to mesh AABB and default parameters.");
         medium->boundary = mesh->aabb;
     }
     else
@@ -522,7 +522,7 @@ medium_build_from_mesh(medium_t* medium,
     integrity_checks_out(medium, mediumdef, grid_size);
 #endif
 
-    ws_log_info(&g_ws_log, "Decomposed mesh into %d partitions", (int)vector_count(&medium->partitions));
+    log_info(&g_ws_log, "Decomposed mesh into %d partitions", (int)vector_count(&medium->partitions));
 
     bail : octree_destruct(&octree);
     return result;
@@ -537,12 +537,12 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
 
     if (cell_tolerance < 0.001)
     {
-        ws_log_info(&g_ws_log, "[WARNING] cell_tolerance clamped from %f to 0.001", cell_tolerance);
+        log_info(&g_ws_log, "[WARNING] cell_tolerance clamped from %f to 0.001", cell_tolerance);
         cell_tolerance = 0.001;
     }
     if (cell_tolerance > 1.0)
     {
-        ws_log_info(&g_ws_log, "[WARNING] cell_tolerance clamped from %f to 1.0", cell_tolerance);
+        log_info(&g_ws_log, "[WARNING] cell_tolerance clamped from %f to 1.0", cell_tolerance);
         cell_tolerance = 1.0;
     }
 
@@ -584,7 +584,7 @@ medium_set_resolution(medium_t* medium, wsreal_t max_frequency, wsreal_t cell_to
     VECTOR_END_EACH
 
     if (cell_sizes_too_small_counter > 0)
-        ws_log_info(&g_ws_log, "[WARNING] Cell sizes in %d partition(s) is/are significantly smaller than optimal. Consider increasing cell_tolerance or your simulation might be unnecessarily slow.", cell_sizes_too_small_counter);
+        log_info(&g_ws_log, "[WARNING] Cell sizes in %d partition(s) is/are significantly smaller than optimal. Consider increasing cell_tolerance or your simulation might be unnecessarily slow.", cell_sizes_too_small_counter);
 }
 
 /* ------------------------------------------------------------------------- */

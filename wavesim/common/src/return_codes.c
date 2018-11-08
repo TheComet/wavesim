@@ -35,6 +35,6 @@ wsret_to_string(wsret code)
 wsret wsret_wrapper(wsret code)
 {
     if (code < 0)
-        ws_log_info(&g_ws_log, "Error: %s", wsret_to_string(code));
+        log_info(&g_ws_log, "Error: %s", wsret_to_string(code));
     return code;
 }

@@ -20,7 +20,7 @@ wavesim_init(void)
     }
 
     log_construct(&g_ws_log);
-    ws_log_info(&g_ws_log, "Initializing WaveSim...");
+    log_info(&g_ws_log, "Initializing WaveSim...");
 
     WSRET(WS_OK);
 }
@@ -32,7 +32,7 @@ wavesim_deinit(void)
     if (--g_init_counter != 0)
         return 0;
 
-    ws_log_info(&g_ws_log, "De-Initializing WaveSim...");
+    log_info(&g_ws_log, "De-Initializing WaveSim...");
     log_destruct(&g_ws_log);
 
     return memory_deinit();

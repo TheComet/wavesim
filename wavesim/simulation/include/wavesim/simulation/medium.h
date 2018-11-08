@@ -25,9 +25,9 @@ typedef struct medium_partition_t
 {
     aabb_t aabb;
     attribute_t attr;
-    wsreal_t cell_size;   /* Calculated using simulation->max_frequency */
-    wsreal_t time_step;   /* Calculated using simulation->max_frequency */
-    uintptr_t cell_count[3]; /* Calculated using simulation->max_frequency */
+    wsreal_t cell_size;           /* Calculated using simulation->max_frequency */
+    wsreal_t time_step;           /* Calculated using simulation->max_frequency */
+    uintptr_t cell_count[3];      /* Calculated using simulation->max_frequency */
     vector_t adjacent_partitions; /* int32_t (indices into medium->partitions) */
 } medium_partition_t;
 
