@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-log_t g_ws_log;
+log_t g_ws_log = {0};
 
 /* ------------------------------------------------------------------------- */
 int

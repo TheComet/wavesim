@@ -15,6 +15,7 @@ class Window(Updateable):
         self.updateable_items.append(self)
         self.updateable_items.append(Simulation())
 
+        self.__fixed_step = 1.0 / 60
         self.__last_time_updated = None
         self.__running = None
 
@@ -32,15 +33,16 @@ class Window(Updateable):
                 item.process_event(event)
 
     def __update_items(self):
-        time_step = self.__update_time_step()
-        for item in self.updateable_items:
-            item.update(time_step)
+        if self.__update_time_step():
+            for item in self.updateable_items:
+                item.update(self.__fixed_step)
 
     def __update_time_step(self):
-        new_time = time.clock()
-        time_step = new_time - self.__last_time_updated
+        new_time = time.process_time()
+        if new_time - self.__last_time_updated < self.__fixed_step:
+            return False
         self.__last_time_updated = new_time
-        return time_step
+        return True
 
     def __draw_items(self):
         self.screen.fill((0, 0, 0))
