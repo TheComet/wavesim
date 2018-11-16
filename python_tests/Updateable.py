@@ -8,5 +8,5 @@ class Updateable(object):
     def update(self, time_step):
         pass
 
-    def draw(self, surface):
+    def draw(self, draw):
         pass
