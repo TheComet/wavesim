@@ -93,26 +93,26 @@ class Domain2D(Updateable):
         # Calculate minimum grid size h and number of cells for given boundary and frequency
         fmax = 20e3  # Hz
         hmax = self.sound_velocity / (2*fmax)
-        distance = np.abs(self.end - self.begin)
-        num_cells = np.cast[int](np.ceil(distance / hmax))
-        self.h = distance / num_cells
+        dimension = np.abs(self.end - self.begin)
+        num_cells = np.cast[int](np.ceil(dimension / hmax))
+        self.h = np.min(dimension / num_cells)
 
         # calculate maximum time step
-        self.dt = np.min(self.h) / (self.sound_velocity * math.sqrt(3))
+        self.dt = self.h / (self.sound_velocity * math.sqrt(3))
 
         # Local spatial coordinates
         self.spatial_coords = np.zeros((num_cells[0], num_cells[1], 2))
-        for x, ix in zip(np.linspace(0, distance[0], num_cells[0]), range(len(self.spatial_coords))):
-            for y, iy in zip(np.linspace(0, distance[1], num_cells[1]), range(len(self.spatial_coords[ix]))):
+        for x, ix in zip(np.linspace(0, dimension[0], num_cells[0]), range(len(self.spatial_coords))):
+            for y, iy in zip(np.linspace(0, dimension[1], num_cells[1]), range(len(self.spatial_coords[ix]))):
                 self.spatial_coords[ix][iy][0], self.spatial_coords[ix][iy][1] = x, y
 
         # Calculate characteristic frequencies omega
-        k2 = np.pi**2 * np.sum(np.power(self.spatial_coords[:,:,dim] / distance[dim], 2) for dim in (0, 1))
+        k2 = np.pi**2 * np.sum(np.power(self.spatial_coords[:,:,dim] / dimension[dim], 2) for dim in range(2))
         self.w = self.sound_velocity * np.sqrt(k2)
 
         self.cos_w_dt = np.cos(self.w * self.dt)
 
-        # Allocate modes for two timesteps
+        # Allocate mode arrays for two timesteps
         self.M_current = np.zeros((num_cells[0], num_cells[1]))
         self.M_past = np.zeros((num_cells[0], num_cells[1]))
         self.initial_force = np.zeros((num_cells[0], num_cells[1]))
@@ -150,7 +150,7 @@ class Domain2D(Updateable):
 
     def draw(self, surface):
         # draw pressure values
-        rect_dims = self.to_screen_scale(*(self.h*0.8))
+        rect_dims = self.to_screen_scale(self.h*0.8, self.h*0.8)
         pressures = idct2(self.M_current)
         for x, px in zip(self.spatial_coords + self.begin, pressures):
             for y, py in zip(x, px):
@@ -179,7 +179,7 @@ class Simulation(Updateable):
             [0, 0, 1]
         ])
         self.domains = [
-            Domain2D("1", (0, 0), (1.35, 1), 700, transform)
+            Domain2D("1", (0, 0), (2, 1), 700, transform)
         ]
 
     def process_event(self, event):
