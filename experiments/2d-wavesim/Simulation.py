@@ -102,8 +102,8 @@ class Domain2D(Updateable):
 
         # Local spatial coordinates
         self.spatial_coords = np.zeros((num_cells[0], num_cells[1], 2))
-        for x, ix in zip(np.linspace(0, dimension[0], num_cells[0]), range(len(self.spatial_coords))):
-            for y, iy in zip(np.linspace(0, dimension[1], num_cells[1]), range(len(self.spatial_coords[ix]))):
+        for x, ix in zip(np.linspace(self.h, dimension[0], num_cells[0]), range(len(self.spatial_coords))):
+            for y, iy in zip(np.linspace(self.h, dimension[1], num_cells[1]), range(len(self.spatial_coords[ix]))):
                 self.spatial_coords[ix][iy][0], self.spatial_coords[ix][iy][1] = x, y
 
         # Calculate characteristic frequencies omega
@@ -116,8 +116,8 @@ class Domain2D(Updateable):
         self.M_current = np.zeros((num_cells[0], num_cells[1]))
         self.M_past = np.zeros((num_cells[0], num_cells[1]))
         self.initial_force = np.zeros((num_cells[0], num_cells[1]))
-        self.initial_force[30][30] = 400
-        self.initial_force = dct2(self.initial_force) * (1 - np.cos(self.w * self.dt))
+        self.initial_force[30][30] = 1e8
+        self.initial_force = 2 * dct2(self.initial_force) / np.power(self.w, 2) * (1 - np.cos(self.w * self.dt))
 
         # Font stuff
         self.font = pygame.font.SysFont('monospace', 18)

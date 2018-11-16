@@ -1,0 +1,63 @@
+/* -*- mode: C++ ; c-file-style: "stroustrup" -*- *****************************
+ * Qwt Widget Library
+ * Copyright (C) 1997   Josef Wilgen
+ * Copyright (C) 2002   Uwe Rathmann
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the Qwt License, Version 1.0
+ *****************************************************************************/
+
+#ifndef QWT_GLOBAL_H
+#    define QWT_GLOBAL_H
+
+#    include <qglobal.h>
+
+// QWT_VERSION is (major << 16) + (minor << 8) + patch.
+
+#   define QWT_VER_MAJ ${QWT_VER_MAJ}
+#   define QWT_VER_MIN ${QWT_VER_MIN}
+#   define QWT_VER_PAT ${QWT_VER_PAT}
+#   define QWT_VERSION       ((QWT_VER_MAJ << 16) + (QWT_VER_MIN << 8) + QWT_VER_PAT)
+#   define QWT_VERSION_STR   "${QWT_VERSION}"
+    #cmakedefine QWT_SHARED
+    #cmakedefine QWT_PLOT
+    #cmakedefine QWT_WIDGETS
+    #cmakedefine QWT_SVG
+    #cmakedefine QWT_OPENGL
+    #cmakedefine QWT_MATHML
+    #cmakedefine QWT_DESIGNER
+    #cmakedefine QWT_DESIGNER_SELF_CONTAINED
+    #cmakedefine QWT_FRAMEWORK
+    #cmakedefine QWT_PKG_CONFIG
+
+#   if defined(_MSC_VER) /* MSVC Compiler */
+        /* template-class specialization 'identifier' is already instantiated */
+#       pragma warning(disable: 4660)
+        /* inherits via dominance */
+#       pragma warning(disable: 4250)
+#   endif // _MSC_VER
+
+#   if !defined(QWT_SVG)
+#       define QWT_NO_SVG
+#   endif
+#   if !defined(QWT_OPENGL)
+#       define QWT_NO_OPENGL
+#   endif
+
+    // Visibility macros
+#   define QWT_HELPER_API_EXPORT ${QWT_HELPER_API_EXPORT}
+#   define QWT_HELPER_API_IMPORT ${QWT_HELPER_API_IMPORT}
+#   define QWT_HELPER_API_LOCAL  ${QWT_HELPER_API_LOCAL}
+
+#   if defined(QWT_SHARED)
+#       if defined (QWT_BUILDING)  /* defined only when the library is being compiled using a command line option, e.g. -DQWT_BUILDING */
+#           define QWT_EXPORT QWT_HELPER_API_EXPORT
+#       else
+#           define QWT_EXPORT QWT_HELPER_API_IMPORT
+#       endif
+#   else
+#       define QWT_EXPORT
+#   endif
+#   define QWT_LOCAL QWT_HELPER_API_LOCAL
+
+#endif

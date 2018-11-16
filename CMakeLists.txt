@@ -18,3 +18,4 @@ include(GNUInstallDirs)
 
 add_subdirectory ("thirdparty/googletest")
 add_subdirectory ("wavesim")
+add_subdirectory ("frontend")
