@@ -8,6 +8,7 @@ namespace Ui {
 
 namespace frontend {
 class Scene;
+class SceneView;
 
 class MainWindow : public QMainWindow
 {
@@ -26,6 +27,7 @@ private slots:
 private:
     Ui::MainWindow* ui_;
     Scene* scene_;
+    SceneView* sceneView_;
 };
 
 }

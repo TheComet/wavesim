@@ -42,16 +42,15 @@ QString Scene::getSupportedFormatsFilter() const
 }
 
 // ----------------------------------------------------------------------------
-bool Scene::loadMesh(const QString& fileName)
+Qt3DCore::QEntity* Scene::loadFile(const QString& fileName, QString* errorMsg)
 {
     const aiScene* assimpScene = importer_->ReadFile(fileName.toUtf8().constData(), aiProcess_Triangulate);
     if (assimpScene == nullptr)
-        return false;
-    return createQtMeshesFromAssimpScene(assimpScene);
-}
+    {
+        if (errorMsg)
+            *errorMsg = importer_->GetErrorString();
+        return nullptr;
+    }
 
-// ----------------------------------------------------------------------------
-bool Scene::createQtMeshesFromAssimpScene(const aiScene* scene)
-{
-    return false;
+    return nullptr;
 }

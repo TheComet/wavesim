@@ -18,7 +18,8 @@ public:
     ~Scene();
 
     QString getSupportedFormatsFilter() const;
-    bool loadMesh(const QString& fileName);
+    Qt3DCore::QEntity* loadFile(const QString& fileName, QString* errorMsg);
+
 
 private:
     bool createQtMeshesFromAssimpScene(const aiScene* scene);
