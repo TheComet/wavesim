@@ -16,13 +16,13 @@ typedef struct mesh_builder_t
     aabb_t    aabb;
 } mesh_builder_t;
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 mesh_builder_create(mesh_builder_t** mb);
 
 WAVESIM_PRIVATE_API int
 mesh_builder_add_face(mesh_builder_t* mb, face_t face);
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 mesh_builder_build(mesh_t** mesh, mesh_builder_t* mb);
 
 WAVESIM_PRIVATE_API void

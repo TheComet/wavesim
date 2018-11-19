@@ -2,21 +2,25 @@
  * Configures prerequisits for this library
  * --------------------------------------------------------------*/
 
-#ifndef WAVESIM_CONFIG_HPP
-#   define WAVESIM_CONFIG_HPP
+#ifndef WAVESIM_CONFIG_H
+#   define WAVESIM_CONFIG_H
 
     /* Config */
-#   define WAVESIM_PRECISION_${WS_PRECISION_CAPS_AND_NO_SPACES}
-#   define WAVESIM_${WAVESIM_BUILD_TYPE}
+#   define WAVESIM_PRECISION_${WAVESIM_PRECISION_CAPS_AND_NO_SPACES}
+#   define WAVESIM_${WAVESIM_LIB_TYPE}
     #cmakedefine WAVESIM_64BIT_INDEX_BUFFERS
+    #cmakedefine WAVESIM_BENCHMARKS
+    #cmakedefine WAVESIM_HAVE_STDINT_H
+    #cmakedefine WAVESIM_MEMORY_BACKTRACE
+    #cmakedefine WAVESIM_MEMORY_DEBUGGING
     #cmakedefine WAVESIM_PIC
     #cmakedefine WAVESIM_PROFILING
     #cmakedefine WAVESIM_PYTHON
     #cmakedefine WAVESIM_TESTS
 
     /* Some macros */
-#   define WS_RESTRICT ${WS_RESTRICT}
-#   define WS_WARN_UNUSED ${WS_WARN_UNUSED}
+#   define WAVESIM_RESTRICT ${WAVESIM_RESTRICT}
+#   define WAVESIM_WARN_UNUSED ${WAVESIM_WARN_UNUSED}
 #   ifdef __cplusplus
 #       define C_BEGIN extern "C" {
 #   else
@@ -37,13 +41,9 @@
 #   endif
 #   define WAVESIM_PRIVATE_API WAVESIM_HELPER_API_LOCAL
 
-    /* Global includes */
-#   ifdef WAVESIM_HAVE_STDINT_H
-#       include <stdint.h>
-#   else
-#       include "wavesim/pstdint.h"
-#   endif
+    /* Some commonly used includes */
 #   include "wavesim/return_codes.h"
+#    include "wavesim/stdint.h"
 
     /*
      * Index buffer type depends on whether 64-bit IBs are enabled.
@@ -63,13 +63,13 @@ typedef ${WAVESIM_PRECISION} wsreal_t;
     /* Define epsilon depending on type of "real" */
 #   include <float.h>
 #   if defined(WAVESIM_PRECISION_LONG_DOUBLE)
-#       define WS_EPSILON DBL_EPSILON
+#       define WAVESIM_EPSILON DBL_EPSILON
 #   elif defined(WAVESIM_PRECISION_DOUBLE)
-#       define WS_EPSILON DBL_EPSILON
+#       define WAVESIM_EPSILON DBL_EPSILON
 #   elif defined(WAVESIM_PRECISION_FLOAT)
-#       define WS_EPSILON FLT_EPSILON
+#       define WAVESIM_EPSILON FLT_EPSILON
 #   else
-#       error Unknown precision. Are you sure you configured with WS_PRECISION_CAPS_AND_NO_SPACES defined?
+#       error Unknown precision. Are you sure you configured with WAVESIM_PRECISION_CAPS_AND_NO_SPACES defined?
 #   endif
 
-#endif /* WAVESIM_CONFIG_HPP */
+#endif /* WAVESIM_CONFIG_H */

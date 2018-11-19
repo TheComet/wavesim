@@ -16,7 +16,7 @@ TEST(NAME, rectangular_medium)
     audio_source_t* as;
     aabb_t bb = aabb(0, 0, 0, 2, 2, 2); // 2 meter box
     ASSERT_THAT(medium_create(&m), Eq(WS_OK));
-    ASSERT_THAT(simulation_create(&s, WS_ARD), Eq(WS_OK));
+    ASSERT_THAT(simulation_create(&s, WAVESIM_ARD), Eq(WS_OK));
     ASSERT_THAT(audio_listener_create(&al), Eq(WS_OK));
     ASSERT_THAT(audio_source_create(&as), Eq(WS_OK));
 

@@ -40,8 +40,8 @@ project ("wavesimlib"
     VERSION 0.0.1
     LANGUAGES C ${NEED_CXX_LANGUAGE})
 
-string (REPLACE " " "_" WS_PRECISION_CAPS_AND_NO_SPACES ${WAVESIM_PRECISION})
-string (TOUPPER ${WS_PRECISION_CAPS_AND_NO_SPACES} WS_PRECISION_CAPS_AND_NO_SPACES)
+string (REPLACE " " "_" WAVESIM_PRECISION_CAPS_AND_NO_SPACES ${WAVESIM_PRECISION})
+string (TOUPPER ${WAVESIM_PRECISION_CAPS_AND_NO_SPACES} WAVESIM_PRECISION_CAPS_AND_NO_SPACES)
 
 test_visibility_macros (WAVESIM_HELPER_API_EXPORT WAVESIM_HELPER_API_IMPORT WAVESIM_HELPER_API_LOCAL)
 
@@ -49,7 +49,7 @@ test_visibility_macros (WAVESIM_HELPER_API_EXPORT WAVESIM_HELPER_API_IMPORT WAVE
 foreach (RESTRICT_KEYWORD __restrict__ __restrict restrict)
     check_c_source_compiles ("int test (void *${RESTRICT_KEYWORD} x); int main (void) {return 0;}" WAVESIM_RESTRICT_${RESTRICT_KEYWORD})
     if (WAVESIM_RESTRICT_${RESTRICT_KEYWORD})
-        set (WS_RESTRICT ${RESTRICT_KEYWORD})  # This replaces ${WS_RESTRICT} in config.h.in
+        set (WAVESIM_RESTRICT ${RESTRICT_KEYWORD})  # This replaces ${WAVESIM_RESTRICT} in config.h.in
         break ()
     endif ()
 endforeach ()
@@ -60,7 +60,7 @@ check_include_files ("stdint.h" WAVESIM_HAVE_STDINT_H)
 # Check if we can warn about unused function results
 check_c_source_compiles ("int __attribute__((warn_unused_result)) f(int z) { return z*z + z*2 + z/3 + 23; } int main(void) { return f(4); }" HAVE_WARN_UNUSED)
 if (HAVE_WARN_UNUSED)
-    set (WS_WARN_UNUSED "__attribute__((warn_unused_result))")
+    set (WAVESIM_WARN_UNUSED "__attribute__((warn_unused_result))")
 endif ()
 
 set (WAVESIM_HOST_COMPUTER ${CMAKE_HOST_SYSTEM})
@@ -105,10 +105,10 @@ if (WAVESIM_PREFER_SYSTEM_FFTW OR WAVESIM_USE_SYSTEM_FFTW)
     endif ()
     find_package (FFTW ${WAVESIM_FFTW_REQUIRED})
 endif ()
-if (NOT FFTW_FOUND)
+if (NOT FFTW_FOUND AND NOT WAVESIM_USE_SYSTEM_FFTW)
     add_subdirectory ("../thirdparty/fftw-3.3.7" "${CMAKE_CURRENT_BINARY_DIR}/fftw-3.3.7")
     set (FFTW_LIBRARIES fftw3)
-    set (FFTW_INCLUDE_DIRS "")
+    set (FFTW_INCLUDE_DIRS "../thirdparty/fftw-3.3.7/api")
     set_property (TARGET fftw3 PROPERTY POSITION_INDEPENDENT_CODE ${WAVESIM_PIC})
 endif ()
 
@@ -147,6 +147,13 @@ file (GLOB WAVESIM_HEADERS_MESH "mesh/include/wavesim/mesh/*.h")
 file (GLOB WAVESIM_SOURCES_MESH "mesh/src/*.c")
 file (GLOB WAVESIM_HEADERS_SIM "simulation/include/wavesim/simulation/*.h")
 file (GLOB WAVESIM_SOURCES_SIM "simulation/src/*.c")
+if (WIN32)
+    file (GLOB WAVESIM_PLATFORM_SOURCES "common/src/platform/win32/*.c")
+elseif (UNIX)
+    file (GLOB WAVESIM_PLATFORM_SOURCES "common/src/platform/unix/*.c")
+else ()
+    message (FATAL_ERROR "No sources for this platform")
+endif ()
 add_library (wavesim_obj OBJECT
     ${WAVESIM_HEADERS}
     ${WAVESIM_SOURCES}
@@ -154,12 +161,14 @@ add_library (wavesim_obj OBJECT
     ${WAVESIM_SOURCES_MESH}
     ${WAVESIM_HEADERS_SIM}
     ${WAVESIM_SOURCES_SIM}
+    ${WAVESIM_PLATFORM_SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/src/build_info.c)
 target_include_directories (wavesim_obj
     PRIVATE
         "common/include"
         "mesh/include"
         "simulation/include"
+        ${FFTW_INCLUDE_DIRS}
         "${CMAKE_CURRENT_BINARY_DIR}/include")
 target_compile_definitions (wavesim_obj
     PRIVATE

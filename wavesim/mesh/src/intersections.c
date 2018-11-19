@@ -62,7 +62,7 @@ intersect_line_plane_internal(wsreal_t result[3], wsreal_t u[3], wsreal_t v[3],
 
     a = -vec3_dot(n.xyz, w0.xyz);
     b = vec3_dot(n.xyz, result);
-    if (fabs(b) < WS_EPSILON) /* ray is parallel to triangle plane */
+    if (fabs(b) < WAVESIM_EPSILON) /* ray is parallel to triangle plane */
         return 0;
 
     /* Get intersection point of ray with triangle */

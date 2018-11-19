@@ -47,13 +47,13 @@ simulation_set_type(simulation_t* simulation, enum simulation_type_e type)
 {
     switch (type)
     {
-        case WS_ARD:
+        case WAVESIM_ARD:
             simulation->prepare  = simulation_ard_prepare;
             simulation->advance  = simulation_ard_advance;
             simulation->finalize = simulation_ard_finalize;
             break;
 
-        case WS_RAY:
+        case WAVESIM_RAY:
             simulation->prepare  = simulation_ray_prepare;
             simulation->advance  = simulation_ray_advance;
             simulation->finalize = simulation_ray_finalize;

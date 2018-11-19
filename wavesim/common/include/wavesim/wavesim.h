@@ -10,7 +10,7 @@ C_BEGIN
  * before using the library or after having called wavesim_deinit(). The call
  * is guarded and can be called multiple times consecutively.
  */
-WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
+WAVESIM_PUBLIC_API wsret WAVESIM_WARN_UNUSED
 wavesim_init(void);
 
 /*!
@@ -28,7 +28,7 @@ wavesim_deinit(void);
  * @brief Runs all unit tests in the library.
  * @param[in] argv Command line arguments are passed on to googletest/mock
  */
-WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
+WAVESIM_PUBLIC_API wsret WAVESIM_WARN_UNUSED
 wavesim_run_tests(int* argc, char** argv);
 
 C_END

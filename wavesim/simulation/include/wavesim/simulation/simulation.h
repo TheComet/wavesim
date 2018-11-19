@@ -24,8 +24,8 @@ typedef struct simulation_user_data_t simulation_user_data_t;
 
 typedef enum simulation_type_e
 {
-    WS_ARD,
-    WS_RAY
+    WAVESIM_ARD,
+    WAVESIM_RAY
 } simulation_type_e;
 
 typedef struct simulation_t
@@ -51,7 +51,7 @@ typedef struct simulation_t
  * @param[in] type The type of simulation (see simulation_type_e)
  * @return Returns WS_OK on success.
  */
-WAVESIM_PUBLIC_API wsret WS_WARN_UNUSED
+WAVESIM_PUBLIC_API wsret WAVESIM_WARN_UNUSED
 simulation_create(simulation_t** simulation, simulation_type_e type);
 
 /*!

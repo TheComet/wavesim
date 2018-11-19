@@ -85,10 +85,10 @@ typedef struct mesh_t
     char             we_own_the_buffers;
 } mesh_t;
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 mesh_create(mesh_t** mesh, const char* name);
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 mesh_construct(mesh_t* mesh, const char* name);
 
 WAVESIM_PRIVATE_API void
@@ -100,13 +100,13 @@ mesh_destroy(mesh_t* mesh);
 WAVESIM_PRIVATE_API void
 mesh_clear_buffers(mesh_t* mesh);
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 mesh_assign_buffers(mesh_t* mesh,
                     void* vertex_buffer, void* index_buffer,
                     uintptr_t vertex_count, uintptr_t index_count,
                     mesh_vb_type_e vb_type, mesh_ib_type_e ib_type);
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 mesh_copy_from_buffers(mesh_t* mesh,
                        const void* vertex_buffer, const void* index_buffer,
                        uintptr_t vertex_count, uintptr_t index_count,

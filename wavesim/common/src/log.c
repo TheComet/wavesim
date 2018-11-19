@@ -12,9 +12,9 @@ log_create(log_t** log)
 {
     *log = MALLOC(sizeof **log);
     if (*log == NULL)
-        return -1;
+        WSRET(WS_ERR_OUT_OF_MEMORY);
     log_construct(*log);
-    return 0;
+    WSRET(WS_OK);
 }
 
 /* ------------------------------------------------------------------------- */

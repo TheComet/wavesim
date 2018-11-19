@@ -52,3 +52,41 @@ target_link_libraries (wavesim_frontend PUBLIC Qt5::3DRender)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::Core)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::Gui)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::Widgets)
+
+###############################################################################
+# DLLs need to be copied on Windows
+###############################################################################
+
+if (WIN32)
+    macro (copy_dlls CONFIG)
+        if (${CONFIG} MATCHES Debug)
+            set (POSTFIX d)
+        else ()
+            set (POSTFIX "")
+        endif ()
+        set (BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG})
+        add_custom_target (Qt5CopyBinaries${CONFIG}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${BIN_DIR}/platforms
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../plugins/platforms/qwindowsd.dll   ${BIN_DIR}/platforms
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DCore${POSTFIX}.dll       ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DExtras${POSTFIX}.dll     ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DInput${POSTFIX}.dll      ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DLogic${POSTFIX}.dll      ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DRender${POSTFIX}.dll     ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Concurrent${POSTFIX}.dll   ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Core${POSTFIX}.dll         ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Gamepad${POSTFIX}.dll      ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Gui${POSTFIX}.dll          ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Network${POSTFIX}.dll      ${BIN_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Widgets${POSTFIX}.dll      ${BIN_DIR}
+
+            COMMENT "Copying Qt binaries from '${Qt5Core_DIR}/../../bin/' to '${BIN_DIR}'"
+            VERBATIM
+        )
+        add_dependencies (wavesim_frontend Qt5CopyBinaries${CONFIG})
+    endmacro ()
+    
+    copy_dlls(Debug)
+    copy_dlls(Release)
+endif ()
+

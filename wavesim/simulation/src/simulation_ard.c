@@ -1,6 +1,6 @@
 #include "wavesim/simulation/simulation_ard.h"
+#include "fftw3.h"
 #include <math.h>
-#include <fftw3.h>
 
 #define MODES_GET(buffer) \
     buffer

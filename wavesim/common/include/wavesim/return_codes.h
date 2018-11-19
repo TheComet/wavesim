@@ -3,7 +3,11 @@
 
 #include "wavesim/config.h"
 
-#define WSRET(code) return wsret_wrapper(code)
+#ifdef DEBUG
+#   define WSRET(code) return wsret_wrapper(code)
+#else
+#   define WSRET(code) return code
+#endif
 
 C_BEGIN
 

@@ -3,7 +3,6 @@
 
 #include "wavesim/config.h"
 #include "wavesim/aabb.h"
-#include "wavesim/return_codes.h"
 #include "wavesim/vector.h"
 #include "wavesim/mesh/attribute.h"
 
@@ -31,7 +30,7 @@ typedef struct medium_partition_t
     vector_t adjacent_partitions; /* int32_t (indices into medium->partitions) */
 } medium_partition_t;
 
-WAVESIM_PRIVATE_API wsret WS_WARN_UNUSED
+WAVESIM_PRIVATE_API wsret WAVESIM_WARN_UNUSED
 medium_create(medium_t** medium);
 
 WAVESIM_PRIVATE_API void
