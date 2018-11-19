@@ -1,5 +1,6 @@
 #include "wavesim/memory.h"
 #include "wavesim/simulation/audio_listener.h"
+#include <stddef.h>
 
 /* ------------------------------------------------------------------------- */
 wsret

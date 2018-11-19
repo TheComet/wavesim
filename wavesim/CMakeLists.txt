@@ -15,13 +15,16 @@ include (TestVisibilityMacros)
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     set (DEBUG_FEATURE 1)
+    set (RELEASE_FEATURE 0)
 else ()
     set (DEBUG_FEATURE 0)
+    set (RELEASE_FEATURE 1)
 endif ()
 
 option (WAVESIM_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." off)
 set (WAVESIM_LIB_TYPE "SHARED" CACHE STRING "Whether to build as shared or static")
 cmake_dependent_option (WAVESIM_BENCHMARKS "Compile benchmarks (requires C++)" OFF "CMAKE_BUILD_TYPE MATCHES Release" OFF)
+option (WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD "Whether to generate buildinfo.c every time you hit compile" ${RELEASE_FEATURE})
 option (WAVESIM_MEMORY_BACKTRACE "Generates backtraces to each malloc call that doesn't get matched to a free. Impacts performance, but can help track down memory leaks easily." ${DEBUG_FEATURE})
 option (WAVESIM_MEMORY_DEBUGGING "Enables malloc/free wrappers and memory usage reports" ${DEBUG_FEATURE})
 option (WAVESIM_PIC "Position independent code when building as a static library" ON)
@@ -124,6 +127,7 @@ message (STATUS " + Configuration: ${CMAKE_BUILD_TYPE}")
 message (STATUS " + Library type: ${WAVESIM_LIB_TYPE}")
 message (STATUS " + 64-bit index buffers: ${WAVESIM_64BIT_INDEX_BUFFERS}")
 message (STATUS " + Build benchmark tests: ${WAVESIM_BENCHMARKS}")
+message (STATUS " + WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD: ${WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD}")
 message (STATUS " + Memory debugging: ${WAVESIM_MEMORY_DEBUGGING}")
 message (STATUS " + Memory backtraces: ${WAVESIM_MEMORY_BACKTRACE}")
 message (STATUS " + PIC (Position independent code): ${WAVESIM_PIC}")
@@ -190,9 +194,13 @@ set_property (
 
 # Update build info every time the project is compiled
 add_custom_target (wavesim_generate_build_info ALL
-    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake"
+    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -DWAVESIM_UPDATE_BUILD_INFO_ON_REBUILD=${WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake"
     DEPENDS "cmake/modules/generate_timestamp.cmake")
 add_dependencies (wavesim_obj wavesim_generate_build_info)
+# Have to run the build info script at least once if WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD=OFF so the header exists
+if (NOT WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD)
+    execute_process (COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -DWAVESIM_UPDATE_BUILD_INFO_ON_REBUILD=ON -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake")
+endif ()
 
 ###############################################################################
 # Python bindings

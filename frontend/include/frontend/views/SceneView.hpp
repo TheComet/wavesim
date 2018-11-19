@@ -3,7 +3,7 @@
 #include <Qt3DExtras/Qt3DWindow>
 
 namespace frontend {
-class Scene;
+class SceneLoader;
 
 class SceneView : public Qt3DExtras::Qt3DWindow
 {

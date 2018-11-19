@@ -11,11 +11,11 @@ namespace Assimp {
 
 namespace frontend {
 
-class Scene
+class SceneLoader
 {
 public:
-    Scene();
-    ~Scene();
+    SceneLoader();
+    ~SceneLoader();
 
     QString getSupportedFormatsFilter() const;
     Qt3DCore::QEntity* loadFile(const QString& fileName, QString* errorMsg);

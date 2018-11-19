@@ -6,6 +6,7 @@
 #include "wavesim/simulation/simulation_ard.h"
 #include "wavesim/simulation/simulation_ray.h"
 #include <assert.h>
+#include <stddef.h>
 
 /* ------------------------------------------------------------------------- */
 wsret

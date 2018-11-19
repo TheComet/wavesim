@@ -43,7 +43,7 @@
 
     /* Some commonly used includes */
 #   include "wavesim/return_codes.h"
-#    include "wavesim/stdint.h"
+#   include "wavesim/stdint.h"
 
     /*
      * Index buffer type depends on whether 64-bit IBs are enabled.

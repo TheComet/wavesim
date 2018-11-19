@@ -7,7 +7,7 @@ namespace Ui {
 }
 
 namespace frontend {
-class Scene;
+class SceneLoader;
 class SceneView;
 
 class MainWindow : public QMainWindow
@@ -26,7 +26,7 @@ private slots:
 
 private:
     Ui::MainWindow* ui_;
-    Scene* scene_;
+    SceneLoader* sceneLoader_;
     SceneView* sceneView_;
 };
 

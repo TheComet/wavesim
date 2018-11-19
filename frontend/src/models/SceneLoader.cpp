@@ -1,4 +1,4 @@
-#include "frontend/models/Scene.hpp"
+#include "frontend/models/SceneLoader.hpp"
 #include "assimp/Importer.hpp"
 #include "assimp/importerdesc.h"
 #include "assimp/scene.h"
@@ -8,21 +8,21 @@
 using namespace frontend;
 
 // ----------------------------------------------------------------------------
-Scene::Scene() :
+SceneLoader::SceneLoader() :
     importer_(new Assimp::Importer),
     rootEntity_(new Qt3DCore::QEntity)
 {
 }
 
 // ----------------------------------------------------------------------------
-Scene::~Scene()
+SceneLoader::~SceneLoader()
 {
     delete rootEntity_;
     delete importer_;
 }
 
 // ----------------------------------------------------------------------------
-QString Scene::getSupportedFormatsFilter() const
+QString SceneLoader::getSupportedFormatsFilter() const
 {
     QStringList filterList;
     for (int i = 0; i != importer_->GetImporterCount(); ++i)
@@ -42,7 +42,7 @@ QString Scene::getSupportedFormatsFilter() const
 }
 
 // ----------------------------------------------------------------------------
-Qt3DCore::QEntity* Scene::loadFile(const QString& fileName, QString* errorMsg)
+Qt3DCore::QEntity* SceneLoader::loadFile(const QString& fileName, QString* errorMsg)
 {
     const aiScene* assimpScene = importer_->ReadFile(fileName.toUtf8().constData(), aiProcess_Triangulate);
     if (assimpScene == nullptr)
