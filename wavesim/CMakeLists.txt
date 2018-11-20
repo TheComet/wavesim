@@ -15,8 +15,10 @@ include (TestVisibilityMacros)
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     set (DEBUG_FEATURE 1)
+	set (RELEASE_FEATURE 0)
 else ()
     set (DEBUG_FEATURE 0)
+	set (RELEASE_FEATURE 1)
 endif ()
 
 option (WAVESIM_64BIT_INDEX_BUFFERS "64-bit index buffer support. If you know you won't be dealing with scenes that have more than 2^32 vertices in total, then disable this feature to save memory." off)
@@ -29,6 +31,7 @@ set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calcul
 option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
 option (WAVESIM_PYTHON "Build python bindings. The library must be shared." OFF)
 option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ${DEBUG_FEATURE})
+option (WAVESIM_UPDATE_BUILD_INFO "Enabling this causes build_info_dynamic.h to be generated every compile, meaning build_info.c has to be compiles every time." ${RELEASE_FEATURE})
 option (WAVESIM_USE_SYSTEM_FFTW "Forces wavesim to use the system fftw library. If it is not present, an error is thrown." OFF)
 option (WAVESIM_PREFER_SYSTEM_FFTW "If fftw is installed on the host system, wavesim will prefer using it over building fftw internally. If this option is disabled, then the internal fftw library is always built." OFF)
 
@@ -190,9 +193,19 @@ set_property (
 
 # Update build info every time the project is compiled
 add_custom_target (wavesim_generate_build_info ALL
-    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake"
+    COMMAND ${CMAKE_COMMAND}
+		-DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+		-DWAVESIM_UPDATE_BUILD_INFO=${WAVESIM_UPDATE_BUILD_INFO}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake"
     DEPENDS "cmake/modules/generate_timestamp.cmake")
 add_dependencies (wavesim_obj wavesim_generate_build_info)
+# Have to generate the build info header at least once
+if (NOT WAVESIM_UPDATE_BUILD_INFO)
+	execute_process (COMMAND ${CMAKE_COMMAND}
+		-DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+		-DWAVESIM_UPDATE_BUILD_INFO=ON
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake")
+endif ()
 
 ###############################################################################
 # Python bindings

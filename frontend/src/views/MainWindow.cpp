@@ -1,4 +1,4 @@
-#include "frontend/models/Scene.hpp"
+#include "frontend/models/SceneLoader.hpp"
 #include "frontend/views/MainWindow.hpp"
 #include "frontend/views/SceneView.hpp"
 #include "ui_MainWindow.h"
@@ -12,7 +12,7 @@ using namespace frontend;
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui_(new Ui::MainWindow),
-    scene_(new Scene),
+    sceneLoader_(new SceneLoader),
     sceneView_(new SceneView)
 {
     ui_->setupUi(this);
@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget* parent) :
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    delete sceneLoader_;
     delete ui_;
 }
 
@@ -48,21 +49,22 @@ void MainWindow::onAction_importMeshTriggered()
         this,
         "Select one or more files to open",
         "",
-        scene_->getSupportedFormatsFilter()
+        sceneLoader_->getSupportedFormatsFilter()
     );
 
     QStringList errors;
     for(QStringList::iterator it = fileNames.begin(); it != fileNames.end(); ++it)
     {
         QString errorMsg;
-        Qt3DCore::QEntity* entity = scene_->loadFile(*it, &errorMsg);
-        if (entity == nullptr)
+        QVector<Qt3DCore::QEntity*> entities;
+        if (sceneLoader_->loadFile(*it, &entities, &errorMsg) == false)
         {
             errors.append(errorMsg);
             continue;
         }
 
-        //sceneView_->addEntity()
+        for (const auto& entity : entities)
+            sceneView_->addEntity(entity);
     }
 
     if (errors.length() > 0)

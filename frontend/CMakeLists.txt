@@ -24,7 +24,7 @@ file (GLOB FRONTEND_SOURCES
     "src/views/*.cpp")
 file (GLOB FRONTEND_HEADERS
     "include/frontend/models/*.hpp"
-    "include/frontend/views*.hpp")
+    "include/frontend/views/*.hpp")
 set (FRONTEND_HEADERS_MOC)
 
 qt5_wrap_cpp (FRONTEND_SOURCES_MOC
@@ -34,6 +34,7 @@ qt5_wrap_ui (FRONTEND_SOURCES_UI
     "forms/MainWindow.ui")
 
 add_executable (wavesim_frontend
+	${FRONTEND_HEADERS}
     ${FRONTEND_SOURCES}
     ${FRONTEND_SOURCES_MOC}
     ${FRONTEND_SOURCES_UI})
