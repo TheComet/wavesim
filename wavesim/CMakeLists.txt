@@ -32,6 +32,7 @@ set (WAVESIM_PRECISION "double" CACHE STRING "The datatype to use for all calcul
 option (WAVESIM_PROFILING "Compiles with -pg on linux" OFF)
 option (WAVESIM_PYTHON "Build python bindings. The library must be shared." OFF)
 option (WAVESIM_TESTS "Whether or not to build unit tests (note: requires C++)" ${DEBUG_FEATURE})
+option (WAVESIM_UPDATE_BUILD_INFO "Enabling this causes build_info_dynamic.h to be generated every compile, meaning build_info.c has to be compiles every time." ${RELEASE_FEATURE})
 option (WAVESIM_USE_SYSTEM_FFTW "Forces wavesim to use the system fftw library. If it is not present, an error is thrown." OFF)
 option (WAVESIM_PREFER_SYSTEM_FFTW "If fftw is installed on the host system, wavesim will prefer using it over building fftw internally. If this option is disabled, then the internal fftw library is always built." OFF)
 
@@ -194,12 +195,18 @@ set_property (
 
 # Update build info every time the project is compiled
 add_custom_target (wavesim_generate_build_info ALL
-    COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -DWAVESIM_UPDATE_BUILD_INFO_ON_REBUILD=${WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake"
+    COMMAND ${CMAKE_COMMAND}
+		-DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+		-DWAVESIM_UPDATE_BUILD_INFO=${WAVESIM_UPDATE_BUILD_INFO}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake"
     DEPENDS "cmake/modules/generate_timestamp.cmake")
 add_dependencies (wavesim_obj wavesim_generate_build_info)
-# Have to run the build info script at least once if WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD=OFF so the header exists
-if (NOT WAVESIM_UPDATE_BUILD_INFO_ON_REBUILD)
-    execute_process (COMMAND ${CMAKE_COMMAND} -DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -DWAVESIM_UPDATE_BUILD_INFO_ON_REBUILD=ON -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake")
+# Have to generate the build info header at least once
+if (NOT WAVESIM_UPDATE_BUILD_INFO)
+	execute_process (COMMAND ${CMAKE_COMMAND}
+		-DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+		-DWAVESIM_UPDATE_BUILD_INFO=ON
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/generate_timestamp.cmake")
 endif ()
 
 ###############################################################################

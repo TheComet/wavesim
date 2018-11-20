@@ -3,11 +3,12 @@
 #include <QString>
 #include <Qt3DCore/QEntity>
 
-struct aiScene;
-
 namespace Assimp {
     class Importer;
 }
+
+struct aiMesh;
+struct aiMaterial;
 
 namespace frontend {
 
@@ -18,11 +19,9 @@ public:
     ~SceneLoader();
 
     QString getSupportedFormatsFilter() const;
-    Qt3DCore::QEntity* loadFile(const QString& fileName, QString* errorMsg);
+    bool loadFile(const QString& fileName, QVector<Qt3DCore::QEntity*>* entities, QString* errorMsg);
 
-
-private:
-    bool createQtMeshesFromAssimpScene(const aiScene* scene);
+    static Qt3DCore::QEntity* assToQt(const aiMesh* mesh, const aiMaterial* material);
 
 private:
     Assimp::Importer* importer_;

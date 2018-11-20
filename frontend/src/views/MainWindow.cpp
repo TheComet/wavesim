@@ -57,14 +57,15 @@ void MainWindow::onAction_importMeshTriggered()
     for(QStringList::iterator it = fileNames.begin(); it != fileNames.end(); ++it)
     {
         QString errorMsg;
-        Qt3DCore::QEntity* entity = sceneLoader_->loadFile(*it, &errorMsg);
-        if (entity == nullptr)
+        QVector<Qt3DCore::QEntity*> entities;
+        if (sceneLoader_->loadFile(*it, &entities, &errorMsg) == false)
         {
             errors.append(errorMsg);
             continue;
         }
 
-        //sceneView_->addEntity()
+        for (const auto& entity : entities)
+            sceneView_->addEntity(entity);
     }
 
     if (errors.length() > 0)
