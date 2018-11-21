@@ -9,6 +9,7 @@ namespace Assimp {
 
 struct aiMesh;
 struct aiMaterial;
+typedef struct mesh_t mesh_t;
 
 namespace frontend {
 
@@ -19,9 +20,9 @@ public:
     ~SceneLoader();
 
     QString getSupportedFormatsFilter() const;
-    bool loadFile(const QString& fileName, QVector<Qt3DCore::QEntity*>* entities, QString* errorMsg);
+    bool loadFile(const QString& fileName, QVector<mesh_t*>* ws_meshes, QString* errorMsg);
 
-    static Qt3DCore::QEntity* assToQt(const aiMesh* mesh, const aiMaterial* material);
+    static mesh_t* assToQt(const aiMesh* mesh, const aiMaterial* material);
 
 private:
     Assimp::Importer* importer_;

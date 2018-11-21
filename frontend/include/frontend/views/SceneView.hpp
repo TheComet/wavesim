@@ -1,21 +1,25 @@
 #pragma once
 
-#include <Qt3DExtras/Qt3DWindow>
+#include <QWindow>
 
 namespace frontend {
 class SceneLoader;
 
-class SceneView : public Qt3DExtras::Qt3DWindow
+class SceneView : public QWindow
 {
     Q_OBJECT
 public:
     explicit SceneView(QScreen* screen=nullptr);
+    explicit SceneView(QWindow* parent);
     ~SceneView();
 
-    void addEntity(Qt3DCore::QEntity* entity);
+private:
+    void initGraphics();
 
 private:
-    Qt3DCore::QEntity* rootEntity_;
+#ifdef Q_OS_LINUX
+    void* X11Display_;
+#endif
 };
 
 }

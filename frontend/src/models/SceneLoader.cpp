@@ -3,12 +3,8 @@
 #include "assimp/importerdesc.h"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
+#include "wavesim/mesh/mesh.h"
 #include <QStringList>
-#include <QMatrix4x4>
-#include <Qt3DCore/QTransform>
-#include <Qt3DRender/QGeometryRenderer>
-#include <Qt3DRender/QBuffer>
-#include <Qt3DRender/QAttribute>
 
 using namespace frontend;
 
@@ -47,14 +43,8 @@ QString SceneLoader::getSupportedFormatsFilter() const
 }
 
 // ----------------------------------------------------------------------------
-Qt3DCore::QEntity* SceneLoader::assToQt(const aiMesh* mesh, const aiMaterial* material)
+mesh_t* SceneLoader::assToQt(const aiMesh* mesh, const aiMaterial* material)
 {
-    Qt3DCore::QEntity* customMeshEntity = new Qt3DCore::QEntity;
-
-    // Custom Mesh (TetraHedron)
-    Qt3DRender::QGeometryRenderer* customMeshRenderer = new Qt3DRender::QGeometryRenderer;
-    Qt3DRender::QGeometry *customGeometry = new Qt3DRender::QGeometry(customMeshRenderer);
-
     // 3 floats for position
     // 3 floats for normals
     // 3 floats for colors
@@ -90,70 +80,11 @@ Qt3DCore::QEntity* SceneLoader::assToQt(const aiMesh* mesh, const aiMaterial* ma
         ptr[idx++] = mesh->mFaces[i].mIndices[2];
     }
 
-    Qt3DRender::QBuffer* vertexDataBuffer = new Qt3DRender::QBuffer(Qt3DRender::QBuffer::VertexBuffer, customGeometry);
-    Qt3DRender::QBuffer* indexDataBuffer = new Qt3DRender::QBuffer(Qt3DRender::QBuffer::IndexBuffer, customGeometry);
-    vertexDataBuffer->setData(vertexBuffer);
-    indexDataBuffer->setData(indexBuffer);
-
-    // Attributes
-    Qt3DRender::QAttribute* positionAttribute = new Qt3DRender::QAttribute();
-    positionAttribute->setAttributeType(Qt3DRender::QAttribute::VertexAttribute);
-    positionAttribute->setBuffer(vertexDataBuffer);
-    positionAttribute->setDataType(Qt3DRender::QAttribute::Float);
-    positionAttribute->setDataSize(3);
-    positionAttribute->setByteOffset(0);
-    positionAttribute->setByteStride(9 * sizeof(float));
-    positionAttribute->setCount(mesh->mNumVertices);
-    positionAttribute->setName(Qt3DRender::QAttribute::defaultPositionAttributeName());
-
-    Qt3DRender::QAttribute *normalAttribute = new Qt3DRender::QAttribute();
-    normalAttribute->setAttributeType(Qt3DRender::QAttribute::VertexAttribute);
-    normalAttribute->setBuffer(vertexDataBuffer);
-    normalAttribute->setDataType(Qt3DRender::QAttribute::Float);
-    normalAttribute->setDataSize(3);
-    normalAttribute->setByteOffset(3 * sizeof(float));
-    normalAttribute->setByteStride(9 * sizeof(float));
-    normalAttribute->setCount(mesh->mNumVertices);
-    normalAttribute->setName(Qt3DRender::QAttribute::defaultNormalAttributeName());
-
-    Qt3DRender::QAttribute *colorAttribute = new Qt3DRender::QAttribute();
-    colorAttribute->setAttributeType(Qt3DRender::QAttribute::VertexAttribute);
-    colorAttribute->setBuffer(vertexDataBuffer);
-    colorAttribute->setDataType(Qt3DRender::QAttribute::Float);
-    colorAttribute->setDataSize(3);
-    colorAttribute->setByteOffset(6 * sizeof(float));
-    colorAttribute->setByteStride(9 * sizeof(float));
-    colorAttribute->setCount(mesh->mNumVertices);
-    colorAttribute->setName(Qt3DRender::QAttribute::defaultColorAttributeName());
-
-    Qt3DRender::QAttribute *indexAttribute = new Qt3DRender::QAttribute();
-    indexAttribute->setAttributeType(Qt3DRender::QAttribute::IndexAttribute);
-    indexAttribute->setBuffer(indexDataBuffer);
-    indexAttribute->setDataType(Qt3DRender::QAttribute::UnsignedShort);
-    indexAttribute->setDataSize(1);
-    indexAttribute->setByteOffset(0);
-    indexAttribute->setByteStride(0);
-    indexAttribute->setCount(mesh->mNumFaces * 3);
-
-    customGeometry->addAttribute(positionAttribute);
-    customGeometry->addAttribute(normalAttribute);
-    customGeometry->addAttribute(colorAttribute);
-    customGeometry->addAttribute(indexAttribute);
-
-    customMeshRenderer->setInstanceCount(1);
-    customMeshRenderer->setFirstVertex(0);
-    customMeshRenderer->setFirstInstance(0);
-    customMeshRenderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
-    customMeshRenderer->setGeometry(customGeometry);
-    customMeshRenderer->setVertexCount(mesh->mNumFaces * 3); // ?? This is the number of primitives * 3 somehow
-
-    customMeshEntity->addComponent(customMeshRenderer);
-
-    return customMeshEntity;
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
-static void processAssNode(QVector<Qt3DCore::QEntity*>* qtEntities,
+static void processAssNode(QVector<mesh_t*>* ws_meshes,
                            const aiNode* node,
                            const aiMesh*const* meshes,
                            const aiMaterial*const* materials,
@@ -170,27 +101,19 @@ static void processAssNode(QVector<Qt3DCore::QEntity*>* qtEntities,
         if ((mesh->mPrimitiveTypes & ~aiPrimitiveType_TRIANGLE))
             continue;
 
-        Qt3DCore::QEntity* entity = SceneLoader::assToQt(mesh, material);
-        Qt3DCore::QTransform* transform = new Qt3DCore::QTransform;
-        transform->setMatrix(QMatrix4x4(
-            accTransform.a1, accTransform.a2, accTransform.a3, accTransform.a4,
-            accTransform.b1, accTransform.b2, accTransform.b3, accTransform.b4,
-            accTransform.c1, accTransform.c2, accTransform.c3, accTransform.c4,
-            accTransform.d1, accTransform.d2, accTransform.d3, accTransform.d4
-        ));
-        entity->addComponent(transform);
-        qtEntities->push_back(entity);
+        mesh_t* ws_mesh = SceneLoader::assToQt(mesh, material);
+        ws_meshes->push_back(ws_mesh);
     }
 
     for (unsigned int i = 0; i != node->mNumChildren; ++i)
     {
         const aiNode* child = node->mChildren[i];
-        processAssNode(qtEntities, child, meshes, materials, node->mTransformation * accTransform);
+        processAssNode(ws_meshes, child, meshes, materials, node->mTransformation * accTransform);
     }
 }
 
 // ----------------------------------------------------------------------------
-bool SceneLoader::loadFile(const QString& fileName, QVector<Qt3DCore::QEntity*>* entities, QString* errorMsg)
+bool SceneLoader::loadFile(const QString& fileName, QVector<mesh_t*>* ws_meshes, QString* errorMsg)
 {
     const aiScene* assScene = importer_->ReadFile(fileName.toUtf8().constData(),
         aiProcess_Triangulate |
@@ -213,7 +136,7 @@ bool SceneLoader::loadFile(const QString& fileName, QVector<Qt3DCore::QEntity*>*
         return false;
     }
 
-    processAssNode(entities, assScene->mRootNode, assScene->mMeshes, assScene->mMaterials, aiMatrix4x4());
+    processAssNode(ws_meshes, assScene->mRootNode, assScene->mMeshes, assScene->mMaterials, aiMatrix4x4());
 
     return true;
 }

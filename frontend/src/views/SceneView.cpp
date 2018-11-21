@@ -1,53 +1,67 @@
 #include "frontend/views/SceneView.hpp"
-#include <Qt3DCore/QEntity>
-#include <Qt3DCore/QTransform>
+#include "bgfx/bgfx.h"
+#include "bgfx/platform.h"
 
-#include <Qt3DExtras/QPerVertexColorMaterial>
-#include <Qt3DExtras/QOrbitCameraController>
+#include <QWidget>
 
-#include <Qt3DRender/QBuffer>
-#include <Qt3DRender/QCamera>
-#include <Qt3DRender/QMaterial>
-#include <Qt3DRender/QMaterial>
-#include <Qt3DRender/QGeometryRenderer>
-#include <Qt3DRender/QGeometry>
+#ifdef Q_OS_LINUX
+#include <X11/Xlib.h>
+#endif
 
 namespace frontend {
 
 // ----------------------------------------------------------------------------
 SceneView::SceneView(QScreen* screen) :
-    Qt3DWindow(screen)
+    QWindow(screen)
 {
-    // Root entity
-    rootEntity_ = new Qt3DCore::QEntity;
+    initGraphics();
+}
 
-    // Camera
-    Qt3DRender::QCamera* cam = camera();
-    cam->lens()->setPerspectiveProjection(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-    cam->setPosition(QVector3D(0, 0, -40.0f));
-    cam->setUpVector(QVector3D(0, 1, 0));
-    cam->setViewCenter(QVector3D(0, 0, 0));
-
-    // For camera controls
-    Qt3DExtras::QOrbitCameraController* camController = new Qt3DExtras::QOrbitCameraController(rootEntity_);
-    camController->setLinearSpeed(50.0f);
-    camController->setLookSpeed(180.0f);
-    camController->setCamera(cam);
-
-    setRootEntity(rootEntity_);
+// ----------------------------------------------------------------------------
+SceneView::SceneView(QWindow* parent) :
+    QWindow(parent)
+{
+    initGraphics();
 }
 
 // ----------------------------------------------------------------------------
 SceneView::~SceneView()
 {
+    bgfx::shutdown();
+#ifdef Q_OS_LINUX
+    XCloseDisplay(reinterpret_cast<::Display*>(X11Display_));
+#endif
 }
 
 // ----------------------------------------------------------------------------
-void SceneView::addEntity(Qt3DCore::QEntity* entity)
+void SceneView::initGraphics()
 {
-    Qt3DRender::QMaterial* material = new Qt3DExtras::QPerVertexColorMaterial(entity);
-    entity->addComponent(material);
-    entity->setParent(rootEntity_);
+    setSurfaceType(QSurface::OpenGLSurface);
+
+    setWidth(640);
+    setHeight(480);
+
+
+    bgfx::Init init;
+    init.resolution.width = width();
+    init.resolution.height = height();
+    init.resolution.reset = BGFX_RESET_VSYNC;
+    init.platformData.nwh = reinterpret_cast<void*>(winId());
+#ifdef Q_OS_LINUX
+    X11Display_ = XOpenDisplay(NULL);
+    init.platformData.ndt = reinterpret_cast<void*>(X11Display_);
+#endif
+    bgfx::setPlatformData(init.platformData);
+    bgfx::init(init);
+    bgfx::reset(width(), height(), BGFX_RESET_VSYNC);
+
+    // Set up screen clears
+    bgfx::setViewClear(0
+        , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
+        , 0x303030ff
+        , 1.0f
+        , 0
+        );
 }
 
 }
