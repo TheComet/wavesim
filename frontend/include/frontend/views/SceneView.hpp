@@ -13,12 +13,18 @@ public:
     explicit SceneView(QWindow* parent);
     ~SceneView();
 
-    void draw();
+protected:
+    void resizeEvent(QResizeEvent* e) override;
+
+private slots:
+    void onResizeTimerTimeout();
 
 private:
     void initGraphics();
+    void draw();
 
 private:
+    QTimer* resizeTimer_;
 #ifdef Q_OS_LINUX
     void* X11Display_;
 #endif
