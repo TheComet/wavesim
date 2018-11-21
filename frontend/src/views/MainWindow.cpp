@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget* parent) :
     connect(ui_->action_closeCcene, SIGNAL(triggered()), this, SLOT(onAction_closeSceneTriggered()));
     connect(ui_->action_importMesh, SIGNAL(triggered()), this, SLOT(onAction_importMeshTriggered()));
     connect(ui_->action_quit, SIGNAL(triggered()), this, SLOT(onAction_quitTriggered()));
+    connect(ui_->pushButton_render, SIGNAL(released()), this, SLOT(onPushButton_renderReleased()));
 }
 
 // ----------------------------------------------------------------------------
@@ -80,6 +81,12 @@ void MainWindow::onAction_importMeshTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onAction_quitTriggered()
 {
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onPushButton_renderReleased(void)
+{
+    sceneView_->draw();
 }
 
 }

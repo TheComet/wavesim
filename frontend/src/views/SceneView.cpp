@@ -41,27 +41,36 @@ void SceneView::initGraphics()
     setWidth(640);
     setHeight(480);
 
-
     bgfx::Init init;
     init.resolution.width = width();
     init.resolution.height = height();
     init.resolution.reset = BGFX_RESET_VSYNC;
+
     init.platformData.nwh = reinterpret_cast<void*>(winId());
 #ifdef Q_OS_LINUX
     X11Display_ = XOpenDisplay(NULL);
     init.platformData.ndt = reinterpret_cast<void*>(X11Display_);
 #endif
-    bgfx::setPlatformData(init.platformData);
+    //bgfx::setPlatformData(data);
     bgfx::init(init);
     bgfx::reset(width(), height(), BGFX_RESET_VSYNC);
 
     // Set up screen clears
     bgfx::setViewClear(0
         , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-        , 0x303030ff
+        , 0x00ff00ff
         , 1.0f
         , 0
         );
 }
+
+// ----------------------------------------------------------------------------
+void SceneView::draw()
+{
+    bgfx::setViewRect(0, 0, 0, uint16_t(640), uint16_t(480));
+    bgfx::touch(0);
+    bgfx::frame();
+}
+
 
 }

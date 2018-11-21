@@ -23,6 +23,7 @@ private slots:
     void onAction_closeSceneTriggered(void);
     void onAction_importMeshTriggered(void);
     void onAction_quitTriggered(void);
+    void onPushButton_renderReleased(void);
 
 private:
     Ui::MainWindow* ui_;

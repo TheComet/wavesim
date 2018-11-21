@@ -13,6 +13,8 @@ public:
     explicit SceneView(QWindow* parent);
     ~SceneView();
 
+    void draw();
+
 private:
     void initGraphics();
 
