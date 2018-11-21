@@ -10,6 +10,7 @@ project ("wavesim GUI"
 
 add_subdirectory ("../thirdparty/qwt-6.1.3" "${CMAKE_CURRENT_BINARY_DIR}/qwt-6.1.3")
 add_subdirectory ("../thirdparty/assimp" "${CMAKE_CURRENT_BINARY_DIR}/assimp")
+add_subdirectory ("../thirdparty/bgfx.cmake" "${CMAKE_CURRENT_BINARY_DIR}/bgfx.cmake")
 
 find_package (Qt53DCore REQUIRED)
 find_package (Qt53DExtras REQUIRED)
@@ -34,7 +35,7 @@ qt5_wrap_ui (FRONTEND_SOURCES_UI
     "forms/MainWindow.ui")
 
 add_executable (wavesim_frontend
-	${FRONTEND_HEADERS}
+    ${FRONTEND_HEADERS}
     ${FRONTEND_SOURCES}
     ${FRONTEND_SOURCES_MOC}
     ${FRONTEND_SOURCES_UI})
@@ -47,6 +48,7 @@ target_include_directories (wavesim_frontend
 target_link_libraries (wavesim_frontend PUBLIC wavesim)
 target_link_libraries (wavesim_frontend PUBLIC qwtinternal)
 target_link_libraries (wavesim_frontend PUBLIC assimp::assimp)
+target_link_libraries (wavesim_frontend PUBLIC bgfx)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::3DCore)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::3DExtras)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::3DRender)
@@ -86,7 +88,7 @@ if (WIN32)
         )
         add_dependencies (wavesim_frontend Qt5CopyBinaries${CONFIG})
     endmacro ()
-    
+
     copy_dlls(Debug)
     copy_dlls(Release)
 endif ()
