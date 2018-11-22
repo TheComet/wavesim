@@ -25,9 +25,6 @@ private:
 
 private:
     QTimer* resizeTimer_;
-#ifdef Q_OS_LINUX
-    void* X11Display_;
-#endif
 };
 
 }

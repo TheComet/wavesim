@@ -33,9 +33,6 @@ SceneView::SceneView(QWindow* parent) :
 SceneView::~SceneView()
 {
     bgfx::shutdown();
-#ifdef Q_OS_LINUX
-    XCloseDisplay(reinterpret_cast<::Display*>(X11Display_));
-#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -48,10 +45,6 @@ void SceneView::initGraphics()
     init.resolution.height = 1;
     init.resolution.reset = BGFX_RESET_VSYNC;
     init.platformData.nwh = reinterpret_cast<void*>(winId());
-#ifdef Q_OS_LINUX
-    X11Display_ = XOpenDisplay(NULL);
-    init.platformData.ndt = reinterpret_cast<void*>(X11Display_);
-#endif
     bgfx::init(init);
 
     // Set up screen clears
@@ -66,6 +59,8 @@ void SceneView::initGraphics()
 // ----------------------------------------------------------------------------
 void SceneView::resizeEvent(QResizeEvent* e)
 {
+    // Without the timer we get a horrible flickering mess. This smooths it
+    // out a bit.
     resizeTimer_->start(40);
 }
 
