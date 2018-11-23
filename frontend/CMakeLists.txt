@@ -18,24 +18,32 @@ function (bgfx_shader SHADERS_OUT SHADERS_IN)
     foreach (IN_FILE ${SHADERS_IN})
         get_filename_component (FILE_NAME ${IN_FILE} NAME_WE)
         get_filename_component (IN_DIR ${IN_FILE} DIRECTORY)
+        get_filename_component (FILE_EXTENSION ${IN_FILE} EXT)
+
         set (VARYING_FILE ${IN_DIR}/${FILE_NAME}.vdef)
         if (MSVC)
-            set (PLATFORMS dx9 dx11 glsl gles asm.js)
+            set (PLATFORMS dx9 dx11 glsl asm.js)
         elseif (APPLE)
             set (PLATFORMS metal glsl gles asm.js)
         else ()
             set (PLATFORMS glsl gles asm.js)
         endif ()
-        set (TYPE fragment)
+
+        if (${FILE_EXTENSION} MATCHES ".vs")
+            set (TYPE vertex)
+        else ()
+            set (TYPE fragment)
+        endif ()
 
         foreach (PLATFORM ${PLATFORMS})
             set (OUT_DIR ${SHADER_OUTPUT_DIR}/${PLATFORM})
-            set (OUT_FILE ${OUT_DIR}/${FILE_NAME}.bin)
+            set (OUT_FILE_NAME ${FILE_NAME}${FILE_EXTENSION}.bin)
+            set (OUT_FILE ${OUT_DIR}/${OUT_FILE_NAME})
             add_custom_command (OUTPUT ${OUT_FILE}
                 DEPENDS ${IN_FILE} ${VARYING_FILE}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${OUT_DIR}
                 COMMAND "$<TARGET_FILE:shaderc>" --varyingdef ${VARYING_FILE} --type ${TYPE} --platform ${PLATFORM} -f ${IN_FILE} -o ${OUT_FILE}
-                COMMENT "Compiling shader ${FILE_NAME}")
+                COMMENT "Compiling ${TYPE} shader ${OUT_FILE_NAME}")
             list (APPEND ${SHADERS_OUT} ${OUT_FILE})
         endforeach ()
 
@@ -57,7 +65,8 @@ file (GLOB FRONTEND_HEADERS
 file (GLOB FRONTEND_FORMS
     "forms/*.ui")
 file (GLOB FRONTEND_SHADERS
-    "shaders/*.sc")
+    "shaders/*.vs"
+    "shaders/*.fs")
 qt5_wrap_cpp (FRONTEND_SOURCES_MOC
     "include/frontend/models/Camera.hpp"
     "include/frontend/views/MainWindow.hpp"
@@ -65,7 +74,7 @@ qt5_wrap_cpp (FRONTEND_SOURCES_MOC
 qt5_wrap_ui (FRONTEND_SOURCES_UI
     ${FRONTEND_FORMS})
 bgfx_shader (FRONTEND_SHADERS_GEN
-    ${FRONTEND_SHADERS})
+    "${FRONTEND_SHADERS}")
 
 add_executable (wavesim_frontend
     ${FRONTEND_HEADERS}

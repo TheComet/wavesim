@@ -80,11 +80,37 @@ SceneView::SceneView(QScreen* screen) :
     camera_ = new Camera(this);
     connect(resizeTimer_, SIGNAL(timeout()), this, SLOT(onResizeTimerTimeout()));
 
+    PosColorVertex::init();
     m_vbh = bgfx::createVertexBuffer(bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices)), PosColorVertex::ms_decl);
     m_ibh = bgfx::createIndexBuffer(bgfx::makeRef(s_cubeTriList, sizeof(s_cubeTriList)));
 
-    /*bgfx::ShaderHandle vsh =
-    m_program = bgfx::createProgram(vsh, fsh, true);*/
+    QString shaderPath;
+    switch (bgfx::getRendererType() )
+    {
+        case bgfx::RendererType::Noop:
+        case bgfx::RendererType::Direct3D9:  shaderPath = "frontend/shaders/dx9/";   break;
+        case bgfx::RendererType::Direct3D11:
+        case bgfx::RendererType::Direct3D12: shaderPath = "frontend/shaders/dx11/";  break;
+        case bgfx::RendererType::Gnm:        shaderPath = "frontend/shaders/pssl/";  break;
+        case bgfx::RendererType::Metal:      shaderPath = "frontend/shaders/metal/"; break;
+        case bgfx::RendererType::OpenGL:     shaderPath = "frontend/shaders/glsl/";  break;
+        case bgfx::RendererType::OpenGLES:   shaderPath = "frontend/shaders/essl/";  break;
+        case bgfx::RendererType::Vulkan:     shaderPath = "frontend/shaders/spirv/"; break;
+
+        case bgfx::RendererType::Count:
+            BX_CHECK(false, "You should not be here!");
+            break;
+    }
+
+    QFile vshFile(shaderPath + "cubes.vs.bin");  vshFile.open(QIODevice::ReadOnly);
+    QFile fshFile(shaderPath + "cubes.fs.bin");  fshFile.open(QIODevice::ReadOnly);
+    QByteArray vshSrc = vshFile.readAll();
+    QByteArray fshSrc = fshFile.readAll();
+    const bgfx::Memory* vshCopy = bgfx::alloc(vshSrc.size());  memcpy(vshCopy->data, vshSrc.data(), vshSrc.size());
+    const bgfx::Memory* fshCopy = bgfx::alloc(fshSrc.size());  memcpy(fshCopy->data, fshSrc.data(), fshSrc.size());
+    bgfx::ShaderHandle vsh = bgfx::createShader(vshCopy);
+    bgfx::ShaderHandle fsh = bgfx::createShader(fshCopy);
+    m_program = bgfx::createProgram(vsh, fsh, true);
 }
 
 // ----------------------------------------------------------------------------
@@ -97,6 +123,7 @@ SceneView::SceneView(QWindow* parent) :
 // ----------------------------------------------------------------------------
 SceneView::~SceneView()
 {
+    bgfx::destroy(m_program);
     bgfx::destroy(m_ibh);
     bgfx::destroy(m_vbh);
     bgfx::shutdown();
@@ -172,11 +199,14 @@ void SceneView::onResizeTimerTimeout()
 void SceneView::draw()
 {
     float viewMat[16];
+    float worldMat[16];
     float projMat[16];
     camera_->getViewMatrix(viewMat);
+    bx::mtxIdentity(worldMat);
     bx::mtxProj(projMat, 60.0f, float(width()) / float(height()), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-    bgfx::setViewTransform(RENDER_PASS_SHADING, viewMat, projMat);
     bgfx::setViewRect(RENDER_PASS_SHADING, 0, 0, width(), height());
+    bgfx::setViewTransform(RENDER_PASS_SHADING, viewMat, projMat);
+    bgfx::setTransform(worldMat);
 
     bgfx::setVertexBuffer(0, m_vbh);
     bgfx::setIndexBuffer(m_ibh);
@@ -190,7 +220,6 @@ void SceneView::draw()
         | BGFX_STATE_DEPTH_TEST_LESS
         | BGFX_STATE_CULL_CW
         | BGFX_STATE_MSAA
-        | BGFX_STATE_PT_TRISTRIP
         ;
     bgfx::setState(state);
     bgfx::submit(RENDER_PASS_SHADING, m_program);

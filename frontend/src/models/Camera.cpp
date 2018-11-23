@@ -17,7 +17,7 @@ Camera::Camera(QObject* parent) :
     x_(0.0f),
     y_(0.0f),
     z_(0.0f),
-    distance_(0.0f),
+    distance_(1.0f),
     currentAction_(NONE)
 {
 }
@@ -35,7 +35,7 @@ void Camera::setSensitivity(Action action, float multiplier)
         case NONE      : break;
         case ROTATE    : rotateSensitivity_    = multiplier; break;
         case TRANSLATE : translateSensitivity_ = multiplier; break;
-        case ZOOM      : zoomSensitivity_ = std::max(multiplier, 0.9f);  break;
+        case ZOOM      : zoomSensitivity_ = multiplier;  break;
     }
 }
 
@@ -44,6 +44,7 @@ void Camera::beginAction(Action action, QPoint mousePos)
 {
     if (currentAction_ != NONE)
         return;
+    currentAction_ = action;
     lastMousePos_ = mousePos;
 }
 
@@ -65,8 +66,8 @@ void Camera::updateMouse(QPoint mousePos)
         case NONE : break;
 
         case ROTATE : {
-            angleY_ += dx * rotateSensitivity_;
-            angleX_ += dy * rotateSensitivity_;
+            angleY_ -= dx * rotateSensitivity_ * 0.002;
+            angleX_ -= dy * rotateSensitivity_ * 0.002;
 
             while (angleX_ > 2*PI) angleX_ -= 2*PI;
             while (angleX_ < 0) angleX_ += 2*PI;
@@ -78,7 +79,7 @@ void Camera::updateMouse(QPoint mousePos)
         } break;
 
         case ZOOM : {
-            distance_ += dy * zoomSensitivity_ * distance_;
+            distance_ += dy * zoomSensitivity_ * distance_ * 0.002;
         } break;
     }
 }
@@ -100,21 +101,18 @@ void Camera::getViewMatrix(float m[16])
     float siny = std::sin(angleY_);
 
     // combined XY rotation matrix
-    m[0]  = -cosx; m[1]  = sinx*siny; m[2]  = sinx*cosy; m[3]  = 0;
-    m[4]  = 0;     m[5]  = -cosy;     m[6]  = siny;      m[7]  = 0;
-    m[8]  = sinx;  m[9]  = cosx*siny; m[10] = cosx*cosy; m[11] = 0;
-    m[12] = 0;     m[13] = 0;         m[14] = 0;         m[15] = 1;
-
+    m[0] = cosy;       m[4] = 0;         m[8]  = siny;       m[12] = 0;
+    m[1] = sinx*siny;  m[5] = cosx;      m[9]  = -sinx*cosy; m[13] = 0;
+    m[2] = -cosx*siny; m[6] = sinx;      m[10] = cosx*cosy;  m[14] = 0;
+    m[3] = 0;          m[7] = 0;         m[11] = 0;          m[15] = 1;
+/*
     // rotate a unit vector to get camera position. This is the 3rd column in
     // the matrix above.
-    float tx = m[2]  * -distance_;
-    float ty = m[6]  * -distance_;
-    float tz = m[10] * -distance_;
+    float tx = m[8]  * distance_;
+    float ty = m[9]  * distance_;
+    float tz = m[10] * distance_;*/
 
-    // Add translation to matrix
-    m[3]  = m[0] * tx + m[1] * ty + m[2] * tz;
-    m[7]  = m[4] * tx + m[5] * ty + m[6] * tz;
-    m[11] = m[8] * tx + m[9] * ty + m[10] * tz;
+    m[14] = distance_;
 }
 
 }
