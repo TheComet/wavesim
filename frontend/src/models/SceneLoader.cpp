@@ -5,20 +5,19 @@
 #include "assimp/postprocess.h"
 #include "wavesim/mesh/mesh.h"
 #include <QStringList>
+#include <QVector>
 
 using namespace frontend;
 
 // ----------------------------------------------------------------------------
 SceneLoader::SceneLoader() :
-    importer_(new Assimp::Importer),
-    rootEntity_(new Qt3DCore::QEntity)
+    importer_(new Assimp::Importer)
 {
 }
 
 // ----------------------------------------------------------------------------
 SceneLoader::~SceneLoader()
 {
-    delete rootEntity_;
     delete importer_;
 }
 

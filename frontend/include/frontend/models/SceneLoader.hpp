@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QString>
-#include <Qt3DCore/QEntity>
 
 namespace Assimp {
     class Importer;
@@ -26,7 +25,6 @@ public:
 
 private:
     Assimp::Importer* importer_;
-    Qt3DCore::QEntity* rootEntity_;
 };
 
 }

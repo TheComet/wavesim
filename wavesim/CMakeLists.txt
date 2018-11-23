@@ -202,7 +202,7 @@ add_custom_target (wavesim_generate_build_info ALL
     DEPENDS "cmake/modules/generate_timestamp.cmake")
 add_dependencies (wavesim_obj wavesim_generate_build_info)
 # Have to generate the build info header at least once
-if (NOT WAVESIM_UPDATE_BUILD_INFO)
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/include/wavesim/build_info_dynamic.h)
 	execute_process (COMMAND ${CMAKE_COMMAND}
 		-DWAVESIM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
 		-DWAVESIM_UPDATE_BUILD_INFO=ON

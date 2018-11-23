@@ -12,9 +12,37 @@ add_subdirectory ("../thirdparty/qwt-6.1.3" "${CMAKE_CURRENT_BINARY_DIR}/qwt-6.1
 add_subdirectory ("../thirdparty/assimp" "${CMAKE_CURRENT_BINARY_DIR}/assimp")
 add_subdirectory ("../thirdparty/bgfx.cmake" "${CMAKE_CURRENT_BINARY_DIR}/bgfx.cmake")
 
-find_package (Qt53DCore REQUIRED)
-find_package (Qt53DExtras REQUIRED)
-find_package (Qt53DRender REQUIRED)
+set (SHADER_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+
+function (bgfx_shader SHADERS_OUT SHADERS_IN)
+    foreach (IN_FILE ${SHADERS_IN})
+        get_filename_component (FILE_NAME ${IN_FILE} NAME_WE)
+        get_filename_component (IN_DIR ${IN_FILE} DIRECTORY)
+        set (VARYING_FILE ${IN_DIR}/${FILE_NAME}.vdef)
+        if (MSVC)
+            set (PLATFORMS dx9 dx11 glsl gles asm.js)
+        elseif (APPLE)
+            set (PLATFORMS metal glsl gles asm.js)
+        else ()
+            set (PLATFORMS glsl gles asm.js)
+        endif ()
+        set (TYPE fragment)
+
+        foreach (PLATFORM ${PLATFORMS})
+            set (OUT_DIR ${SHADER_OUTPUT_DIR}/${PLATFORM})
+            set (OUT_FILE ${OUT_DIR}/${FILE_NAME}.bin)
+            add_custom_command (OUTPUT ${OUT_FILE}
+                DEPENDS ${IN_FILE} ${VARYING_FILE}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${OUT_DIR}
+                COMMAND "$<TARGET_FILE:shaderc>" --varyingdef ${VARYING_FILE} --type ${TYPE} --platform ${PLATFORM} -f ${IN_FILE} -o ${OUT_FILE}
+                COMMENT "Compiling shader ${FILE_NAME}")
+            list (APPEND ${SHADERS_OUT} ${OUT_FILE})
+        endforeach ()
+
+    endforeach ()
+    set (${SHADERS_OUT} ${${SHADERS_OUT}} PARENT_SCOPE)
+endfunction ()
+
 find_package (Qt5Core REQUIRED)
 find_package (Qt5Gui REQUIRED)
 find_package (Qt5Widgets REQUIRED)
@@ -26,32 +54,37 @@ file (GLOB FRONTEND_SOURCES
 file (GLOB FRONTEND_HEADERS
     "include/frontend/models/*.hpp"
     "include/frontend/views/*.hpp")
-set (FRONTEND_HEADERS_MOC)
-
+file (GLOB FRONTEND_FORMS
+    "forms/*.ui")
+file (GLOB FRONTEND_SHADERS
+    "shaders/*.sc")
 qt5_wrap_cpp (FRONTEND_SOURCES_MOC
+    "include/frontend/models/Camera.hpp"
     "include/frontend/views/MainWindow.hpp"
     "include/frontend/views/SceneView.hpp")
 qt5_wrap_ui (FRONTEND_SOURCES_UI
-    "forms/MainWindow.ui")
+    ${FRONTEND_FORMS})
+bgfx_shader (FRONTEND_SHADERS_GEN
+    ${FRONTEND_SHADERS})
 
 add_executable (wavesim_frontend
     ${FRONTEND_HEADERS}
     ${FRONTEND_SOURCES}
     ${FRONTEND_SOURCES_MOC}
-    ${FRONTEND_SOURCES_UI})
+    ${FRONTEND_SOURCES_UI}
+    ${FRONTEND_SHADERS_GEN})
 target_include_directories (wavesim_frontend
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
+set_property (TARGET wavesim_frontend
+    PROPERTY CXX_STANDARD 14)
 
 target_link_libraries (wavesim_frontend PUBLIC wavesim)
 target_link_libraries (wavesim_frontend PUBLIC qwtinternal)
 target_link_libraries (wavesim_frontend PUBLIC assimp::assimp)
 target_link_libraries (wavesim_frontend PUBLIC bgfx)
-target_link_libraries (wavesim_frontend PUBLIC Qt5::3DCore)
-target_link_libraries (wavesim_frontend PUBLIC Qt5::3DExtras)
-target_link_libraries (wavesim_frontend PUBLIC Qt5::3DRender)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::Core)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::Gui)
 target_link_libraries (wavesim_frontend PUBLIC Qt5::Widgets)
@@ -71,11 +104,6 @@ if (WIN32)
         add_custom_target (Qt5CopyBinaries${CONFIG}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${BIN_DIR}/platforms
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../plugins/platforms/qwindowsd.dll   ${BIN_DIR}/platforms
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DCore${POSTFIX}.dll       ${BIN_DIR}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DExtras${POSTFIX}.dll     ${BIN_DIR}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DInput${POSTFIX}.dll      ${BIN_DIR}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DLogic${POSTFIX}.dll      ${BIN_DIR}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt53DRender${POSTFIX}.dll     ${BIN_DIR}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Concurrent${POSTFIX}.dll   ${BIN_DIR}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Core${POSTFIX}.dll         ${BIN_DIR}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5Core_DIR}/../../../bin/Qt5Gamepad${POSTFIX}.dll      ${BIN_DIR}
@@ -92,4 +120,3 @@ if (WIN32)
     copy_dlls(Debug)
     copy_dlls(Release)
 endif ()
-
