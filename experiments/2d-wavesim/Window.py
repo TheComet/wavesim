@@ -14,12 +14,12 @@ class Window(object):
         self.updateable_items = list()
         self.updateable_items.append(Simulation())
 
-        self.__fixed_step = 1.0 / 600
+        self.__fixed_step = 1.0 / 1200
         self.__last_time_updated = None
+        self.__running = True
 
     def enter_main_loop(self):
-        self.__last_time_updated = time.clock()
-        self.__running = True
+        self.__last_time_updated = time.process_time()
         while self.__running:
             self.__process_events()
             self.__update_items()

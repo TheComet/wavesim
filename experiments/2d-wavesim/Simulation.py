@@ -51,6 +51,9 @@ class Domain1D(Updateable):
         self.M_past = dct(self.M_past)
         self.M_current = np.zeros(num_cells)
 
+        # Font stuff
+        self.font = pygame.font.SysFont('monospace', 18)
+
         print(f"Cells: {num_cells}, Cell size: {self.h}, Time step: {self.dt}")
 
     def to_screen_coords(self, x, p):
@@ -85,60 +88,56 @@ class Domain2D(Updateable):
         self.name = name
         self.begin = np.array(begin)
         self.end = np.array(end)
-        self.sound_velocity = sound_velocity
+        self.c = sound_velocity
         self.transform = screen_coords_transform
         self.time_passed = 0
         self.steps_passed = 0
 
         # Calculate minimum grid size h and number of cells for given boundary and frequency
+        # limited by Nyquist
         fmax = 20e3  # Hz
-        hmax = self.sound_velocity / (2*fmax)
-        dimension = np.abs(self.end - self.begin)
-        num_cells = np.cast[int](np.ceil(dimension / hmax))
-        self.h = np.min(dimension / num_cells)
+        hmax = self.c / (2*fmax)
+        dims = np.abs(self.end - self.begin)
+        cells = np.cast[int](np.ceil(dims / hmax))
+        self.h = np.min(dims / cells)
 
-        # calculate maximum time step
-        self.dt = self.h / (self.sound_velocity * math.sqrt(3))
+        # calculate maximum time step, restricted by the CFL condition
+        self.dt = self.h / (self.c * np.sqrt(3))
 
         # Local spatial coordinates
-        self.spatial_coords = np.zeros((num_cells[0], num_cells[1], 2))
-        for x, ix in zip(np.linspace(self.h, dimension[0], num_cells[0]), range(len(self.spatial_coords))):
-            for y, iy in zip(np.linspace(self.h, dimension[1], num_cells[1]), range(len(self.spatial_coords[ix]))):
+        self.spatial_coords = np.zeros((cells[0], cells[1], 2))
+        for x, ix in zip(np.linspace(self.h, dims[0], cells[0]), range(len(self.spatial_coords))):
+            for y, iy in zip(np.linspace(self.h, dims[1], cells[1]), range(len(self.spatial_coords[ix]))):
                 self.spatial_coords[ix][iy][0], self.spatial_coords[ix][iy][1] = x, y
 
         # Calculate characteristic frequencies omega
-        k2 = np.pi**2 * np.sum(np.power(self.spatial_coords[:,:,dim] / dimension[dim], 2) for dim in range(2))
-        self.w = self.sound_velocity * np.sqrt(k2)
+        k2 = np.pi**2 * np.sum(np.power(self.spatial_coords[:,:,dim] / dims[dim], 2) for dim in range(2))
+        self.w = self.c * np.sqrt(k2)
 
         self.cos_w_dt = np.cos(self.w * self.dt)
 
         # Allocate mode arrays for two timesteps
-        self.M_current = np.zeros((num_cells[0], num_cells[1]))
-        self.M_past = np.zeros((num_cells[0], num_cells[1]))
-        self.initial_force = np.zeros((num_cells[0], num_cells[1]))
-        self.initial_force[30][30] = 1e8
-        self.initial_force = 2 * dct2(self.initial_force) / np.power(self.w, 2) * (1 - np.cos(self.w * self.dt))
+        pressures = np.zeros((cells[0], cells[1]))
+        pressures[30][15] = 0.1
+        self.M_past = dct2(pressures)
+        self.M_current = np.zeros((cells[0], cells[1]))
 
         # Font stuff
         self.font = pygame.font.SysFont('monospace', 18)
 
-        self.step_time = self.step_time_initial
-        print(f"Cells: {num_cells}, Cell size: {self.h}, Time step: {self.dt}")
+        #self.step_time = self.step_time_consecutive
+        print(f"Cells: {cells}, Cell size: {self.h}, Time step: {self.dt}")
 
     def to_screen_coords(self, x, p):
         x, p, w = (np.array([x, p, 1]) * self.transform.T).tolist()[0]
         return int(x), int(p)
 
     def to_screen_scale(self, x, y):
-        return (x * self.transform.A[0][0], y * np.abs(self.transform.A[0][0]))
+        return \
+            x * self.transform.A[0][0],\
+            y * np.abs(self.transform.A[0][0])
 
-    def step_time_initial(self):
-        M_new = 2 * self.M_current * self.cos_w_dt - self.M_past + self.initial_force
-        self.M_current, self.M_past = M_new, self.M_current
-        self.time_passed += self.dt
-        self.step_time = self.step_time_consecutive
-
-    def step_time_consecutive(self):
+    def step_time(self):
         M_new = 2 * self.M_current * self.cos_w_dt - self.M_past
         self.M_current, self.M_past = M_new, self.M_current
         self.time_passed += self.dt
@@ -166,7 +165,7 @@ class Domain2D(Updateable):
         # draw text
         text = self.font.render(
             f"Domain ({self.begin[0]},{self.begin[1]})-({self.end[0]},{self.end[1]}): "
-            f"c={self.sound_velocity}m/s, t={self.time_passed:.2f}s, p={np.mean(pressures):.4f}"
+            f"c={self.c}m/s, t={self.time_passed:.2f}s, p={np.sum(pressures):.4f}, pmax={np.max(pressures):.2f}"
             f", step: {self.steps_passed}", 1, (255, 255, 255))
         surface.blit(text, self.to_screen_coords(self.begin[0], self.begin[1]))
 
@@ -179,7 +178,13 @@ class Simulation(Updateable):
             [0, 0, 1]
         ])
         self.domains = [
-            Domain2D("1", (0, 0), (2, 1), 700, transform)
+            Domain2D(
+                "1",
+                begin=(0, 0),
+                end=(2, 1),
+                sound_velocity=700,
+                screen_coords_transform=transform
+            )
         ]
 
     def process_event(self, event):
