@@ -31,8 +31,7 @@ w = c * k
 cos_w_dt = np.cos(w * dt)
 
 # Create 2D array of pressures for initial condition
-pressures = np.ones(cells)
-pressures *= 0.5
+pressures = np.zeros(cells)
 pressures[30][30] = 1  # impulse response
 
 # Initialize mode arrays
