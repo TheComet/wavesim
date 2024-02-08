@@ -104,23 +104,19 @@ class Domain2D(Updateable):
         # calculate maximum time step, restricted by the CFL condition
         self.dt = self.h / (self.c * np.sqrt(3))
 
-        # Local spatial coordinates
-        self.spatial_coords = np.zeros((cells[0], cells[1], 2))
-        for x, ix in zip(np.linspace(self.h, dims[0], cells[0]), range(len(self.spatial_coords))):
-            for y, iy in zip(np.linspace(self.h, dims[1], cells[1]), range(len(self.spatial_coords[ix]))):
-                self.spatial_coords[ix][iy][0], self.spatial_coords[ix][iy][1] = x, y
-
-        # Calculate characteristic frequencies omega
-        k2 = np.pi**2 * np.sum(np.power(self.spatial_coords[:,:,dim] / dims[dim], 2) for dim in range(2))
-        self.w = self.c * np.sqrt(k2)
-
+        # Calculate characteristic frequencies omega_i (equation 6)
+        k = np.zeros(cells)
+        for ix in range(cells[0]):
+            for iy in range(cells[1]):
+                k[ix][iy] = np.pi * np.sqrt(ix ** 2 / dims[0] ** 2 + iy ** 2 / dims[1] ** 2)
+        self.w = self.c * k
         self.cos_w_dt = np.cos(self.w * self.dt)
 
         # Allocate mode arrays for two timesteps
         pressures = np.zeros((cells[0], cells[1]))
-        pressures[30][15] = 0.1
-        self.M_past = dct2(pressures)
-        self.M_current = np.zeros((cells[0], cells[1]))
+        pressures[30][15] = 1
+        self.M_past = np.zeros(cells)
+        self.M_current = dct2(pressures)
 
         # Font stuff
         self.font = pygame.font.SysFont('monospace', 18)
@@ -151,11 +147,11 @@ class Domain2D(Updateable):
         # draw pressure values
         rect_dims = self.to_screen_scale(self.h*0.8, self.h*0.8)
         pressures = idct2(self.M_current)
-        for x, px in zip(self.spatial_coords + self.begin, pressures):
-            for y, py in zip(x, px):
-                rect_pos = self.to_screen_coords(y[0], y[1])
+        for ix, x in enumerate(np.linspace(self.begin[0], self.end[0], pressures.shape[0])):
+            for iy, y in enumerate(np.linspace(self.begin[1], self.end[1], pressures.shape[1])):
+                rect_pos = self.to_screen_coords(x, y)
                 rect_pos = (rect_pos[0] - rect_dims[0]/2, rect_pos[1] - rect_dims[1]/2)
-                pygame.draw.rect(surface, self.calc_color(py), pygame.Rect(rect_pos, rect_dims))
+                pygame.draw.rect(surface, self.calc_color(pressures[ix][iy]), pygame.Rect(rect_pos, rect_dims))
 
         # draw boundaries
         left, top = self.to_screen_coords(self.begin[0], self.begin[1])
@@ -181,8 +177,8 @@ class Simulation(Updateable):
             Domain2D(
                 "1",
                 begin=(0, 0),
-                end=(2, 1),
-                sound_velocity=700,
+                end=(1, 1),
+                sound_velocity=340,
                 screen_coords_transform=transform
             )
         ]
