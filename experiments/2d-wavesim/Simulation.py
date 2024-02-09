@@ -6,11 +6,10 @@ from scipy.fftpack import dct
 from Updateable import Updateable
 
 
-def idct(arr):
-    return dct(arr, type=3) / (2 * len(arr))
-
 def dct2(arr):
-    return dct(dct(arr, axis=0), axis=1)
+    along_x = dct(arr, type=2, axis=0)
+    along_y = dct(along_x, type=2, axis=1)
+    return along_y
 
 def idct2(arr):
     along_x = dct(arr, type=3, axis=0) / (2 * arr.shape[0])
@@ -108,13 +107,13 @@ class Domain2D(Updateable):
         k = np.zeros(cells)
         for ix in range(cells[0]):
             for iy in range(cells[1]):
-                k[ix][iy] = np.pi * np.sqrt(ix ** 2 / dims[0] ** 2 + iy ** 2 / dims[1] ** 2)
+                k[ix][iy] = np.pi * np.sqrt((ix+1) ** 2 / dims[0] ** 2 + (iy+1) ** 2 / dims[1] ** 2)
         self.w = self.c * k
         self.cos_w_dt = np.cos(self.w * self.dt)
 
         # Allocate mode arrays for two timesteps
         pressures = np.zeros((cells[0], cells[1]))
-        pressures[30][15] = 1
+        pressures[30][15] = 10
         self.M_past = np.zeros(cells)
         self.M_current = dct2(pressures)
 
@@ -177,8 +176,8 @@ class Simulation(Updateable):
             Domain2D(
                 "1",
                 begin=(0, 0),
-                end=(1, 1),
-                sound_velocity=340,
+                end=(2, 1),
+                sound_velocity=170,
                 screen_coords_transform=transform
             )
         ]

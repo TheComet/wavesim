@@ -3,14 +3,14 @@ from scipy.fftpack import dct
 
 
 def dct2(arr):
-    along_x = dct(arr, axis=0)
-    along_y = dct(along_x, axis=1)
+    along_x = dct(arr, type=2, axis=0)
+    along_y = dct(along_x, type=2, axis=1)
     return along_y
 
 def idct2(arr):
-    along_x = dct(arr, type=3, axis=0) / (2 * arr.shape[0])
-    along_y = dct(along_x, type=3, axis=1) / (2 * arr.shape[1])
-    return along_y
+    along_x = dct(arr, type=3, axis=0)
+    along_y = dct(along_x, type=3, axis=1)
+    return along_y / (4 * arr.shape[0] * arr.shape[1])
 
 c = 340                    # Sound velocity in m/s
 fmax = 20e3                # Max frequency in Hz
@@ -36,12 +36,15 @@ pressures[30][30] = 1  # impulse response
 
 # Initialize mode arrays
 M_past = np.zeros(cells)
-M_current = dct2(pressures)
 
+pressures = np.zeros(cells)
+pressures[30][30] = 1  # impulse response
+print(f"initial: pmax={np.max(pressures)}, p={np.sum(pressures)}")
+M_current = dct2(pressures)
 pressures = idct2(M_current)
 print(f"initial: pmax={np.max(pressures)}, p={np.sum(pressures)}")
 
-for i in range(50):
+for i in range(5):
     # Step
     M_new = 2 * M_current * cos_w_dt - M_past
     M_current, M_past = M_new, M_current

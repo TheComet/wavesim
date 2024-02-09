@@ -14,7 +14,7 @@ class Window(object):
         self.updateable_items = list()
         self.updateable_items.append(Simulation())
 
-        self.__fixed_step = 1.0 / 50000
+        self.__fixed_step = 1.0 / 10000
         self.__last_time_updated = None
         self.__running = True
 
